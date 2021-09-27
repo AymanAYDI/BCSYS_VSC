@@ -1,0 +1,39 @@
+OBJECT Codeunit 16 Gen. Jnl.-Show CT Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=81;
+    OnRun=BEGIN
+            IF NOT ("Document Type" IN ["Document Type"::Payment,"Document Type"::Refund]) THEN
+              EXIT;
+            IF NOT ("Account Type" IN ["Account Type"::Customer,"Account Type"::Vendor]) THEN
+              EXIT;
+
+            CreditTransferEntry.SETAUTOCALCFIELDS(Canceled);
+            IF "Account Type" = "Account Type"::Vendor THEN
+              CreditTransferEntry.SETRANGE("Account Type",CreditTransferEntry."Account Type"::Vendor)
+            ELSE
+              CreditTransferEntry.SETRANGE("Account Type",CreditTransferEntry."Account Type"::Customer);
+            CreditTransferEntry.SETRANGE("Account No.","Account No.");
+            CreditTransferEntry.SETRANGE("Applies-to Entry No.","Source Line No.");
+            CreditTransferEntry.SETRANGE(Canceled,FALSE);
+            PAGE.RUN(PAGE::"Credit Transfer Reg. Entries",CreditTransferEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CreditTransferEntry@1000 : Record 1206;
+
+    BEGIN
+    END.
+  }
+}
+

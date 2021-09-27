@@ -1,0 +1,79 @@
+OBJECT Page 1216 Post Exch Col Def Part
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Posting Exchange Column Definition;
+               FRA=D‚finition colonne ‚change comptabilit‚];
+    SourceTable=Table1223;
+    DelayedInsert=Yes;
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr="Column No." }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Data Type";
+                OnValidate=BEGIN
+                             DataFormatRequired := IsDataFormatRequired;
+                             DataFormattingCultureRequired := IsDataFormattingCultureRequired;
+                           END;
+
+                ShowMandatory=TRUE }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr="Data Format";
+                ShowMandatory=DataFormatRequired }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Data Formatting Culture";
+                ShowMandatory=DataFormattingCultureRequired }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr=Length }
+
+    { 9   ;2   ;Field     ;
+                SourceExpr=Description }
+
+    { 15  ;2   ;Field     ;
+                SourceExpr=Path }
+
+    { 16  ;2   ;Field     ;
+                SourceExpr="Negative-Sign Identifier" }
+
+    { 11  ;2   ;Field     ;
+                SourceExpr=Constant }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr=Show;
+                Visible=false }
+
+  }
+  CODE
+  {
+    VAR
+      DataFormatRequired@1000 : Boolean;
+      DataFormattingCultureRequired@1001 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

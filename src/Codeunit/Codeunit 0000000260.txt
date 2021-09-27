@@ -1,0 +1,106 @@
+OBJECT Codeunit 260 Document-Mailing
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      EmailSubjectCapTxt@1001 : TextConst '@@@="%1 = Customer Name. %2 = Document Type %3 = Invoice No.";ENU=%1 - %2 %3;FRA=%1 - %2 %3';
+      ReportAsPdfFileNameMsg@1000 : TextConst '@@@="%1 = Document Type %2 = Invoice No.";ENU=Sales %1 %2.pdf;FRA=%1 ventes %2.pdf';
+      InvoiceTxt@1003 : TextConst 'ENU=Invoice;FRA=Facturer';
+      CrMemoTxt@1002 : TextConst 'ENU=Credit Memos;FRA=Avoirs';
+
+    PROCEDURE EmailFileFromIssuedFinChrgMemo@1(IssuedFinChargeMemoHeader@1000 : Record 304;AttachmentFilePath@1001 : Text[250]);
+    VAR
+      IssuedFinanceChargeMemo@1003 : Page 450;
+    BEGIN
+      EmailFile(AttachmentFilePath,
+        IssuedFinChargeMemoHeader."No.",
+        IssuedFinChargeMemoHeader."Customer No.",
+        IssuedFinChargeMemoHeader.Name,
+        IssuedFinanceChargeMemo.CAPTION);
+    END;
+
+    PROCEDURE EmailFileFromIssuedReminder@2(IssuedReminderHeader@1000 : Record 297;AttachmentFilePath@1001 : Text[250]);
+    VAR
+      IssuedReminder@1003 : Page 438;
+    BEGIN
+      EmailFile(AttachmentFilePath,
+        IssuedReminderHeader."No.",
+        IssuedReminderHeader."Customer No.",
+        IssuedReminderHeader.Name,
+        IssuedReminder.CAPTION);
+    END;
+
+    PROCEDURE EmailFileFromSalesHeader@12(SalesHeader@1000 : Record 36;AttachmentFilePath@1001 : Text[250]);
+    BEGIN
+      EmailFile(AttachmentFilePath,
+        SalesHeader."No.",
+        SalesHeader."Bill-to Customer No.",
+        SalesHeader."Bill-to Name",
+        FORMAT(SalesHeader."Document Type"));
+    END;
+
+    PROCEDURE EmailFileFromSalesInvoiceHeader@5(SalesInvoiceHeader@1000 : Record 112;AttachmentFilePath@1001 : Text[250]);
+    BEGIN
+      EmailFile(AttachmentFilePath,
+        SalesInvoiceHeader."No.",
+        SalesInvoiceHeader."Bill-to Customer No.",
+        SalesInvoiceHeader."Bill-to Name",
+        InvoiceTxt);
+    END;
+
+    PROCEDURE EmailFileFromSalesCrMemoHeader@4(SalesCrMemoHeader@1000 : Record 114;AttachmentFilePath@1001 : Text[250]);
+    BEGIN
+      EmailFile(AttachmentFilePath,
+        SalesCrMemoHeader."No.",
+        SalesCrMemoHeader."Bill-to Customer No.",
+        SalesCrMemoHeader."Bill-to Name",
+        CrMemoTxt);
+    END;
+
+    LOCAL PROCEDURE EmailFile@3(AttachmentFilePath@1001 : Text[250];PostedDocNo@1000 : Code[20];SendEmaillToCustNo@1006 : Code[20];SendEmaillToCustName@1007 : Text[50];EmailDocName@1008 : Text[50]);
+    VAR
+      TempEmailItem@1002 : TEMPORARY Record 9500;
+      AttachmentFileName@1004 : Text[250];
+    BEGIN
+      AttachmentFileName := STRSUBSTNO(ReportAsPdfFileNameMsg,EmailDocName,PostedDocNo);
+
+      WITH TempEmailItem DO BEGIN
+        "Send to" := GetToAddressFromCustomer(SendEmaillToCustNo);
+        Subject := COPYSTR(
+            STRSUBSTNO(
+              EmailSubjectCapTxt,SendEmaillToCustName,EmailDocName,PostedDocNo),1,
+            MAXSTRLEN(Subject));
+        "Attachment File Path" := AttachmentFilePath;
+        "Attachment Name" := AttachmentFileName;
+        Send(FALSE);
+      END;
+    END;
+
+    LOCAL PROCEDURE GetToAddressFromCustomer@16(BillToCustomerNo@1000 : Code[20]) : Text[250];
+    VAR
+      Customer@1002 : Record 18;
+      ToAddress@1001 : Text;
+    BEGIN
+      IF Customer.GET(BillToCustomerNo) THEN
+        ToAddress := Customer."E-Mail";
+
+      EXIT(ToAddress);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

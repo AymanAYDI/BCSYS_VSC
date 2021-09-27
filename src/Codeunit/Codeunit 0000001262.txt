@@ -1,0 +1,179 @@
+OBJECT Codeunit 1262 Pre & Post Process XML Import
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      DiffCurrQst@1001 : TextConst '@@@="%1 %2 = Currency Code EUR; %3 %4 = LCY Code DKK.";ENU=The bank statement that you are importing contains transactions in %1 %2. This conflicts with the %3 %4.\\Do you want to continue?;FRA=Le relev‚ bancaire que vous importez contient des transactions dans %1 %2. Il existe des conflits avec %3 %4.\\Voulez-vous continuerÿ?';
+      MissingStmtDateInDataMsg@1012 : TextConst 'ENU=The statement date was not found in the data to be imported.;FRA=Date de relev‚ introuvable dans les donn‚es … importer.';
+      MissingCrdDbtIndInDataMsg@1013 : TextConst 'ENU=The credit/debit indicator was not found in the data to be imported.;FRA=Indicateur cr‚dit/d‚bit introuvable dans les donn‚es … importer.';
+      MissingBalTypeInDataMsg@1014 : TextConst 'ENU=The balance type was not found in the data to be imported.;FRA=Type de solde introuvable dans les donn‚es … importer.';
+      MissingClosingBalInDataMsg@1015 : TextConst 'ENU=The closing balance was not found in the data to be imported.;FRA=Solde de cl“ture introuvable dans les donn‚es … importer.';
+      MissingBankAccNoQst@1022 : TextConst 'ENU=Bank account %1 does not have a bank account number.\\Do you want to continue?;FRA=Le compte bancaire %1 ne possŠde pas de num‚ro.\\Voulez-vous continuerÿ?';
+      BankAccCurrErr@1020 : TextConst '@@@="%1 %2 = Currency Code EUR; %3 = Bank Account No.";ENU=The bank statement that you are importing contains transactions in currencies other than the %1 %2 of bank account %3.;FRA=Le relev‚ bancaire que vous importez contient des transactions dans des devises diff‚rentes du/de la %1 %2 du compte bancaire %3.';
+      MultipleStmtErr@1019 : TextConst 'ENU=The file that you are trying to import contains more than one bank statement.;FRA=Le fichier que vous tentez d''importer contient plusieurs relev‚s bancaires.';
+      MissingBankAccNoInDataErr@1018 : TextConst 'ENU=The bank account number was not found in the data to be imported.;FRA=Num‚ro de compte bancaire introuvable dans les donn‚es … importer.';
+      BankAccMismatchQst@1017 : TextConst '@@@="%1=Value; %2 = Bank account no.";ENU=Bank account %1 does not have the bank account number %2, as specified in the bank statement file.\\Do you want to continue?;FRA=Le compte bancaire %1 ne possŠde pas de num‚ro %2, comme indiqu‚ dans le fichier de relev‚ bancaire.\\Voulez-vous continuerÿ?';
+
+    PROCEDURE PostProcessStatementDate@3(PostingExch@1002 : Record 1220;VAR RecRef@1000 : RecordRef;FieldNo@1001 : Integer;StmtDatePathFilter@1004 : Text);
+    VAR
+      PostExchFieldDetails@1007 : Query 1232;
+    BEGIN
+      SetValueFromPostExchField(PostExchFieldDetails,PostingExch,StmtDatePathFilter,MissingStmtDateInDataMsg,RecRef,FieldNo);
+    END;
+
+    PROCEDURE PostProcessStatementEndingBalance@11(PostingExch@1004 : Record 1220;VAR RecRef@1000 : RecordRef;FieldNo@1001 : Integer;BalTypeDescriptor@1009 : Text;BalTypePathFilter@1007 : Text;BalAmtPathFilter@1010 : Text;CrdDbtIndPathFilter@1011 : Text;ParentNodeOffset@1012 : Integer);
+    VAR
+      PostExchFieldDetails@1008 : Query 1232;
+      GroupNodeID@1002 : Text;
+    BEGIN
+      PostExchFieldDetails.SETRANGE(FieldValue,BalTypeDescriptor);
+      IF NOT HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",BalTypePathFilter) THEN BEGIN
+        MESSAGE(MissingBalTypeInDataMsg);
+        EXIT;
+      END;
+
+      GroupNodeID := GetSubTreeRoot(PostExchFieldDetails.Node_ID,ParentNodeOffset);
+      CLEAR(PostExchFieldDetails);
+      PostExchFieldDetails.SETFILTER(Node_ID,'%1',GroupNodeID + '*');
+      IF NOT SetValueFromPostExchField(PostExchFieldDetails,PostingExch,BalAmtPathFilter,MissingClosingBalInDataMsg,RecRef,FieldNo) THEN
+        EXIT;
+
+      IF CrdDbtIndPathFilter = '' THEN
+        EXIT;
+
+      SetValueFromPostExchField(PostExchFieldDetails,PostingExch,CrdDbtIndPathFilter,MissingCrdDbtIndInDataMsg,RecRef,FieldNo);
+    END;
+
+    PROCEDURE PreProcessBankAccount@5(PostingExch@1005 : Record 1220;BankAccNo@1004 : Code[20];BankAccNoPathFilter@1006 : Text;CurrCodePathFilter@1007 : Text);
+    VAR
+      BankAccount@1001 : Record 270;
+    BEGIN
+      BankAccount.GET(BankAccNo);
+      CheckBankAccNo(PostingExch,BankAccount,BankAccNoPathFilter);
+      CheckBankAccCurrency(PostingExch,BankAccount,CurrCodePathFilter);
+    END;
+
+    PROCEDURE PreProcessGLAccount@1(PostingExch@1005 : Record 1220;VAR GenJournalLineTemplate@1004 : Record 81;CurrencyCodePathFilter@1001 : Text);
+    VAR
+      GLSetup@1000 : Record 98;
+      PostExchFieldDetails@1007 : Query 1232;
+      StatementCurrencyCode@1006 : Code[10];
+    BEGIN
+      GLSetup.GET;
+
+      PostExchFieldDetails.SETFILTER(FieldValue,'<>%1&<>%2','',GLSetup."LCY Code");
+      IF HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",CurrencyCodePathFilter) THEN
+        IF NOT CONFIRM(STRSUBSTNO(DiffCurrQst,GenJournalLineTemplate.FIELDCAPTION("Currency Code"),
+               PostExchFieldDetails.FieldValue,GLSetup.FIELDCAPTION("LCY Code"),GLSetup."LCY Code"))
+        THEN
+          ERROR('');
+
+      PostExchFieldDetails.SETRANGE(FieldValue);
+      IF HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",CurrencyCodePathFilter) THEN BEGIN
+        StatementCurrencyCode := FORMAT(PostExchFieldDetails.FieldValue,-MAXSTRLEN(GenJournalLineTemplate."Currency Code"));
+        GenJournalLineTemplate.VALIDATE("Currency Code",GLSetup.GetCurrencyCode(StatementCurrencyCode));
+      END;
+    END;
+
+    PROCEDURE PreProcessFile@6(PostingExch@1000 : Record 1220;StatementIdPathFilter@1001 : Text);
+    BEGIN
+      CheckMultipleStatements(PostingExch,StatementIdPathFilter);
+    END;
+
+    LOCAL PROCEDURE GetSubTreeRoot@13(Node@1002 : Text;Distance@1001 : Integer) : Text;
+    BEGIN
+      EXIT(COPYSTR(Node,1,STRLEN(Node) - Distance * 4));
+    END;
+
+    LOCAL PROCEDURE CheckBankAccNo@4(PostingExch@1003 : Record 1220;BankAccount@1000 : Record 270;BankAccNoPathFilter@1001 : Text);
+    VAR
+      PostExchFieldDetails@1002 : Query 1232;
+    BEGIN
+      IF BankAccount.GetBankAccountNo = '' THEN BEGIN
+        IF NOT CONFIRM(STRSUBSTNO(MissingBankAccNoQst,BankAccount."No.")) THEN
+          ERROR('');
+        EXIT;
+      END;
+
+      IF NOT HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",BankAccNoPathFilter) THEN
+        ERROR(MissingBankAccNoInDataErr);
+
+      IF (DELCHR(PostExchFieldDetails.FieldValue,'=','- ') <> DELCHR(BankAccount."Bank Account No.",'=','- ')) AND
+         (DELCHR(PostExchFieldDetails.FieldValue,'=','- ') <> DELCHR(BankAccount.IBAN,'=','- '))
+      THEN
+        IF NOT CONFIRM(STRSUBSTNO(BankAccMismatchQst,BankAccount."No.",PostExchFieldDetails.FieldValue)) THEN
+          ERROR('');
+    END;
+
+    LOCAL PROCEDURE CheckBankAccCurrency@9(PostingExch@1004 : Record 1220;BankAccount@1000 : Record 270;CurrCodePathFilter@1001 : Text);
+    VAR
+      GeneralLedgerSetup@1003 : Record 98;
+      PostExchFieldDetails@1002 : Query 1232;
+    BEGIN
+      GeneralLedgerSetup.GET;
+
+      PostExchFieldDetails.SETFILTER(FieldValue,'<>%1&<>%2','',GeneralLedgerSetup.GetCurrencyCode(BankAccount."Currency Code"));
+      IF HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",CurrCodePathFilter) THEN
+        ERROR(BankAccCurrErr,BankAccount.FIELDCAPTION("Currency Code"),
+          GeneralLedgerSetup.GetCurrencyCode(BankAccount."Currency Code"),BankAccount."No.");
+    END;
+
+    LOCAL PROCEDURE CheckMultipleStatements@2(PostingExch@1003 : Record 1220;StatementIdPathFilter@1000 : Text);
+    VAR
+      PostExchFieldDetails@1001 : Query 1232;
+      StmtCount@1002 : Integer;
+    BEGIN
+      IF HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",StatementIdPathFilter) THEN BEGIN
+        StmtCount := 1;
+        WHILE PostExchFieldDetails.READ DO
+          StmtCount += 1;
+      END;
+
+      IF StmtCount > 1 THEN
+        ERROR(MultipleStmtErr);
+    END;
+
+    LOCAL PROCEDURE HasPostExchFieldValue@7(VAR PostExchFieldDetails@1003 : Query 1232;PostExchEntryNo@1001 : Integer;PathFilter@1002 : Text) : Boolean;
+    BEGIN
+      PostExchFieldDetails.SETRANGE(Posting_Exch_No,PostExchEntryNo);
+      PostExchFieldDetails.SETFILTER(Path,PathFilter);
+      PostExchFieldDetails.OPEN;
+      EXIT(PostExchFieldDetails.READ);
+    END;
+
+    LOCAL PROCEDURE SetValueFromPostExchField@8(VAR PostExchFieldDetails@1000 : Query 1232;PostingExch@1001 : Record 1220;PathFilter@1005 : Text;NotFoundMessage@1006 : Text;RecRef@1003 : RecordRef;FieldNo@1004 : Integer) : Boolean;
+    VAR
+      PostingExchField@1002 : Record 1221;
+      ProcessPostingExch@1007 : Codeunit 1201;
+    BEGIN
+      IF NOT HasPostExchFieldValue(PostExchFieldDetails,PostingExch."Entry No.",PathFilter) THEN BEGIN
+        MESSAGE(NotFoundMessage);
+        EXIT(FALSE);
+      END;
+
+      PostingExchField.GET(PostExchFieldDetails.Posting_Exch_No,PostExchFieldDetails.Line_No,
+        PostExchFieldDetails.Column_No,PostExchFieldDetails.Node_ID);
+      ProcessPostingExch.SetField(RecRef,FieldNo,PostingExchField,
+        PostingExch."Posting Exch. Def Code",PostingExch."Posting Exch. Line Def Code",1);
+
+      RecRef.MODIFY(TRUE);
+      EXIT(TRUE);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

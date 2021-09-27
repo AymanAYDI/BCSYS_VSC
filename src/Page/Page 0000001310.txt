@@ -1,0 +1,247 @@
+OBJECT Page 1310 Mini Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Activities;
+               FRA=Activit‚s];
+    SourceTable=Table1313;
+    PageType=CardPart;
+    ShowFilter=No;
+    OnInit=BEGIN
+             GettingStartedVisible := MiniGettingStartedMgt.IsGettingStartedVisible;
+             VideoVisible := GettingStartedVisible AND FileManagement.IsWebClient;
+             AutoPlayWelcomeVideo := VideoVisible AND MiniGettingStartedMgt.ShouldWelcomeVideoBePlayed;
+           END;
+
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+                 SETFILTER("Due Date Filter",'>=%1',WORKDATE);
+                 SETFILTER("Overdue Date Filter",'<%1',WORKDATE);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       CalculateCueFieldValues;
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           IF GettingStartedVisible <> MiniGettingStartedMgt.IsGettingStartedVisible THEN BEGIN
+                             GettingStartedVisible := MiniGettingStartedMgt.IsGettingStartedVisible;
+                             VideoVisible := GettingStartedVisible AND FileManagement.IsWebClient;
+                             CurrPage.UPDATE;
+                           END;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 6       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Action    ;
+                      Name=Set Up Cues;
+                      CaptionML=[ENU=Set Up Cues;
+                                 FRA=Param‚trer piles];
+                      Image=Setup;
+                      OnAction=VAR
+                                 CueRecordRef@1000 : RecordRef;
+                               BEGIN
+                                 CueRecordRef.GETTABLE(Rec);
+                                 CueSetup.OpenCustomizePageForCurrentUser(CueRecordRef.NUMBER);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 16  ;1   ;Group     ;
+                CaptionML=[ENU=Getting Started;
+                           FRA=Mise en route];
+                Visible=GettingStartedVisible;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 12      ;    ;Action    ;
+                                  Name=WelcomeIntroductionVideo;
+                                  CaptionML=[ENU=Welcome!;
+                                             FRA=Bienvenueÿ!];
+                                  ToolTipML=[ENU=Watch a short video to learn five things you need to know first.;
+                                             FRA=Regardez une brŠve vid‚o pour d‚couvrir 5ÿchoses que vous devez connaŒtre au pr‚alable.];
+                                  Visible=VideoVisible;
+                                  Image=TileVideo;
+                                  OnAction=BEGIN
+                                             MiniGettingStartedMgt.PlayWelcomeVideoForWebClient;
+                                           END;
+                                            }
+                  { 14      ;    ;Action    ;
+                                  Name=SettingupYourSystem;
+                                  CaptionML=[ENU=Setting Up Your System;
+                                             FRA=Param‚trage de votre systŠme];
+                                  ToolTipML=[ENU=Watch a video to learn how to set up the system for your needs.;
+                                             FRA=Regardez une vid‚o pour d‚couvrir comment param‚trer le systŠme selon vos besoins.];
+                                  Visible=VideoVisible;
+                                  Image=TileVideo;
+                                  OnAction=BEGIN
+                                             MiniGettingStartedMgt.PlaySettingUpYourSystemVideoForWebClient;
+                                           END;
+                                            }
+                  { 13      ;    ;Action    ;
+                                  Name=ManageYourBusiness;
+                                  CaptionML=[ENU=Manage Your Business;
+                                             FRA=Gestion de votre entreprise];
+                                  ToolTipML=[ENU=Learn about how to do your business tasks.;
+                                             FRA=D‚couvrez comment ex‚cuter vos tƒches professionnelles.];
+                                  Image=TileHelp }
+                }
+                 }
+
+    { 23  ;1   ;Group     ;
+                Name=GettingStartedTablet;
+                CaptionML=[ENU=Getting Started;
+                           FRA=Mise en route];
+                Visible=GettingStartedVisible;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 21      ;    ;Action    ;
+                                  Name=SettingupYourSystemTablet;
+                                  CaptionML=[ENU=Setting Up Your System;
+                                             FRA=Param‚trage de votre systŠme];
+                                  ToolTipML=[ENU=Watch a video to learn how to set up the system for your needs.;
+                                             FRA=Regardez une vid‚o pour d‚couvrir comment param‚trer le systŠme selon vos besoins.];
+                                  Visible=VideoVisible;
+                                  Image=TileVideo;
+                                  OnAction=BEGIN
+                                             MiniGettingStartedMgt.PlaySettingUpYourSystemVideoForTablet;
+                                           END;
+                                            }
+                  { 22      ;    ;Action    ;
+                                  Name=ManageYourBusinessTablet;
+                                  CaptionML=[ENU=Manage Your Business;
+                                             FRA=Gestion de votre entreprise];
+                                  ToolTipML=[ENU=Learn about how to do your business tasks.;
+                                             FRA=D‚couvrez comment ex‚cuter vos tƒches professionnelles.];
+                                  Image=TileHelp }
+                }
+                 }
+
+    { 10  ;1   ;Group     ;
+                CaptionML=[ENU=Sales;
+                           FRA=Ventes];
+                GroupType=CueGroup }
+
+    { 2   ;2   ;Field     ;
+                ToolTipML=[ENU=Shows the number of open sales invoices.;
+                           FRA=Affiche le nombre de factures vente ouvertes.];
+                SourceExpr="Ongoing Sales Invoices";
+                DrillDownPageID=Mini Sales Invoice List }
+
+    { 17  ;2   ;Field     ;
+                ToolTipML=[ENU=Shows the sum of overdue payments from customers.;
+                           FRA=Affiche la somme des paiements dus par des clients.];
+                SourceExpr="Overdue Sales Invoice Amount";
+                OnDrillDown=BEGIN
+                              MiniActivitiesMgt.DrillDownCalcOverdueSalesInvoiceAmount;
+                            END;
+                             }
+
+    { 3   ;2   ;Field     ;
+                ToolTipML=[ENU=Shows the sum of sales in the current month.;
+                           FRA=Affichez la somme des ventes du mois en cours.];
+                SourceExpr="Sales This Month";
+                DrillDownPageID=Mini Sales Invoice List;
+                OnDrillDown=BEGIN
+                              MiniActivitiesMgt.DrillDownSalesThisMonth;
+                            END;
+                             }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[ENU=The share of sales this year made to the ten largest customers.;
+                           FRA=Proportion des ventes aux dixÿprincipaux clients cette ann‚e.];
+                SourceExpr="Top 10 Customer Sales YTD" }
+
+    { 9   ;1   ;Group     ;
+                CaptionML=[ENU=Purchases;
+                           FRA=Achats];
+                GroupType=CueGroup }
+
+    { 5   ;2   ;Field     ;
+                ToolTipML=[ENU=Shows the number of open purchase invoices.;
+                           FRA=Affiche le nombre de factures achat ouvertes.];
+                SourceExpr="Ongoing Purchase Invoices";
+                DrillDownPageID=Mini Purchase Invoice List }
+
+    { 18  ;2   ;Field     ;
+                ToolTipML=[ENU=Shows the sum of your overdue payments to vendors.;
+                           FRA=Affiche la somme des paiements que vous devez … des fournisseurs.];
+                SourceExpr="Overdue Purch. Invoice Amount";
+                OnDrillDown=BEGIN
+                              MiniActivitiesMgt.DrillDownOverduePurchaseInvoiceAmount;
+                            END;
+                             }
+
+    { 8   ;1   ;Group     ;
+                CaptionML=[ENU=Financial Performance;
+                           FRA=Performances financiŠres];
+                GroupType=CueGroup }
+
+    { 19  ;2   ;Field     ;
+                ToolTipML=[ENU=Specifies how long customers took to pay invoices in the last three months. This is the average number of days from when invoices are issued to when customers pay the invoices.;
+                           FRA=Sp‚cifie le d‚lai aprŠs lequel les clients ont pay‚ les factures au cours des trois derniers mois. Il s'agit du nombre moyen de jours entre la date d'‚mission des factures et le moment o— les clients les paient.];
+                SourceExpr="Average Collection Days" }
+
+    { 15  ;1   ;Group     ;
+                Visible=AutoPlayWelcomeVideo;
+                GroupType=Group }
+
+    { 11  ;2   ;Field     ;
+                Name=WebClientPageReady;
+                ControlAddIn=[Microsoft.Dynamics.Nav.Client.PageReady;PublicKeyToken=31bf3856ad364e35] }
+
+  }
+  CODE
+  {
+    VAR
+      MiniGettingStartedMgt@1001 : Codeunit 1321;
+      FileManagement@1003 : Codeunit 419;
+      MiniActivitiesMgt@1009 : Codeunit 1311;
+      CueSetup@1005 : Codeunit 9701;
+      GettingStartedVisible@1002 : Boolean INDATASET;
+      VideoVisible@1000 : Boolean INDATASET;
+      AutoPlayWelcomeVideo@1004 : Boolean INDATASET;
+
+    LOCAL PROCEDURE CalculateCueFieldValues@6();
+    BEGIN
+      IF FIELDACTIVE("Overdue Sales Invoice Amount") THEN
+        "Overdue Sales Invoice Amount" := MiniActivitiesMgt.CalcOverdueSalesInvoiceAmount;
+      IF FIELDACTIVE("Overdue Purch. Invoice Amount") THEN
+        "Overdue Purch. Invoice Amount" := MiniActivitiesMgt.CalcOverduePurchaseInvoiceAmount;
+      IF FIELDACTIVE("Sales This Month") THEN
+        "Sales This Month" := MiniActivitiesMgt.CalcSalesThisMonthAmount;
+      IF FIELDACTIVE("Top 10 Customer Sales YTD") THEN
+        "Top 10 Customer Sales YTD" := MiniActivitiesMgt.CalcTop10CustomerSalesRatioYTD;
+      IF FIELDACTIVE("Average Collection Days") THEN
+        "Average Collection Days" := MiniActivitiesMgt.CalcAverageCollectionDays;
+    END;
+
+    EVENT WebClientPageReady@-11::AddInReady@0();
+    BEGIN
+      IF FileManagement.IsWebClient THEN
+        MiniGettingStartedMgt.PlayWelcomeVideoOnFirstLogin;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

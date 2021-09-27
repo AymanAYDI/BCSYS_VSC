@@ -1,0 +1,97 @@
+OBJECT Page 1259 Bank Name - Data Conv. List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=Bank Name - Data Conv. List;
+               FRA=Nom banque - Liste conv. donn‚es];
+    SourceTable=Table1259;
+    PageType=List;
+    PromotedActionCategoriesML=[ENU=New,Process,Page,Setup;
+                                FRA=Nouveau,Traitement,Page,Configuration];
+    OnOpenPage=VAR
+                 CompanyInformation@1001 : Record 79;
+                 BankDataConvBank@1002 : Record 1259;
+                 ImpBankListExtDataHndl@1000 : Codeunit 1289;
+               BEGIN
+                 CountryFilter := GETFILTER("Country/Region Code");
+                 IF CountryFilter <> '' THEN
+                   IF CountryFilter = '''''' THEN BEGIN
+                     CompanyInformation.GET;
+                     SETFILTER("Country/Region Code",CompanyInformation."Country/Region Code");
+                     CountryFilter := GETFILTER("Country/Region Code");
+                   END;
+                 IF BankDataConvBank.ISEMPTY THEN
+                   ImpBankListExtDataHndl.GetBankListFromConversionService(FALSE,CountryFilter,5000)
+                 ELSE BEGIN
+                   IF CountryFilter <> '' THEN
+                     BankDataConvBank.SETFILTER("Country/Region Code",CountryFilter);
+                   BankDataConvBank.SETFILTER("Last Update Date",'<>%1',TODAY);
+
+                   IF BankDataConvBank.FINDFIRST THEN
+                     ImpBankListExtDataHndl.GetBankListFromConversionService(FALSE,CountryFilter,5000);
+                 END;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 7       ;    ;ActionContainer;
+                      Name=Action;
+                      CaptionML=[ENU=Setup;
+                                 FRA=Configuration];
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;Action    ;
+                      Name=UpdateBankList;
+                      ShortCutKey=Ctrl+F5;
+                      CaptionML=[ENU=Update Bank Name List;
+                                 FRA=Mettre … jour liste noms banque];
+                      Promoted=Yes;
+                      Image=Restore;
+                      PromotedCategory=Category4;
+                      RunPageMode=View;
+                      OnAction=VAR
+                                 ImpBankListExtDataHndl@1000 : Codeunit 1289;
+                               BEGIN
+                                 ImpBankListExtDataHndl.GetBankListFromConversionService(TRUE,'',30000);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                SourceExpr=Bank }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="Bank Name" }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr="Country/Region Code" }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Last Update Date" }
+
+  }
+  CODE
+  {
+    VAR
+      CountryFilter@1002 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

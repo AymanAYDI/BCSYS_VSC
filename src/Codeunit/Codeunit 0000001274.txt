@@ -1,0 +1,52 @@
+OBJECT Codeunit 1274 Exp. Mapping Gen. Jnl.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=1220;
+    Permissions=TableData 1220=rimd;
+    OnRun=VAR
+            PaymentExportData@1001 : Record 1226;
+            PostingExch@1002 : Record 1220;
+            PaymentExportMgt@1000 : Codeunit 1210;
+            Window@1005 : Dialog;
+            PaymentExportDataRecRef@1004 : RecordRef;
+            LineNo@1006 : Integer;
+          BEGIN
+            PaymentExportData.SETRANGE("Posting Exch Entry No.","Entry No.");
+            PaymentExportData.FINDSET;
+
+            Window.OPEN(ProgressMsg);
+
+            REPEAT
+              LineNo += 1;
+              Window.UPDATE(1,LineNo);
+
+              PostingExch.GET(PaymentExportData."Posting Exch Entry No.");
+              PostingExch.VALIDATE("Posting Exch. Line Def Code",PaymentExportData."Posting Exch. Line Def Code");
+              PostingExch.MODIFY(TRUE);
+
+              PaymentExportDataRecRef.GETTABLE(PaymentExportData);
+              PaymentExportMgt.ProcessColumnMapping(PostingExch,PaymentExportDataRecRef,
+                PaymentExportData."Line No.",PaymentExportData."Posting Exch. Line Def Code");
+            UNTIL PaymentExportData.NEXT = 0;
+
+            Window.CLOSE;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ProgressMsg@1000 : TextConst 'ENU=Processing line no. #1######.;FRA=Traitement de la ligne nø #1######.';
+
+    BEGIN
+    END.
+  }
+}
+

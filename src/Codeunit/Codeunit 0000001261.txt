@@ -1,0 +1,70 @@
+OBJECT Codeunit 1261 Imp. SEPA CAMT Bank Rec. Lines
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=274;
+    OnRun=VAR
+            PostingExch@1002 : Record 1220;
+            ProcessPostingExch@1001 : Codeunit 1201;
+            RecRef@1000 : RecordRef;
+          BEGIN
+            PostingExch.GET("Posting Exch. Entry No.");
+            RecRef.GETTABLE(Rec);
+            PreProcess(Rec);
+            ProcessPostingExch.ProcessAllLinesColumnMapping(PostingExch,RecRef);
+            PostProcess(Rec)
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      StatementIDTxt@1000 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Id;FRA=/Document/BkToCstmrStmt/Stmt/Id';
+      IBANTxt@1001 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Acct/Id/IBAN;FRA=/Document/BkToCstmrStmt/Stmt/Acct/Id/IBAN';
+      CurrencyTxt@1002 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Bal/Amt[@Ccy];FRA=/Document/BkToCstmrStmt/Stmt/Bal/Amt[@Ccy]';
+      BalTypeTxt@1006 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Bal/Tp/CdOrPrtry/Cd;FRA=/Document/BkToCstmrStmt/Stmt/Bal/Tp/CdOrPrtry/Cd';
+      ClosingBalTxt@1005 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Bal/Amt;FRA=/Document/BkToCstmrStmt/Stmt/Bal/Amt';
+      StatementDateTxt@1004 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/CreDtTm;FRA=/Document/BkToCstmrStmt/Stmt/CreDtTm';
+      CrdDbtIndTxt@1003 : TextConst '@@@={Locked};ENU=/Document/BkToCstmrStmt/Stmt/Bal/CdtDbtInd;FRA=/Document/BkToCstmrStmt/Stmt/Bal/CdtDbtInd';
+
+    PROCEDURE PreProcess@1(BankAccReconciliationLine@1000 : Record 274);
+    VAR
+      PostingExch@1001 : Record 1220;
+      PrePostProcessXMLImport@1002 : Codeunit 1262;
+    BEGIN
+      PostingExch.GET(BankAccReconciliationLine."Posting Exch. Entry No.");
+      PrePostProcessXMLImport.PreProcessFile(PostingExch,StatementIDTxt);
+      PrePostProcessXMLImport.PreProcessBankAccount(PostingExch,BankAccReconciliationLine."Bank Account No.",IBANTxt,CurrencyTxt);
+    END;
+
+    PROCEDURE PostProcess@2(BankAccReconciliationLine@1000 : Record 274);
+    VAR
+      PostingExch@1001 : Record 1220;
+      BankAccReconciliation@1002 : Record 273;
+      PrePostProcessXMLImport@1004 : Codeunit 1262;
+      RecRef@1003 : RecordRef;
+    BEGIN
+      PostingExch.GET(BankAccReconciliationLine."Posting Exch. Entry No.");
+      BankAccReconciliation.GET(
+        BankAccReconciliationLine."Statement Type",
+        BankAccReconciliationLine."Bank Account No.",
+        BankAccReconciliationLine."Statement No.");
+
+      RecRef.GETTABLE(BankAccReconciliation);
+      PrePostProcessXMLImport.PostProcessStatementEndingBalance(PostingExch,RecRef,
+        BankAccReconciliation.FIELDNO("Statement Ending Balance"),'CLBD',BalTypeTxt,ClosingBalTxt,CrdDbtIndTxt,4);
+      PrePostProcessXMLImport.PostProcessStatementDate(PostingExch,RecRef,BankAccReconciliation.FIELDNO("Statement Date"),
+        StatementDateTxt);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,178 @@
+OBJECT Codeunit 1312 Mini Vendor Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      NewVendQst@1001 : TextConst 'ENU=This vendor is not registered. Do you want to create a new vendor card for vendor %1?;FRA=Ce fournisseur n''est pas enregistr‚. Voulez-vous cr‚er une nouvelle fiche fournisseur pour le fournisseur %1ÿ?';
+      SelectVendorErr@1000 : TextConst 'ENU=You must select an existing vendor.;FRA=Vous devez s‚lectionner un fournisseur existant.';
+      VendorFieldType@1002 : 'BuyFrom,PayTo';
+
+    PROCEDURE GetVendorNoByName@56(VendorName@1000 : Text[50]) : Code[20];
+    VAR
+      Vendor@1001 : Record 23;
+      VendorNo@1002 : Code[20];
+    BEGIN
+      Vendor.SETRANGE(Name,VendorName);
+      IF Vendor.COUNT = 1 THEN BEGIN
+        Vendor.FINDFIRST;
+        EXIT(Vendor."No.");
+      END;
+
+      CLEAR(Vendor);
+      Vendor.SETFILTER(Name,'''@*' + VendorName + '*''');
+      CASE Vendor.COUNT OF
+        0:
+          BEGIN
+            IF CONFIRM(NewVendQst,TRUE,VendorName) THEN
+              EXIT(CreateNewVendor(VendorName));
+            ERROR(SelectVendorErr);
+          END;
+        1:
+          BEGIN
+            Vendor.FINDFIRST;
+            EXIT(Vendor."No.");
+          END;
+        ELSE BEGIN
+          VendorNo := PickVendor(Vendor);
+          IF VendorNo = '' THEN
+            ERROR(SelectVendorErr);
+          EXIT(VendorNo);
+        END;
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateNewVendor@59(VendorName@1000 : Text[50]) : Code[20];
+    VAR
+      Vendor@1005 : Record 23;
+      MiniVendorTemplate@1006 : Record 1303;
+      MiniVendorCard@1002 : Page 1330;
+      NewVendorCode@1007 : Code[20];
+    BEGIN
+      NewVendorCode := MiniVendorTemplate.NewVendorFromTemplate;
+      IF NewVendorCode = '' THEN
+        ERROR(SelectVendorErr);
+
+      Vendor.GET(NewVendorCode);
+      Vendor.Name := VendorName;
+      Vendor.MODIFY(TRUE);
+      COMMIT;
+      MiniVendorCard.SETRECORD(Vendor);
+      IF NOT (MiniVendorCard.RUNMODAL = ACTION::OK) THEN
+        ERROR(SelectVendorErr);
+
+      MiniVendorCard.GETRECORD(Vendor);
+
+      EXIT(Vendor."No.");
+    END;
+
+    LOCAL PROCEDURE PickVendor@58(VAR Vendor@1000 : Record 23) : Code[20];
+    VAR
+      MiniVendorList@1001 : Page 1331;
+    BEGIN
+      MiniVendorList.SETTABLEVIEW(Vendor);
+      MiniVendorList.SETRECORD(Vendor);
+      MiniVendorList.LOOKUPMODE := TRUE;
+      IF MiniVendorList.RUNMODAL = ACTION::LookupOK THEN
+        MiniVendorList.GETRECORD(Vendor);
+      EXIT(Vendor."No.");
+    END;
+
+    PROCEDURE LookupBuyFromVendor@13(VAR PurchaseHeader@1002 : Record 38;VAR OldPurchaseHeader@1003 : Record 38) : Boolean;
+    BEGIN
+      EXIT(LookupVendor(PurchaseHeader,OldPurchaseHeader,VendorFieldType::BuyFrom));
+    END;
+
+    PROCEDURE LookupPayToVendor@61(VAR PurchaseHeader@1003 : Record 38;VAR OldPurchaseHeader@1002 : Record 38) : Boolean;
+    BEGIN
+      EXIT(LookupVendor(PurchaseHeader,OldPurchaseHeader,VendorFieldType::PayTo));
+    END;
+
+    PROCEDURE ValidateBuyFromVendor@60(VAR PurchaseHeader@1003 : Record 38;VAR OldPurchaseHeader@1002 : Record 38) : Boolean;
+    VAR
+      NewVendorNo@1001 : Code[20];
+    BEGIN
+      IF PurchaseHeader."Buy-from Vendor Name" <> OldPurchaseHeader."Buy-from Vendor Name" THEN BEGIN
+        NewVendorNo := GetVendorNoByName(PurchaseHeader."Buy-from Vendor Name");
+        UpdateVendor(PurchaseHeader,NewVendorNo,VendorFieldType::BuyFrom);
+        EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    PROCEDURE ValidatePayToVendor@62(VAR PurchaseHeader@1003 : Record 38;VAR OldPurchaseHeader@1002 : Record 38) : Boolean;
+    VAR
+      NewVendorNo@1000 : Code[20];
+    BEGIN
+      IF PurchaseHeader."Pay-to Name" <> OldPurchaseHeader."Pay-to Name" THEN BEGIN
+        NewVendorNo := GetVendorNoByName(PurchaseHeader."Pay-to Name");
+        UpdateVendor(PurchaseHeader,NewVendorNo,VendorFieldType::PayTo);
+        EXIT(TRUE);
+      END;
+
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE LookupVendor@66(VAR PurchaseHeader@1002 : Record 38;VAR OldPurchaseHeader@1000 : Record 38;VendorField@1003 : 'BuyFrom,PayTo') : Boolean;
+    VAR
+      Vendor@1005 : Record 23;
+      NewVendorNo@1001 : Code[20];
+      CurrVendorNo@1006 : Code[20];
+      OldVendorNo@1007 : Code[20];
+    BEGIN
+      IF VendorField = VendorFieldType::BuyFrom THEN BEGIN
+        CurrVendorNo := PurchaseHeader."Buy-from Vendor No.";
+        OldVendorNo := OldPurchaseHeader."Buy-from Vendor No.";
+      END ELSE BEGIN
+        CurrVendorNo := PurchaseHeader."Pay-to Vendor No.";
+        OldVendorNo := OldPurchaseHeader."Pay-to Vendor No.";
+      END;
+
+      IF CurrVendorNo <> '' THEN
+        Vendor.GET(CurrVendorNo);
+
+      NewVendorNo := PickVendor(Vendor);
+
+      IF NewVendorNo = '' THEN
+        EXIT(FALSE);
+
+      IF NewVendorNo <> OldVendorNo THEN BEGIN
+        UpdateVendor(PurchaseHeader,NewVendorNo,VendorField);
+        EXIT(TRUE);
+      END;
+      EXIT(FALSE);
+    END;
+
+    LOCAL PROCEDURE UpdateVendor@63(VAR PurchaseHeader@1004 : Record 38;NewVendorNo@1001 : Code[20];VendorField@1000 : 'BuyFrom,PayTo');
+    VAR
+      MiniPurchCalcDiscByType@1002 : Codeunit 1310;
+    BEGIN
+      WITH PurchaseHeader DO
+        IF VendorField = VendorFieldType::BuyFrom THEN BEGIN
+          IF "No." = '' THEN
+            InitRecord;
+
+          VALIDATE("Buy-from Vendor No.",NewVendorNo)
+        END ELSE
+          VALIDATE("Pay-to Vendor No.",NewVendorNo);
+
+      MiniPurchCalcDiscByType.ApplyDefaultInvoiceDiscount(0,PurchaseHeader);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

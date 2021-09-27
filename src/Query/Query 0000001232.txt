@@ -1,0 +1,65 @@
+OBJECT Query 1232 Post. Exch. Field Details
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Post. Exch. Field Details;
+               FRA=D‚tails champ ‚chge compta.];
+  }
+  ELEMENTS
+  {
+    { 1063;0   ;DataItem;                    ;
+               DataItemTable=Table1221;
+               DataItemLinkType=Exclude Row If No Match }
+
+    { 1064;1   ;Column  ;                    ;
+               DataSource=Line No. }
+
+    { 1065;1   ;Column  ;                    ;
+               DataSource=Column No. }
+
+    { 1066;1   ;Column  ;FieldValue          ;
+               DataSource=Value }
+
+    { 1067;1   ;Column  ;                    ;
+               DataSource=Posting Exch. Line Def Code }
+
+    { 1068;1   ;Column  ;                    ;
+               DataSource=Posting Exch. No. }
+
+    { 1   ;1   ;Column  ;                    ;
+               DataSource=Node ID }
+
+    { 1069;1   ;DataItem;                    ;
+               DataItemTable=Table1220;
+               DataItemLink=Entry No.=Posting_Exch_Field."Posting Exch. No." }
+
+    { 1070;2   ;DataItem;                    ;
+               DataItemTable=Table1223;
+               DataItemLink=Column No.=Posting_Exch_Field."Column No.",
+                            Posting Exch. Def Code=Posting_Exch."Posting Exch. Def Code",
+                            Posting Exch. Line Def Code=Posting_Exch_Field."Posting Exch. Line Def Code" }
+
+    { 1071;3   ;Column  ;                    ;
+               DataSource=Name }
+
+    { 1072;3   ;Column  ;                    ;
+               DataSource=Path }
+
+    { 2   ;3   ;Column  ;                    ;
+               DataSource=Negative-Sign Identifier }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

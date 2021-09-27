@@ -1,0 +1,107 @@
+OBJECT Page 1328 Mini Sales Hist. Sell-to Tiles
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Sell-to Customer Sales History;
+               FRA=Historique des ventes - donneur d'ordre];
+    SourceTable=Table18;
+    PageType=CardPart;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=CueGroup }
+
+    { 2   ;2   ;Field     ;
+                DrillDown=Yes;
+                CaptionML=[ENU=Ongoing Sales Quotes;
+                           FRA=Devis en cours];
+                ToolTipML=[ENU=Specifies the number of sales quotes that have been registered for the customer.;
+                           FRA=Indique le nombre de devis enregistr‚s pour le client.];
+                SourceExpr="No. of Quotes";
+                OnDrillDown=VAR
+                              SalesHeader@1000 : Record 36;
+                            BEGIN
+                              SalesHeader.SETRANGE("Sell-to Customer No.","No.");
+                              PAGE.RUN(PAGE::"Mini Sales Quotes List",SalesHeader);
+                            END;
+                             }
+
+    { 9   ;2   ;Field     ;
+                DrillDown=Yes;
+                CaptionML=[ENU=Ongoing Sales Invoices;
+                           FRA=Factures vente en cours];
+                ToolTipML=[ENU=Specifies the number of unposted sales invoices that have been registered for the customer.;
+                           FRA=Indique le nombre factures vente enregistr‚es pour le client.];
+                SourceExpr="No. of Invoices";
+                OnDrillDown=VAR
+                              SalesHeader@1000 : Record 36;
+                            BEGIN
+                              SalesHeader.SETRANGE("Sell-to Customer No.","No.");
+                              PAGE.RUN(PAGE::"Mini Sales Invoice List",SalesHeader);
+                            END;
+                             }
+
+    { 13  ;2   ;Field     ;
+                DrillDown=Yes;
+                CaptionML=[ENU=Ongoing Sales Credit Memos;
+                           FRA=Avoirs vente en cours];
+                ToolTipML=[ENU=Specifies the number of unposted sales credit memos that have been registered for the customer.;
+                           FRA=Indique le nombre d'avoirs vente non valid‚s enregistr‚s pour le client.];
+                SourceExpr="No. of Credit Memos";
+                OnDrillDown=VAR
+                              SalesHeader@1000 : Record 36;
+                            BEGIN
+                              SalesHeader.SETRANGE("Sell-to Customer No.","No.");
+                              PAGE.RUN(PAGE::"Mini Sales Credit Memos",SalesHeader);
+                            END;
+                             }
+
+    { 17  ;2   ;Field     ;
+                DrillDown=Yes;
+                CaptionML=[ENU=Posted Sales Invoices;
+                           FRA=Factures vente enregistr‚es];
+                ToolTipML=[ENU=Specifies the number of posted sales invoices that have been registered for the customer.;
+                           FRA=Indique le nombre de factures vente enregistr‚es pour le client.];
+                SourceExpr="No. of Pstd. Invoices";
+                OnDrillDown=VAR
+                              SalesInvoiceHeader@1000 : Record 112;
+                            BEGIN
+                              SalesInvoiceHeader.SETRANGE("Sell-to Customer No.","No.");
+                              PAGE.RUN(PAGE::"Mini Posted Sales Invoices",SalesInvoiceHeader);
+                            END;
+                             }
+
+    { 21  ;2   ;Field     ;
+                DrillDown=Yes;
+                CaptionML=[ENU=Posted Sales Credit Memos;
+                           FRA=Avoirs vente enregistr‚s];
+                ToolTipML=[ENU=Specifies the number of posted sales credit memos that have been registered for the customer.;
+                           FRA=Indique le nombre d'avoirs vente valid‚s enregistr‚s pour le client.];
+                SourceExpr="No. of Pstd. Credit Memos";
+                OnDrillDown=VAR
+                              SalesCrMemoHeader@1000 : Record 114;
+                            BEGIN
+                              SalesCrMemoHeader.SETRANGE("Sell-to Customer No.","No.");
+                              PAGE.RUN(PAGE::"Mini Posted Sales Credit Memos",SalesCrMemoHeader);
+                            END;
+                             }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

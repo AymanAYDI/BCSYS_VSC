@@ -1,0 +1,105 @@
+OBJECT Codeunit 1200 Import Bank Statement
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/01/15;
+    Time=12:00:00;
+    Version List=NAVW18.00.00.39368;
+  }
+  PROPERTIES
+  {
+    TableNo=1220;
+    Permissions=TableData 1221=rimd;
+    OnRun=VAR
+            PostingExchLineDef@1003 : Record 1227;
+            XMLDocument@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+            XMLStream@1001 : InStream;
+            LineNo@1002 : Integer;
+          BEGIN
+            XMLDocument := XMLDocument.XmlDocument;
+            "File Content".CREATEINSTREAM(XMLStream);
+            XMLDocument.Load(XMLStream);
+
+            PostingExchLineDef.GET("Posting Exch. Def Code","Posting Exch. Line Def Code");
+
+            ProgressWindow.OPEN(ProgressMsg);
+            Parse(PostingExchLineDef,"Entry No.",XMLDocument.DocumentElement,'','',LineNo,LineNo);
+            ProgressWindow.CLOSE;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      IncorrectNamespaceErr@1002 : TextConst 'ENU=Unexpected namespace ''%1'' in the imported file. The supported namespace is ''%2''.;FRA=Espace de noms ®ÿ%1ÿ¯ inattendu dans le fichier import‚. L''espace de noms pris en charge est ®ÿ%2ÿ¯.';
+      ProgressMsg@1000 : TextConst 'ENU=Preparing line number #1#######;FRA=Pr‚paration du num‚ro de ligne #1#######';
+      ProgressWindow@1001 : Dialog;
+
+    LOCAL PROCEDURE Parse@1(PostingExchLineDef@1009 : Record 1227;EntryNo@1008 : Integer;XMLNode@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode";ParentPath@1002 : Text;NodeId@1001 : Text[250];VAR LastGivenLineNo@1000 : Integer;CurrentLineNo@1011 : Integer);
+    VAR
+      CurrentPostingExchLineDef@1010 : Record 1227;
+      XMLAttributeCollection@1007 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlAttributeCollection";
+      XMLNodeList@1005 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNodeList";
+      XMLNodeType@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNodeType";
+      i@1006 : Integer;
+    BEGIN
+      CurrentPostingExchLineDef.SETRANGE("Data Line Tag",ParentPath + '/' + XMLNode.LocalName);
+      CurrentPostingExchLineDef.SETRANGE("Posting Exch. Def Code",PostingExchLineDef."Posting Exch. Def Code");
+      IF CurrentPostingExchLineDef.FINDFIRST THEN BEGIN
+        PostingExchLineDef := CurrentPostingExchLineDef;
+        LastGivenLineNo += 1;
+        CurrentLineNo := LastGivenLineNo;
+        ValidateNamespace(PostingExchLineDef.Namespace,XMLNode);
+      END;
+
+      IF XMLNode.NodeType.Equals(XMLNodeType.Text) THEN
+        InsertColumn(ParentPath,CurrentLineNo,NodeId,XMLNode.Value,PostingExchLineDef,EntryNo);
+
+      IF NOT ISNULL(XMLNode.Attributes) THEN BEGIN
+        XMLAttributeCollection := XMLNode.Attributes;
+        FOR i := 1 TO XMLAttributeCollection.Count DO
+          InsertColumn(ParentPath + '/' + XMLNode.LocalName + '[@' + XMLAttributeCollection.Item(i - 1).Name + ']',
+            CurrentLineNo,NodeId,XMLAttributeCollection.Item(i - 1).Value,PostingExchLineDef,EntryNo);
+      END;
+
+      IF XMLNode.HasChildNodes THEN BEGIN
+        XMLNodeList := XMLNode.ChildNodes;
+        FOR i := 1 TO XMLNodeList.Count DO
+          Parse(PostingExchLineDef,EntryNo,XMLNodeList.Item(i - 1),ParentPath + '/' + XMLNode.LocalName,
+            NodeId + FORMAT(i,0,'<Integer,4><Filler Char,0>'),LastGivenLineNo,CurrentLineNo);
+      END;
+    END;
+
+    LOCAL PROCEDURE InsertColumn@2(Path@1000 : Text;LineNo@1001 : Integer;NodeId@1006 : Text[250];Value@1002 : Text;VAR PostingExchLineDef@1003 : Record 1227;EntryNo@1007 : Integer);
+    VAR
+      PostingExchColumnDef@1004 : Record 1223;
+      PostingExchField@1005 : Record 1221;
+    BEGIN
+      // Note: The Posting Exch. variable is passed by reference only to improve performance.
+      PostingExchColumnDef.SETRANGE("Posting Exch. Def Code",PostingExchLineDef."Posting Exch. Def Code");
+      PostingExchColumnDef.SETRANGE("Posting Exch. Line Def Code",PostingExchLineDef.Code);
+      PostingExchColumnDef.SETRANGE(Path,Path);
+
+      IF PostingExchColumnDef.FINDFIRST THEN BEGIN
+        ProgressWindow.UPDATE(1,LineNo);
+        PostingExchField.InsertRecXMLField(EntryNo,LineNo,PostingExchColumnDef."Column No.",NodeId,Value,
+          PostingExchLineDef.Code);
+      END;
+    END;
+
+    LOCAL PROCEDURE ValidateNamespace@3(PostingExchLineDefNamespace@1002 : Text[250];XMLNode@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNode");
+    VAR
+      NamespaceURI@1001 : Text;
+    BEGIN
+      IF PostingExchLineDefNamespace <> '' THEN BEGIN
+        NamespaceURI := XMLNode.NamespaceURI;
+        IF NamespaceURI <> PostingExchLineDefNamespace THEN
+          ERROR(IncorrectNamespaceErr,NamespaceURI,PostingExchLineDefNamespace);
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

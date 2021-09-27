@@ -1,0 +1,157 @@
+OBJECT Codeunit 449 Job Queue Start Codeunit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=472;
+    OnRun=VAR
+            AllObjWithCaption@1001 : Record 2000000058;
+            WinAccControl@1002 : Record 2000000053;
+            HasPermission@1004 : Boolean;
+          BEGIN
+            IF "User Language ID" <> 0 THEN
+              GLOBALLANGUAGE("User Language ID");
+            IF NOT "Run in User Session" THEN BEGIN
+              HasPermission := WinAccControl.ISEMPTY;
+              IF NOT HasPermission THEN
+                HasPermission := HasWinPermission("User ID","Object Type to Run","Object ID to Run");
+              IF NOT HasPermission THEN BEGIN
+                IF AllObjWithCaption.GET("Object Type to Run","Object ID to Run") THEN;
+                ERROR(Text001,"User ID","Object Type to Run","Object ID to Run",AllObjWithCaption."Object Caption");
+              END;
+            END;
+
+            CASE "Object Type to Run" OF
+              "Object Type to Run"::Codeunit:
+                CODEUNIT.RUN("Object ID to Run",Rec);
+              "Object Type to Run"::Report:
+                RunReport("Object ID to Run",Rec);
+            END;
+
+            // Commit any remaining transactions from the target codeunit\report. This is necessary due
+            // to buffered record insertion which may not have surfaced errors in CODEUNIT.RUN above.
+            COMMIT;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text001@1000 : TextConst 'ENU=User %1 has not been set up to be allowed to run %2 %3 - %4.;FRA=L''utilisateur %1 n''a pas ‚t‚ param‚tr‚ pour ˆtre autoris‚ … ex‚cuter %2 %3 - %4.';
+
+    LOCAL PROCEDURE RunReport@1(ReportID@1000 : Integer;VAR JobQueueEntry@1006 : Record 472);
+    VAR
+      ReportInbox@1003 : Record 477;
+      RecRef@1002 : RecordRef;
+      OutStr@1004 : OutStream;
+      RunOnRec@1001 : Boolean;
+    BEGIN
+      ReportInbox.INIT;
+      ReportInbox."User ID" := JobQueueEntry."User ID";
+      ReportInbox."Job Queue Log Entry ID" := JobQueueEntry.ID;
+      ReportInbox."Report ID" := ReportID;
+      ReportInbox.Description := JobQueueEntry.Description;
+      ReportInbox."Report Output".CREATEOUTSTREAM(OutStr);
+      RunOnRec := RecRef.GET(JobQueueEntry."Record ID to Process");
+      IF RunOnRec THEN
+        RecRef.SETRECFILTER;
+
+      CASE JobQueueEntry."Report Output Type" OF
+        JobQueueEntry."Report Output Type"::"None (Processing only)":
+          IF RunOnRec THEN
+            REPORT.EXECUTE(ReportID,JobQueueEntry.GetReportParameters,RecRef)
+          ELSE
+            REPORT.EXECUTE(ReportID,JobQueueEntry.GetReportParameters);
+        JobQueueEntry."Report Output Type"::Print:
+          IF RunOnRec THEN
+            REPORT.PRINT(ReportID,JobQueueEntry.GetReportParameters,JobQueueEntry."Printer Name",RecRef)
+          ELSE
+            REPORT.PRINT(ReportID,JobQueueEntry.GetReportParameters,JobQueueEntry."Printer Name");
+        JobQueueEntry."Report Output Type"::PDF:
+          BEGIN
+            IF RunOnRec THEN
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Pdf,OutStr,RecRef)
+            ELSE
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Pdf,OutStr);
+            ReportInbox."Output Type" := ReportInbox."Output Type"::PDF;
+          END;
+        JobQueueEntry."Report Output Type"::Word:
+          BEGIN
+            IF RunOnRec THEN
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Word,OutStr,RecRef)
+            ELSE
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Word,OutStr);
+            ReportInbox."Output Type" := ReportInbox."Output Type"::Word;
+          END;
+        JobQueueEntry."Report Output Type"::Excel:
+          BEGIN
+            IF RunOnRec THEN
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Excel,OutStr,RecRef)
+            ELSE
+              REPORT.SAVEAS(ReportID,JobQueueEntry.GetReportParameters,REPORTFORMAT::Excel,OutStr);
+            ReportInbox."Output Type" := ReportInbox."Output Type"::Excel;
+          END;
+      END;
+
+      CASE JobQueueEntry."Report Output Type" OF
+        JobQueueEntry."Report Output Type"::"None (Processing only)":
+          BEGIN
+            JobQueueEntry."Notify On Success" := TRUE;
+            JobQueueEntry.MODIFY;
+          END;
+        JobQueueEntry."Report Output Type"::Print:
+          ;
+        ELSE BEGIN
+          ReportInbox."Created Date-Time" := ROUNDDATETIME(CURRENTDATETIME,60000);
+          ReportInbox.INSERT(TRUE);
+        END;
+      END;
+      COMMIT;
+    END;
+
+    LOCAL PROCEDURE HasWinPermission@2(UserId2@1002 : Text[65];ObjectType@1000 : Integer;ObjectID@1001 : Integer) : Boolean;
+    VAR
+      User@1005 : Record 2000000120;
+      User2@1009 : Record 2000000120;
+      PermissionSet@1006 : Record 2000000053;
+      Permission@1008 : Record 2000000005;
+      Found@1007 : Boolean;
+      HasPermission@1003 : Boolean;
+    BEGIN
+      IF User2.FINDSET THEN
+        REPEAT
+          Found := UPPERCASE(User2."User Name") = UPPERCASE(UserId2);
+          IF Found THEN
+            User := User2;
+        UNTIL Found OR (User2.NEXT = 0);
+      IF NOT Found THEN
+        EXIT(FALSE);
+
+      HasPermission := PermissionSet.GET(User."User Security ID",'SUPER',COMPANYNAME);
+      IF NOT HasPermission THEN
+        HasPermission := PermissionSet.GET(User."User Security ID",'SUPER','');
+      IF HasPermission THEN
+        EXIT(TRUE);
+
+      Permission.SETRANGE("Object Type",ObjectType);
+      Permission.SETRANGE("Object ID",ObjectID);
+      Permission.SETRANGE("Execute Permission",Permission."Execute Permission"::Yes);
+      IF Permission.FINDSET THEN
+        REPEAT
+          HasPermission := PermissionSet.GET(User."User Security ID",Permission."Role ID",COMPANYNAME);
+          IF NOT HasPermission THEN
+            HasPermission := PermissionSet.GET(User."User Security ID",Permission."Role ID",'');
+        UNTIL HasPermission OR (Permission.NEXT = 0);
+      EXIT(HasPermission);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

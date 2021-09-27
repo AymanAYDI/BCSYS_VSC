@@ -1,0 +1,36 @@
+OBJECT Codeunit 1276 Exp. Writing Gen. Jnl.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=1220;
+    Permissions=TableData 1221=rimd;
+    OnRun=VAR
+            PostingExchDef@1001 : Record 1222;
+            PostingExchField@1000 : Record 1221;
+            OutputStream@1002 : OutStream;
+          BEGIN
+            PostingExchDef.GET("Posting Exch. Def Code");
+            PostingExchDef.TESTFIELD("Reading/Writing XMLport");
+
+            "File Content".CREATEOUTSTREAM(OutputStream);
+            PostingExchField.SETRANGE("Posting Exch. No.","Entry No.");
+            XMLPORT.EXPORT(PostingExchDef."Reading/Writing XMLport",OutputStream,PostingExchField);
+
+            PostingExchField.DELETEALL(TRUE);
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

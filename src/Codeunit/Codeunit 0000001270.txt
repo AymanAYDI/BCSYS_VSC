@@ -1,0 +1,54 @@
+OBJECT Codeunit 1270 Exp. Launcher Gen. Jnl.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=31/10/14;
+    Time=12:00:00;
+    Version List=NAVW18.00.00.38457;
+  }
+  PROPERTIES
+  {
+    TableNo=81;
+    Permissions=TableData 1220=rimd;
+    OnRun=VAR
+            BankAccount@1005 : Record 270;
+            CreditTransferRegister@1003 : Record 1205;
+            GenJnlBatch@1001 : Record 232;
+            GenJnlLine@1000 : Record 81;
+            GenJnlLine2@1008 : Record 81;
+            PostingExch@1004 : Record 1220;
+            PostingExchDef@1006 : Record 1222;
+            PaymentExportMgt@1002 : Codeunit 1210;
+          BEGIN
+            GenJnlLine.COPYFILTERS(Rec);
+            GenJnlLine.FINDFIRST;
+
+            GenJnlBatch.GET(GenJnlLine."Journal Template Name",GenJnlLine."Journal Batch Name");
+            BankAccount.GET(GenJnlBatch."Bal. Account No.");
+            PostingExchDef.GET(BankAccount."Payment Export Format");
+
+            CreditTransferRegister.CreateNew(PostingExchDef.Code,GenJnlLine."Bal. Account No.");
+            COMMIT;
+
+            IF PostingExchDef."Data Handling Codeunit" > 0 THEN
+              CODEUNIT.RUN(PostingExchDef."Data Handling Codeunit",GenJnlLine);
+
+            IF PostingExchDef."Validation Codeunit" > 0 THEN
+              CODEUNIT.RUN(PostingExchDef."Validation Codeunit",GenJnlLine);
+
+            PaymentExportMgt.CreatePostingExch(PostingExch,GenJnlLine."Bal. Account No.");
+            GenJnlLine2.COPYFILTERS(GenJnlLine);
+            GenJnlLine2.MODIFYALL("Posting Exch. Entry No.",PostingExch."Entry No.",TRUE);
+
+            PostingExch.ExportFromPostExch;
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

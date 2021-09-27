@@ -1,0 +1,142 @@
+OBJECT Table 1220 Posting Exch.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 1221=rimd;
+    OnDelete=VAR
+               PostExchField@1000 : Record 1221;
+             BEGIN
+               PostExchField.SETRANGE("Posting Exch. No.","Entry No.");
+               PostExchField.DELETEALL;
+             END;
+
+    CaptionML=[ENU=Posting Exch.;
+               FRA=chge compta.];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes;
+                                                   CaptionML=[ENU=Entry No.;
+                                                              FRA=Nø s‚quence] }
+    { 2   ;   ;File Name           ;Text250       ;CaptionML=[ENU=File Name;
+                                                              FRA=Nom du fichier] }
+    { 3   ;   ;File Content        ;BLOB          ;CaptionML=[ENU=File Content;
+                                                              FRA=Contenu fichier] }
+    { 4   ;   ;Posting Exch. Def Code;Code20      ;TableRelation="Posting Exch. Def";
+                                                   CaptionML=[ENU=Posting Exch. Def Code;
+                                                              FRA=Code appellation ‚chge compta.] }
+    { 5   ;   ;Posting Exch. Line Def Code;Code20 ;TableRelation="Posting Exch. Line Def".Code WHERE (Posting Exch. Def Code=FIELD(Posting Exch. Def Code));
+                                                   CaptionML=[ENU=Posting Exch. Line Def Code;
+                                                              FRA=Code appellation ligne ‚chge compta.] }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ProgressWindowMsg@1000 : TextConst 'ENU=Please wait while the operation is being completed.;FRA=Veuillez patienter lors de l''ex‚cution de l''op‚ration.';
+
+    PROCEDURE InsertRec@1(FileName@1001 : Text[250];VAR FileContent@1002 : InStream;PostExchDefCode@1003 : Code[20]);
+    VAR
+      PostingExchLineDef@1000 : Record 1227;
+      OutStream@1005 : OutStream;
+    BEGIN
+      INIT;
+      VALIDATE("File Name",FileName);
+      "File Content".CREATEOUTSTREAM(OutStream);
+      COPYSTREAM(OutStream,FileContent);
+      VALIDATE("Posting Exch. Def Code",PostExchDefCode);
+      PostingExchLineDef.SETRANGE("Posting Exch. Def Code",PostExchDefCode);
+      IF PostingExchLineDef.FINDFIRST THEN
+        VALIDATE("Posting Exch. Line Def Code",PostingExchLineDef.Code);
+      INSERT;
+    END;
+
+    PROCEDURE ImportFileContent@5(PostExchDef@1000 : Record 1222) : Boolean;
+    VAR
+      PostExchLineDef@1001 : Record 1227;
+    BEGIN
+      PostExchDef.TESTFIELD("Ext. Data Handling Codeunit");
+      CODEUNIT.RUN(PostExchDef."Ext. Data Handling Codeunit",Rec);
+
+      IF NOT "File Content".HASVALUE THEN
+        EXIT(FALSE);
+      PostExchLineDef.SETRANGE("Posting Exch. Def Code",PostExchDef.Code);
+      PostExchLineDef.FINDFIRST;
+      "Posting Exch. Def Code" := PostExchDef.Code;
+      "Posting Exch. Line Def Code" := PostExchLineDef.Code;
+      INSERT;
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE ImportToPostExch@2(PostExchDef@1000 : Record 1222) : Boolean;
+    VAR
+      Source@1001 : InStream;
+      ProgressWindow@1002 : Dialog;
+    BEGIN
+      IF NOT "File Content".HASVALUE THEN
+        IF NOT ImportFileContent(PostExchDef) THEN
+          EXIT(FALSE);
+
+      ProgressWindow.OPEN(ProgressWindowMsg);
+
+      "File Content".CREATEINSTREAM(Source);
+      SETRANGE("Entry No.","Entry No.");
+      IF PostExchDef."Reading/Writing Codeunit" > 0 THEN
+        CODEUNIT.RUN(PostExchDef."Reading/Writing Codeunit",Rec)
+      ELSE BEGIN
+        PostExchDef.TESTFIELD("Reading/Writing XMLport");
+        XMLPORT.IMPORT(PostExchDef."Reading/Writing XMLport",Source,Rec);
+      END;
+
+      ProgressWindow.CLOSE;
+
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE ExportFromPostExch@3();
+    VAR
+      PostingExchDef@1001 : Record 1222;
+      PostingExchMapping@1000 : Record 1224;
+    BEGIN
+      PostingExchMapping.SETRANGE("Posting Exch. Def Code","Posting Exch. Def Code");
+      PostingExchMapping.SETRANGE("Table ID",DATABASE::"Payment Export Data");
+      PostingExchMapping.FINDFIRST;
+
+      PostingExchMapping.TESTFIELD("Mapping Codeunit");
+      PostingExchDef.GET("Posting Exch. Def Code");
+      PostingExchDef.TESTFIELD("Reading/Writing Codeunit");
+      PostingExchDef.TESTFIELD("Ext. Data Handling Codeunit");
+
+      IF PostingExchMapping."Pre-Mapping Codeunit" > 0 THEN
+        CODEUNIT.RUN(PostingExchMapping."Pre-Mapping Codeunit",Rec);
+
+      CODEUNIT.RUN(PostingExchMapping."Mapping Codeunit",Rec);
+
+      IF PostingExchMapping."Post-Mapping Codeunit" > 0 THEN
+        CODEUNIT.RUN(PostingExchMapping."Post-Mapping Codeunit",Rec);
+
+      CODEUNIT.RUN(PostingExchDef."Reading/Writing Codeunit",Rec);
+
+      CODEUNIT.RUN(PostingExchDef."Ext. Data Handling Codeunit",Rec);
+
+      IF PostingExchDef."User Feedback Codeunit" > 0 THEN
+        CODEUNIT.RUN(PostingExchDef."User Feedback Codeunit",Rec);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,64 @@
+OBJECT Codeunit 1241 Fixed File Import
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    TableNo=1220;
+    Permissions=TableData 1221=rimd;
+    OnRun=VAR
+            ReadStream@1003 : InStream;
+            ReadText@1002 : Text;
+            ReadLen@1001 : Integer;
+            LineNo@1000 : Integer;
+          BEGIN
+            "File Content".CREATEINSTREAM(ReadStream);
+            LineNo := 1;
+            REPEAT
+              ReadLen := ReadStream.READTEXT(ReadText);
+              IF ReadLen > 0 THEN
+                IF ParseLine(ReadText,Rec,LineNo) THEN
+                  LineNo += 1;
+            UNTIL ReadLen = 0;
+          END;
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE ParseLine@2(Line@1005 : Text;PostingExch@1006 : Record 1220;LineNo@1007 : Integer) : Boolean;
+    VAR
+      PostingExchLineDef@1008 : Record 1227;
+      PostingExchColumnDef@1009 : Record 1223;
+      PostingExchField@1010 : Record 1221;
+      StartPosition@1011 : Integer;
+    BEGIN
+      PostingExchLineDef.SETRANGE("Posting Exch. Def Code",PostingExch."Posting Exch. Def Code");
+      PostingExchLineDef.FINDFIRST;
+
+      IF STRPOS(Line,PostingExchLineDef."Data Line Tag") <> 1 THEN
+        EXIT(FALSE);
+
+      PostingExchColumnDef.SETRANGE("Posting Exch. Def Code",PostingExch."Posting Exch. Def Code");
+      PostingExchColumnDef.SETRANGE("Posting Exch. Line Def Code",PostingExchLineDef.Code);
+      PostingExchColumnDef.FINDSET;
+
+      StartPosition := 1;
+      REPEAT
+        PostingExchField.InsertRecXMLField(PostingExch."Entry No.",LineNo,PostingExchColumnDef."Column No.",'',
+          COPYSTR(Line,StartPosition,PostingExchColumnDef.Length),PostingExchLineDef.Code);
+        StartPosition += PostingExchColumnDef.Length;
+      UNTIL PostingExchColumnDef.NEXT = 0;
+
+      EXIT(TRUE);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

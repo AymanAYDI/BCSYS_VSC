@@ -1,0 +1,40 @@
+OBJECT Table 1051 Sorting Table
+{
+  OBJECT-PROPERTIES
+  {
+    Date=27/11/14;
+    Time=12:00:00;
+    Version List=NAVW18.00.00.38798;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Sorting Table;
+               FRA=Tri de la table];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Integer             ;Integer       ;CaptionML=[ENU=Integer;
+                                                              FRA=Entier] }
+    { 2   ;   ;Decimal             ;Decimal       ;CaptionML=[ENU=Decimal;
+                                                              FRA=D‚cimal] }
+    { 3   ;   ;Code                ;Code20        ;CaptionML=[ENU=Code;
+                                                              FRA=Code] }
+  }
+  KEYS
+  {
+    {    ;Integer                                 ;SumIndexFields=Decimal;
+                                                   Clustered=Yes }
+    {    ;Decimal                                  }
+    {    ;Code                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

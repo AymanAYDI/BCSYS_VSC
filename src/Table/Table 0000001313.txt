@@ -1,0 +1,66 @@
+OBJECT Table 1313 Mini Activities Cue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Mini Activities Cue;
+               FRA=Pile activit‚s mini];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[ENU=Primary Key;
+                                                              FRA=Cl‚ primaire] }
+    { 2   ;   ;Due Date Filter     ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[ENU=Due Date Filter;
+                                                              FRA=Filtre ‚ch‚ance];
+                                                   Editable=No }
+    { 3   ;   ;Overdue Date Filter ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[ENU=Overdue Date Filter;
+                                                              FRA=Filtre ‚chus] }
+    { 4   ;   ;Ongoing Sales Invoices;Integer     ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Header" WHERE (Document Type=FILTER(Invoice)));
+                                                   CaptionML=[ENU=Ongoing Sales Invoices;
+                                                              FRA=Factures vente en cours] }
+    { 5   ;   ;Ongoing Purchase Invoices;Integer  ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=FILTER(Invoice)));
+                                                   CaptionML=[ENU=Ongoing Purchase Invoices;
+                                                              FRA=Factures achat en cours] }
+    { 6   ;   ;Sales This Month    ;Decimal       ;CaptionML=[ENU=Sales This Month;
+                                                              FRA=Ventes ce mois];
+                                                   DecimalPlaces=0:0 }
+    { 7   ;   ;Top 10 Customer Sales YTD;Decimal  ;CaptionML=[ENU=Top 10 Customer Sales YTD;
+                                                              FRA=PalmarŠs Solde actuel ventes client];
+                                                   AutoFormatType=10;
+                                                   AutoFormatExpr='<Precision,1:1><Standard Format,9>%' }
+    { 8   ;   ;Overdue Purch. Invoice Amount;Decimal;
+                                                   CaptionML=[ENU=Overdue Purch. Invoice Amount;
+                                                              FRA=Montant facture ach. ‚chue];
+                                                   DecimalPlaces=0:0 }
+    { 9   ;   ;Overdue Sales Invoice Amount;Decimal;
+                                                   CaptionML=[ENU=Overdue Sales Invoice Amount;
+                                                              FRA=Montant facture vente ‚chue];
+                                                   DecimalPlaces=0:0 }
+    { 10  ;   ;Average Collection Days;Decimal    ;CaptionML=[ENU=Average Collection Days;
+                                                              FRA=Jours de rŠglement moyens];
+                                                   DecimalPlaces=1:1 }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

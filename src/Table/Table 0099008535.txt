@@ -1,0 +1,35 @@
+OBJECT Table 99008535 TempBlob
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=TempBlob;
+               FRA=TempBlob];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Integer       ;CaptionML=[ENU=Primary Key;
+                                                              FRA=Cl‚ primaire] }
+    { 2   ;   ;Blob                ;BLOB          ;CaptionML=[ENU=Blob;
+                                                              FRA=Objet BLOB] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

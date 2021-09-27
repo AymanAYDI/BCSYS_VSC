@@ -1,0 +1,61 @@
+OBJECT Codeunit 9900 Data Upgrade Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/09/14;
+    Time=12:00:00;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      OldUnusedTableMsg@1000 : TextConst 'ENU=Old Unused Table - marked for deletion.;FRA=Ancienne table inutilis‚e - marqu‚e pour suppression.';
+
+    PROCEDURE SetTableSyncSetup@6(TableId@1000 : Integer;UpgradeTableId@1001 : Integer;TableUpgradeMode@1002 : 'Check,Copy,Move,Force');
+    VAR
+      TableSynchSetup@1003 : Record 2000000135;
+    BEGIN
+      IF TableSynchSetup.GET(TableId) THEN BEGIN
+        TableSynchSetup."Upgrade Table ID" := UpgradeTableId;
+        TableSynchSetup.Mode := TableUpgradeMode;
+        TableSynchSetup.MODIFY;
+      END;
+    END;
+
+    PROCEDURE MarkTableForDeletion@1(TableId@1000 : Integer);
+    VAR
+      ObjectTranslation@1001 : Record 377;
+      Permission@1002 : Record 2000000005;
+      Object@1003 : Record 2000000001;
+    BEGIN
+      WITH ObjectTranslation DO BEGIN
+        SETRANGE("Object Type","Object Type"::Table);
+        SETRANGE("Object ID",TableId);
+        DELETEALL;
+      END;
+
+      WITH Permission DO BEGIN
+        SETFILTER("Object Type",'%1|%2',"Object Type"::Table,"Object Type"::"Table Data");
+        SETRANGE("Object ID",TableId);
+        DELETEALL;
+      END;
+
+      WITH Object DO
+        IF GET(Type::Table,'',TableId) THEN BEGIN
+          Modified := TRUE;
+          "Version List" := OldUnusedTableMsg;
+          MODIFY;
+        END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
