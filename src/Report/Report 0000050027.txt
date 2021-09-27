@@ -1,0 +1,3640 @@
+OBJECT Report 50027 VSC- R‚cap. Calc. Post VAT
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20/10/15;
+    Time=12:30:00;
+    Modified=Yes;
+    Version List=NAVW15.00,JX-VSC1.0-XAD;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 254=imd;
+    CaptionML=[ENU=Calc. and Post VAT Settlement;
+               FRA=R‚capitulatif de d‚claration de TVA];
+    OnPreReport=BEGIN
+                  IF PostingDate = 0D THEN
+                    ERROR(Text000);
+                  IF DocNo = '' THEN
+                    ERROR(Text001);
+                  IF GLAccSettle."No." = '' THEN
+                    ERROR(Text002);
+                  GLAccSettle.FIND;
+
+                  VATPostingSetupFilter := "VAT Posting Setup".GETFILTERS;
+                  IF EndDateReq = 0D THEN
+                    VATEntry.SETFILTER("Posting Date",'%1..',EntrdStartDate)
+                  ELSE
+                    VATEntry.SETRANGE("Posting Date",EntrdStartDate,EndDateReq);
+                  VATDateFilter := VATEntry.GETFILTER("Posting Date");
+
+                  GLSetup.GET;
+                  IF UseAmtsInAddCurr THEN
+                    HeaderText := STRSUBSTNO(Text006,GLSetup."Additional Reporting Currency")
+                  ELSE BEGIN
+                    GLSetup.TESTFIELD("LCY Code");
+                    HeaderText := STRSUBSTNO(Text006,GLSetup."LCY Code");
+                  END;
+                END;
+
+  }
+  DATASET
+  {
+    { 1756;    ;DataItem;                    ;
+               DataItemTable=Table325;
+               DataItemTableView=SORTING(VAT Bus. Posting Group,VAT Prod. Posting Group);
+               OnPreDataItem=BEGIN
+                               PostSettlement := FALSE; //MODIF JX-XAD 30/03/2009
+
+                               GLEntry.LOCKTABLE; // Avoid deadlock with function 12
+                               IF RECORDLEVELLOCKING THEN
+                                 IF GLEntry.FIND('+') THEN;
+                               VATEntry.LOCKTABLE;
+                               VATEntry.RESET;
+                               IF VATEntry.FIND('+') THEN
+                                 NextVATEntryNo := VATEntry."Entry No.";
+
+                               SourceCodeSetup.GET;
+                               GLSetup.GET;
+                               VATAmount := 0;
+                               VATAmountAddCurr := 0;
+                               //DEBUT MODIF JX-XAD 31/03/2009
+                               GDec_VATBase := 0;
+                               GDec_VATBaseAddCurr := 0;
+                               //FIN MODIF JX-XAD 31/03/2009
+
+                               IF PostSettlement AND NOT Initialized THEN
+                                 IF NOT CONFIRM(Text003,FALSE) THEN
+                                   CurrReport.BREAK;
+                             END;
+
+               OnPostDataItem=BEGIN
+                                // Post to settlement account
+                                IF VATAmount <> 0 THEN BEGIN
+                                  GenJnlLine.INIT;
+                                  GenJnlLine."System-Created Entry" := TRUE;
+                                  GenJnlLine."Account Type" := GenJnlLine."Account Type"::"G/L Account";
+
+                                  GLAccSettle.TESTFIELD("Gen. Posting Type",GenJnlLine."Gen. Posting Type"::" ");
+                                  GLAccSettle.TESTFIELD("VAT Bus. Posting Group",'');
+                                  GLAccSettle.TESTFIELD("VAT Prod. Posting Group",'');
+                                  IF VATPostingSetup.GET(GLAccSettle."VAT Bus. Posting Group",GLAccSettle."VAT Prod. Posting Group") THEN
+                                    VATPostingSetup.TESTFIELD("VAT %",0);
+                                  GLAccSettle.TESTFIELD("Gen. Bus. Posting Group",'');
+                                  GLAccSettle.TESTFIELD("Gen. Prod. Posting Group",'');
+
+                                  GenJnlLine.VALIDATE("Account No.",GLAccSettle."No.");
+                                  GenJnlLine."Posting Date" := PostingDate;
+                                  GenJnlLine."Document Type" := 0;
+                                  GenJnlLine."Document No." := DocNo;
+                                  GenJnlLine.Description := Text004;
+                                  GenJnlLine.Amount := VATAmount;
+                                  GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                  GenJnlLine."Source Currency Amount" := VATAmountAddCurr;
+                                  GenJnlLine."Source Code" := SourceCodeSetup."VAT Settlement";
+                                  GenJnlLine."VAT Posting" := GenJnlLine."VAT Posting"::"Manual VAT Entry";
+                                  IF PostSettlement THEN
+                                    PostGenJnlLine(GenJnlLine);
+                                END;
+                              END;
+
+               ReqFilterFields=VAT Bus. Posting Group,VAT Prod. Posting Group }
+
+    { 2   ;1   ;Column  ;FORMAT_TODAY_0_4_   ;
+               SourceExpr=FORMAT(TODAY,0,4) }
+
+    { 3   ;1   ;Column  ;STRSUBSTNO_Text005_VATDateFilter_;
+               SourceExpr=STRSUBSTNO(Text005,VATDateFilter) }
+
+    { 5   ;1   ;Column  ;CurrReport_PAGENO   ;
+               SourceExpr=CurrReport.PAGENO }
+
+    { 6   ;1   ;Column  ;COMPANYNAME         ;
+               SourceExpr=COMPANYNAME }
+
+    { 7   ;1   ;Column  ;USERID              ;
+               SourceExpr=USERID }
+
+    { 10  ;1   ;Column  ;PostingDate         ;
+               SourceExpr=PostingDate }
+
+    { 12  ;1   ;Column  ;DocNo               ;
+               SourceExpr=DocNo }
+
+    { 14  ;1   ;Column  ;GLAccSettle__No__   ;
+               SourceExpr=GLAccSettle."No." }
+
+    { 15  ;1   ;Column  ;VAT_Posting_Setup__TABLECAPTION__________VATPostingSetupFilter;
+               SourceExpr="VAT Posting Setup".TABLECAPTION + ': ' + VATPostingSetupFilter }
+
+    { 75  ;1   ;Column  ;HeaderText          ;
+               SourceExpr=HeaderText }
+
+    { 1   ;1   ;Column  ;Calc__and_Post_VAT_SettlementCaption;
+               SourceExpr=Calc__and_Post_VAT_SettlementCaptionLbl }
+
+    { 4   ;1   ;Column  ;CurrReport_PAGENOCaption;
+               SourceExpr=CurrReport_PAGENOCaptionLbl }
+
+    { 9   ;1   ;Column  ;PostingDateCaption  ;
+               SourceExpr=PostingDateCaptionLbl }
+
+    { 11  ;1   ;Column  ;DocNoCaption        ;
+               SourceExpr=DocNoCaptionLbl }
+
+    { 13  ;1   ;Column  ;GLAccSettle__No__Caption;
+               SourceExpr=GLAccSettle__No__CaptionLbl }
+
+    { 20  ;1   ;Column  ;TVACaption          ;
+               SourceExpr=TVACaptionLbl }
+
+    { 21  ;1   ;Column  ;HTCaption           ;
+               SourceExpr=HTCaptionLbl }
+
+    { 1000000001;1;Column;TTCCaption         ;
+               SourceExpr=TTCCaptionLbl }
+
+    { 36  ;1   ;Column  ;TOTALCaption        ;
+               SourceExpr=TOTALCaptionLbl }
+
+    { 67  ;1   ;Column  ;TOTALCaption_Control67;
+               SourceExpr=TOTALCaption_Control67Lbl }
+
+    { 2805;1   ;Column  ;VAT_Posting_Setup_VAT_Bus__Posting_Group;
+               SourceExpr="VAT Bus. Posting Group" }
+
+    { 6879;1   ;Column  ;VAT_Posting_Setup_VAT_Prod__Posting_Group;
+               SourceExpr="VAT Prod. Posting Group" }
+
+    { 1000000000;1;Column;UseAmtsInAddCurr   ;
+               SourceExpr=UseAmtsInAddCurr }
+
+    { 1000000002;1;Column;ReversingEntry     ;
+               SourceExpr=ReversingEntry }
+
+    { 8188;1   ;DataItem;Closing G/L and VAT Entry;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number);
+               OnPreDataItem=BEGIN
+                               VATType := VATEntry.Type::Purchase;
+                               FindFirstEntry := TRUE;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  VATEntry.RESET;
+                                  IF NOT
+                                    VATEntry.SETCURRENTKEY(
+                                      Type,Closed,"VAT Bus. Posting Group","VAT Prod. Posting Group","Posting Date")
+                                  THEN
+                                    VATEntry.SETCURRENTKEY(
+                                      Type,Closed,"Tax Jurisdiction Code","Use Tax","Posting Date");
+                                  VATEntry.SETRANGE(Type,VATType);
+                                  //VATEntry.SETRANGE(Closed,FALSE); //JX-XAD
+                                  VATEntry.SETFILTER("Posting Date",VATDateFilter);
+                                  VATEntry.SETRANGE("VAT Bus. Posting Group","VAT Posting Setup"."VAT Bus. Posting Group");
+                                  VATEntry.SETRANGE("VAT Prod. Posting Group","VAT Posting Setup"."VAT Prod. Posting Group");
+
+                                  CASE "VAT Posting Setup"."VAT Calculation Type" OF
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Normal VAT",
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Reverse Charge VAT",
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Full VAT":
+                                      BEGIN
+                                        IF FindFirstEntry THEN BEGIN
+                                          IF NOT VATEntry.FIND('-') THEN
+                                            REPEAT
+                                              VATType := VATType + 1;
+                                              VATEntry.SETRANGE(Type,VATType);
+                                            UNTIL (VATType = VATEntry.Type::Settlement) OR VATEntry.FIND('-');
+                                          FindFirstEntry := FALSE;
+                                        END ELSE BEGIN
+                                          IF VATEntry.NEXT = 0 THEN
+                                            REPEAT
+                                              VATType := VATType + 1;
+                                              VATEntry.SETRANGE(Type,VATType);
+                                            UNTIL (VATType = VATEntry.Type::Settlement) OR VATEntry.FIND('-');
+                                        END;
+                                        IF VATType < VATEntry.Type::Settlement THEN
+                                          VATEntry.FIND('+');
+                                      END;
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Sales Tax":
+                                      BEGIN
+                                        IF FindFirstEntry THEN BEGIN
+                                          IF NOT VATEntry.FIND('-') THEN
+                                            REPEAT
+                                              VATType := VATType + 1;
+                                              VATEntry.SETRANGE(Type,VATType);
+                                            UNTIL (VATType = VATEntry.Type::Settlement) OR VATEntry.FIND('-');
+                                          FindFirstEntry := FALSE;
+                                        END ELSE BEGIN
+                                          VATEntry.SETRANGE("Tax Jurisdiction Code");
+                                          VATEntry.SETRANGE("Use Tax");
+                                          IF VATEntry.NEXT = 0 THEN
+                                            REPEAT
+                                              VATType := VATType + 1;
+                                              VATEntry.SETRANGE(Type,VATType);
+                                            UNTIL (VATType = VATEntry.Type::Settlement) OR VATEntry.FIND('-');
+                                        END;
+                                        IF VATType < VATEntry.Type::Settlement THEN BEGIN
+                                          VATEntry.SETRANGE("Tax Jurisdiction Code",VATEntry."Tax Jurisdiction Code");
+                                          VATEntry.SETRANGE("Use Tax",VATEntry."Use Tax");
+                                          VATEntry.FIND('+');
+                                        END;
+                                      END;
+                                  END;
+
+                                  IF VATType = VATEntry.Type::Settlement THEN
+                                    CurrReport.BREAK;
+                                END;
+                                 }
+
+    { 7612;2   ;DataItem;                    ;
+               DataItemTable=Table254;
+               DataItemTableView=SORTING(Type,Closed)
+                                 WHERE(Type=FILTER(Purchase|Sale));
+               OnPreDataItem=BEGIN
+                               "VAT Entry".COPYFILTERS(VATEntry);
+                             END;
+                              }
+
+    { 3370;2   ;DataItem;Close VAT Entries   ;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number);
+               MaxIteration=1;
+               OnAfterGetRecord=BEGIN
+                                  // Calculate amount and base
+                                  VATEntry.CALCSUMS(
+                                    Base,Amount,
+                                    "Additional-Currency Base","Additional-Currency Amount");
+
+                                  ReversingEntry := FALSE;
+                                  // Balancing entries to VAT accounts
+                                  CLEAR(GenJnlLine);
+                                  GenJnlLine."System-Created Entry" := TRUE;
+                                  GenJnlLine."Account Type" := GenJnlLine."Account Type"::"G/L Account";
+                                  CASE VATType OF
+                                    VATEntry.Type::Purchase:
+                                      GenJnlLine.Description :=
+                                        DELCHR(
+                                          STRSUBSTNO(
+                                            Text007,
+                                            "VAT Posting Setup"."VAT Bus. Posting Group",
+                                            "VAT Posting Setup"."VAT Prod. Posting Group"),
+                                          '>');
+                                    VATEntry.Type::Sale:
+                                      GenJnlLine.Description :=
+                                        DELCHR(
+                                          STRSUBSTNO(
+                                            Text008,
+                                            "VAT Posting Setup"."VAT Bus. Posting Group",
+                                            "VAT Posting Setup"."VAT Prod. Posting Group"),
+                                          '>');
+                                  END;
+                                  GenJnlLine."VAT Bus. Posting Group" := "VAT Posting Setup"."VAT Bus. Posting Group";
+                                  GenJnlLine."VAT Prod. Posting Group" := "VAT Posting Setup"."VAT Prod. Posting Group";
+                                  GenJnlLine."VAT Calculation Type" := "VAT Posting Setup"."VAT Calculation Type";
+                                  GenJnlLine."Gen. Posting Type" := GenJnlLine."Gen. Posting Type"::Settlement;
+                                  GenJnlLine."Posting Date" := PostingDate;
+                                  GenJnlLine."Document Type" := 0;
+                                  GenJnlLine."Document No." := DocNo;
+                                  GenJnlLine."Source Code" := SourceCodeSetup."VAT Settlement";
+                                  GenJnlLine."VAT Posting" := GenJnlLine."VAT Posting"::"Manual VAT Entry";
+                                  CASE "VAT Posting Setup"."VAT Calculation Type" OF
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Normal VAT",
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Full VAT":
+                                      BEGIN
+                                        CASE VATType OF
+                                          VATEntry.Type::Purchase:
+                                            BEGIN
+                                              "VAT Posting Setup".TESTFIELD("Purchase VAT Account");
+                                              GenJnlLine."Account No." := "VAT Posting Setup"."Purchase VAT Account";
+                                            END;
+                                          VATEntry.Type::Sale:
+                                            BEGIN
+                                              "VAT Posting Setup".TESTFIELD("Sales VAT Account");
+                                              GenJnlLine."Account No." := "VAT Posting Setup"."Sales VAT Account";
+                                            END;
+                                        END;
+                                        GenJnlLine.Amount := -VATEntry.Amount;
+                                        GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                        GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                        GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                        GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                        GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                        GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                        IF PostSettlement THEN
+                                          PostGenJnlLine(GenJnlLine);
+                                        VATAmount := VATAmount + VATEntry.Amount;
+                                        VATAmountAddCurr := VATAmountAddCurr + VATEntry."Additional-Currency Amount";
+                                        //DEBUT MODIF JX-XAD 31/03/2009
+                                        GDec_VATBase := GDec_VATBase + VATEntry.Base;
+                                        GDec_VATBaseAddCurr := GDec_VATBaseAddCurr + VATEntry."Additional-Currency Base";
+                                        //FIN MODIF JX-XAD 31/03/2009
+                                      END;
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Reverse Charge VAT":
+                                      BEGIN
+                                        CASE VATType OF
+                                          VATEntry.Type::Purchase:
+                                            BEGIN
+                                              "VAT Posting Setup".TESTFIELD("Purchase VAT Account");
+                                              GenJnlLine."Account No." := "VAT Posting Setup"."Purchase VAT Account";
+                                              GenJnlLine.Amount := -VATEntry.Amount;
+                                              GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                              GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                              GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine);
+
+                                              "VAT Posting Setup".TESTFIELD("Reverse Chrg. VAT Acc.");
+                                              CLEAR(GenJnlLine2);
+                                              GenJnlLine2."System-Created Entry" := TRUE;
+                                              GenJnlLine2."Account Type" := GenJnlLine2."Account Type"::"G/L Account";
+                                              GenJnlLine2.Description := GenJnlLine.Description;
+                                              GenJnlLine2."Posting Date" := PostingDate;
+                                              GenJnlLine2."Document Type" := 0;
+                                              GenJnlLine2."Document No." := DocNo;
+                                              GenJnlLine2."Source Code" := SourceCodeSetup."VAT Settlement";
+                                              GenJnlLine2."VAT Posting" := GenJnlLine2."VAT Posting"::"Manual VAT Entry";
+                                              GenJnlLine2."Account No." := "VAT Posting Setup"."Reverse Chrg. VAT Acc.";
+                                              GenJnlLine2.Amount := VATEntry.Amount;
+                                              GenJnlLine2."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine2."Source Currency Amount" := VATEntry."Additional-Currency Amount";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine2);
+                                              ReversingEntry := TRUE;
+                                            END;
+                                          VATEntry.Type::Sale:
+                                            BEGIN
+                                              "VAT Posting Setup".TESTFIELD("Sales VAT Account");
+                                              GenJnlLine."Account No." := "VAT Posting Setup"."Sales VAT Account";
+                                              GenJnlLine.Amount := -VATEntry.Amount;
+                                              GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                              GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                              GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine);
+                                            END;
+                                        END;
+                                      END;
+                                    "VAT Posting Setup"."VAT Calculation Type"::"Sales Tax":
+                                      BEGIN
+                                        TaxJurisdiction.GET(VATEntry."Tax Jurisdiction Code");
+                                        GenJnlLine."Tax Area Code" := TaxJurisdiction.Code;
+                                        GenJnlLine."Use Tax" := VATEntry."Use Tax";
+                                        CASE VATType OF
+                                          VATEntry.Type::Purchase:
+                                            IF VATEntry."Use Tax" THEN BEGIN
+                                              TaxJurisdiction.TESTFIELD("Tax Account (Purchases)");
+                                              GenJnlLine."Account No." := TaxJurisdiction."Tax Account (Purchases)";
+                                              GenJnlLine.Amount := -VATEntry.Amount;
+                                              GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                              GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                              GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine);
+
+                                              TaxJurisdiction.TESTFIELD("Reverse Charge (Purchases)");
+                                              CLEAR(GenJnlLine2);
+                                              GenJnlLine2."System-Created Entry" := TRUE;
+                                              GenJnlLine2."Account Type" := GenJnlLine2."Account Type"::"G/L Account";
+                                              GenJnlLine2.Description := GenJnlLine.Description;
+                                              GenJnlLine2."Posting Date" := PostingDate;
+                                              GenJnlLine2."Document Type" := 0;
+                                              GenJnlLine2."Document No." := DocNo;
+                                              GenJnlLine2."Source Code" := SourceCodeSetup."VAT Settlement";
+                                              GenJnlLine2."VAT Posting" := GenJnlLine2."VAT Posting"::"Manual VAT Entry";
+                                              GenJnlLine2."Tax Area Code" := TaxJurisdiction.Code;
+                                              GenJnlLine2."Use Tax" := VATEntry."Use Tax";
+                                              GenJnlLine2."Account No." := TaxJurisdiction."Reverse Charge (Purchases)";
+                                              GenJnlLine2.Amount := VATEntry.Amount;
+                                              GenJnlLine2."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine2."Source Currency Amount" := VATEntry."Additional-Currency Amount";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine2);
+                                              ReversingEntry := TRUE;
+                                            END ELSE BEGIN
+                                              TaxJurisdiction.TESTFIELD("Tax Account (Purchases)");
+                                              GenJnlLine."Account No." := TaxJurisdiction."Tax Account (Purchases)";
+                                              GenJnlLine.Amount := -VATEntry.Amount;
+                                              GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                              GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                              GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine);
+                                              VATAmount := VATAmount + VATEntry.Amount;
+                                              VATAmountAddCurr := VATAmountAddCurr + VATEntry."Additional-Currency Amount";
+                                              //DEBUT MODIF JX-XAD 31/03/2009
+                                              GDec_VATBase := GDec_VATBase + VATEntry.Base;
+                                              GDec_VATBaseAddCurr := GDec_VATBaseAddCurr + VATEntry."Additional-Currency Base";
+                                              //FIN MODIF JX-XAD 31/03/2009
+                                            END;
+                                          VATEntry.Type::Sale:
+                                            BEGIN
+                                              TaxJurisdiction.TESTFIELD("Tax Account (Sales)");
+                                              GenJnlLine."Account No." := TaxJurisdiction."Tax Account (Sales)";
+                                              GenJnlLine.Amount := -VATEntry.Amount;
+                                              GenJnlLine."VAT Amount" := -VATEntry.Amount;
+                                              GenJnlLine."VAT Base Amount" := -VATEntry.Base;
+                                              GenJnlLine."Source Currency Code" := GLSetup."Additional Reporting Currency";
+                                              GenJnlLine."Source Currency Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Amount" := -VATEntry."Additional-Currency Amount";
+                                              GenJnlLine."Source Curr. VAT Base Amount" := -VATEntry."Additional-Currency Base";
+                                              IF PostSettlement THEN
+                                                PostGenJnlLine(GenJnlLine);
+                                              VATAmount := VATAmount + VATEntry.Amount;
+                                              VATAmountAddCurr := VATAmountAddCurr + VATEntry."Additional-Currency Amount";
+                                              //DEBUT MODIF JX-XAD 31/03/2009
+                                              GDec_VATBase := GDec_VATBase + VATEntry.Base;
+                                              GDec_VATBaseAddCurr := GDec_VATBaseAddCurr + VATEntry."Additional-Currency Base";
+                                              //FIN MODIF JX-XAD 31/03/2009
+                                            END;
+                                        END;
+                                      END;
+                                  END;
+                                  NextVATEntryNo := NextVATEntryNo + 1;
+
+                                  IF NOT UseAmtsInAddCurr THEN BEGIN
+                                   IF NOT ReversingEntry THEN BEGIN
+                                    Gtotal := GenJnlLine."VAT Base Amount" + GenJnlLine."VAT Amount";
+                                    Gtotal1 := GenJnlLine."VAT Base Amount";
+                                    Gtotal2 := GenJnlLine."VAT Amount";
+                                   END ELSE BEGIN
+                                    Gtotal := GenJnlLine."VAT Base Amount" + GenJnlLine."VAT Amount" + VATEntry.Base + GenJnlLine2.Amount;
+                                    Gtotal1 := GenJnlLine."VAT Base Amount" + VATEntry.Base;
+                                    Gtotal2 := GenJnlLine."VAT Amount" + GenJnlLine2.Amount;
+                                   END;
+                                  END ELSE BEGIN
+                                   IF NOT ReversingEntry THEN BEGIN
+                                    Gtotal := GenJnlLine."Source Curr. VAT Base Amount" + GenJnlLine."Source Curr. VAT Amount";
+                                    Gtotal1 := GenJnlLine."Source Curr. VAT Base Amount";
+                                    Gtotal2 := GenJnlLine."Source Curr. VAT Amount";
+                                   END ELSE BEGIN
+                                    Gtotal := GenJnlLine."Source Curr. VAT Base Amount" + GenJnlLine."Source Curr. VAT Amount" + VATEntry."Additional-Currency Base" + GenJnlLine2."Source Currency Amount";
+                                    Gtotal1 := GenJnlLine."Source Curr. VAT Base Amount" + VATEntry."Additional-Currency Base";
+                                    Gtotal2 := GenJnlLine."Source Curr. VAT Amount" + GenJnlLine2."Source Currency Amount";
+                                   END;
+                                  END;
+
+                                  // Close current VAT entries
+                                  IF PostSettlement THEN
+                                    IF VATEntry.FIND('-') THEN
+                                      REPEAT
+                                        VATEntry2 := VATEntry;
+                                        VATEntry2."Closed by Entry No." := NextVATEntryNo;
+                                        VATEntry2.Closed := TRUE;
+                                        VATEntry2.MODIFY;
+                                      UNTIL VATEntry.NEXT = 0;
+                                END;
+                                 }
+
+    { 31  ;3   ;Column  ;GenJnlLine__VAT_Base_Amount_;
+               SourceExpr=GenJnlLine."VAT Base Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 32  ;3   ;Column  ;GenJnlLine__VAT_Amount_;
+               SourceExpr=GenJnlLine."VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000004;3;Column;GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_;
+               SourceExpr=GenJnlLine."VAT Base Amount"+GenJnlLine."VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000007;3;Column;VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007;
+               SourceExpr="VAT Posting Setup"."VAT Bus. Posting Group" }
+
+    { 1000000008;3;Column;VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008;
+               SourceExpr="VAT Posting Setup"."VAT Prod. Posting Group" }
+
+    { 70  ;3   ;Column  ;GenJnlLine__Source_Curr__VAT_Amount_;
+               SourceExpr=GenJnlLine."Source Curr. VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 71  ;3   ;Column  ;GenJnlLine__Source_Curr__VAT_Base_Amount_;
+               SourceExpr=GenJnlLine."Source Curr. VAT Base Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000005;3;Column;GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_;
+               SourceExpr=GenJnlLine."Source Curr. VAT Base Amount"+GenJnlLine."Source Curr. VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000006;3;Column;VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000006;
+               SourceExpr="VAT Posting Setup"."VAT Bus. Posting Group" }
+
+    { 1000000011;3;Column;VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000011;
+               SourceExpr="VAT Posting Setup"."VAT Prod. Posting Group" }
+
+    { 92  ;3   ;Column  ;GenJnlLine2_Amount  ;
+               SourceExpr=GenJnlLine2.Amount;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000017;3;Column;VATEntry_Base      ;
+               SourceExpr=[ VATEntry.Base];
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000025;3;Column;GenJnlLine2_Amount__VATEntry_Base;
+               SourceExpr=GenJnlLine2.Amount+ VATEntry.Base;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000014;3;Column;VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000014;
+               SourceExpr="VAT Posting Setup"."VAT Bus. Posting Group" }
+
+    { 1000000015;3;Column;VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000015;
+               SourceExpr="VAT Posting Setup"."VAT Prod. Posting Group" }
+
+    { 85  ;3   ;Column  ;GenJnlLine2__Source_Currency_Amount_;
+               SourceExpr=GenJnlLine2."Source Currency Amount";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000023;3;Column;VATEntry__Additional_Currency_Base_;
+               SourceExpr=VATEntry."Additional-Currency Base";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000027;3;Column;GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_;
+               SourceExpr=GenJnlLine2."Source Currency Amount"+VATEntry."Additional-Currency Base";
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000016;3;Column;VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000016;
+               SourceExpr="VAT Posting Setup"."VAT Bus. Posting Group" }
+
+    { 1000000018;3;Column;VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000018;
+               SourceExpr="VAT Posting Setup"."VAT Prod. Posting Group" }
+
+    { 5363;3   ;Column  ;Close_VAT_Entries_Number;
+               SourceExpr=Number }
+
+    { 1000000019;3;Column;VATAmount          ;
+               SourceExpr=VATAmount;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000013;3;Column;GDec_VATBase       ;
+               SourceExpr=GDec_VATBase;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000012;3;Column;VATAmount_GDec_VATBase;
+               SourceExpr=VATAmount+GDec_VATBase;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000010;3;Column;VATAmountAddCurr   ;
+               SourceExpr=VATAmountAddCurr;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000009;3;Column;GDec_VATBaseAddCurr;
+               SourceExpr=GDec_VATBaseAddCurr;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000003;3;Column;VATAmount_GDec_VATBase_Control1000000026;
+               SourceExpr=VATAmount+GDec_VATBase;
+               AutoFormatType=1;
+               AutoFormatExpr=GetCurrency }
+
+    { 1000000020;3;Column;GTotal1            ;
+               SourceExpr=Gtotal1 }
+
+    { 1000000021;3;Column;GTotal2            ;
+               SourceExpr=Gtotal2 }
+
+    { 1000000022;3;Column;GTotal             ;
+               SourceExpr=Gtotal }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Options;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  Name=Date d‚but;
+                  CaptionML=[ENU=Starting Date;
+                             FRA=Date d‚but];
+                  SourceExpr=EntrdStartDate }
+
+      { 1000000002;1;Field  ;
+                  Name=Date fin;
+                  CaptionML=[ENU=Ending Date;
+                             FRA=Date fin];
+                  SourceExpr=EndDateReq }
+
+      { 1000000003;1;Field  ;
+                  Name=Date comptabilisation;
+                  CaptionML=[ENU=Posting Date;
+                             FRA=Date comptabilisation];
+                  SourceExpr=PostingDate }
+
+      { 1000000004;1;Field  ;
+                  Name=Nø Document;
+                  CaptionML=[ENU=Document No.;
+                             FRA=Nø document];
+                  SourceExpr=DocNo }
+
+      { 1000000005;1;Field  ;
+                  Name=Compte D‚claration;
+                  CaptionML=[ENU=Settlement Account;
+                             FRA=Compte de d‚claration];
+                  SourceExpr=GLAccSettle."No.";
+                  TableRelation="G/L Account" }
+
+      { 1000000006;1;Field  ;
+                  Name=UseAmtsInAddCurr;
+                  CaptionML=[ENU=Show Amounts in Add. Reporting Currency;
+                             FRA=Afficher montants en devise report];
+                  SourceExpr=UseAmtsInAddCurr }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000000000 : TextConst 'ENU=Please enter the posting date.;FRA=Veuillez saisir une date de comptabilisation.';
+      Text001@1000000001 : TextConst 'ENU=Please enter the document no.;FRA=Veuillez saisir un num‚ro de document.';
+      Text002@1000000002 : TextConst 'ENU=Please enter the settlement account;FRA=Veuillez saisir un compte de d‚claration.';
+      Text003@1000000003 : TextConst 'ENU=Do you want to calculate and post the VAT Settlement?;FRA=Souhaitez-vous calculer et valider la d‚claration de TVA ?';
+      Text004@1000000004 : TextConst 'ENU=VAT Settlement;FRA=D‚claration de TVA';
+      Text005@1000000005 : TextConst 'ENU=Period: %1;FRA=P‚riode : %1';
+      Text006@1000000006 : TextConst 'ENU=All amounts are in %1;FRA=Tous les montants sont en %1';
+      Text007@1000000007 : TextConst 'ENU=Purchase VAT settlement: #1######## #2########;FRA=D‚claration de TVA achats: #1######## #2########';
+      Text008@1000000008 : TextConst 'ENU=Sales VAT settlement  : #1######## #2########;FRA=D‚claration de TVA ventes  : #1######## #2########';
+      GLAccSettle@1000000009 : Record 15;
+      SourceCodeSetup@1000000010 : Record 242;
+      GenJnlLine@1000000011 : Record 81;
+      GenJnlLine2@1000000012 : Record 81;
+      GLEntry@1000000013 : Record 17;
+      VATEntry@1000000014 : Record 254;
+      VATEntry2@1000000015 : Record 254;
+      TaxJurisdiction@1000000016 : Record 320;
+      GLSetup@1000000017 : Record 98;
+      VATPostingSetup@1000000018 : Record 325;
+      GenJnlPostLine@1000000019 : Codeunit 12;
+      EntrdStartDate@1000000020 : Date;
+      EndDateReq@1000000021 : Date;
+      PrintVATEntries@1000000022 : Boolean;
+      NextVATEntryNo@1000000023 : Integer;
+      PostingDate@1000000024 : Date;
+      DocNo@1000000025 : Code[20];
+      VATType@1000000026 : Integer;
+      VATAmount@1000000027 : Decimal;
+      VATAmountAddCurr@1000000028 : Decimal;
+      PostSettlement@1000000029 : Boolean;
+      FindFirstEntry@1000000030 : Boolean;
+      ReversingEntry@1000000031 : Boolean;
+      Initialized@1000000032 : Boolean;
+      VATPostingSetupFilter@1000000033 : Text[250];
+      VATDateFilter@1000000034 : Text[30];
+      UseAmtsInAddCurr@1000000035 : Boolean;
+      HeaderText@1000000036 : Text[30];
+      GDec_VATBase@1000000037 : Decimal;
+      GDec_VATBaseAddCurr@1000000038 : Decimal;
+      Calc__and_Post_VAT_SettlementCaptionLbl@9349 : TextConst 'ENU=Calc. and Post VAT Settlement;FRA=RECAPITULATIF DE DECLARATION DE TVA';
+      CurrReport_PAGENOCaptionLbl@8565 : TextConst 'ENU=Page;FRA=Page';
+      PostingDateCaptionLbl@4591 : TextConst 'ENU=Posting Date;FRA=Date comptabilisation';
+      DocNoCaptionLbl@2117 : TextConst 'ENU=Document No.;FRA=Nø document';
+      GLAccSettle__No__CaptionLbl@4450 : TextConst 'ENU=Settlement Account;FRA=Compte de d‚claration';
+      TVACaptionLbl@4163 : TextConst 'FRA=TVA';
+      HTCaptionLbl@4418 : TextConst 'FRA=HT';
+      TTCCaptionLbl@1000056155 : TextConst 'FRA=TTC';
+      TOTALCaptionLbl@7292 : TextConst 'FRA=TOTAL';
+      TOTALCaption_Control67Lbl@6425 : TextConst 'FRA=TOTAL';
+      Gtotal@1000000039 : Decimal;
+      Gtotal1@1000000040 : Decimal;
+      Gtotal2@1000000041 : Decimal;
+
+    PROCEDURE InitializeRequest@1(NewStartDate@1000000000 : Date;NewEndDate@1000000001 : Date;NewPostingDate@1000000002 : Date;NewDocNo@1000000003 : Code[20];NewSettlementAcc@1000000004 : Code[20];ShowVATEntries@1000000005 : Boolean;Post@1000000006 : Boolean);
+    BEGIN
+      EntrdStartDate := NewStartDate;
+      EndDateReq := NewEndDate;
+      PostingDate := NewPostingDate;
+      DocNo := NewDocNo;
+      GLAccSettle."No." := NewSettlementAcc;
+      PrintVATEntries := ShowVATEntries;
+      PostSettlement := Post;
+      Initialized := TRUE;
+    END;
+
+    PROCEDURE GetCurrency@2() : Code[10];
+    BEGIN
+      IF UseAmtsInAddCurr THEN
+        EXIT(GLSetup."Additional Reporting Currency")
+      ELSE
+        EXIT('');
+    END;
+
+    LOCAL PROCEDURE PostGenJnlLine@3(VAR GenJnlLine@1000000000 : Record 81);
+    VAR
+      DimMgt@1000000002 : Codeunit 408;
+      TableID@1000000003 : ARRAY [10] OF Integer;
+      No@1000000004 : ARRAY [10] OF Code[20];
+    BEGIN
+      TableID[1] := DATABASE::"G/L Account";
+      TableID[2] := DATABASE::"G/L Account";
+      No[1] := GenJnlLine."Account No.";
+      No[2] := GenJnlLine."Bal. Account No.";
+      GenJnlLine."Dimension Set ID" :=
+           DimMgt.GetDefaultDimID(
+           TableID,No,GenJnlLine."Source Code",
+           GenJnlLine."Shortcut Dimension 1 Code",GenJnlLine."Shortcut Dimension 2 Code",0,0);
+      GenJnlPostLine.RUN(GenJnlLine);
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD le  26/03/2009
+      R‚capitulatif du report 50026 (‚tat de d‚claration de TVA)
+    }
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>152aab15-52a6-4376-abbb-b27ac578b71b</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="FORMAT_TODAY_0_4_">
+          <DataField>FORMAT_TODAY_0_4_</DataField>
+        </Field>
+        <Field Name="STRSUBSTNO_Text005_VATDateFilter_">
+          <DataField>STRSUBSTNO_Text005_VATDateFilter_</DataField>
+        </Field>
+        <Field Name="CurrReport_PAGENO">
+          <DataField>CurrReport_PAGENO</DataField>
+        </Field>
+        <Field Name="COMPANYNAME">
+          <DataField>COMPANYNAME</DataField>
+        </Field>
+        <Field Name="USERID">
+          <DataField>USERID</DataField>
+        </Field>
+        <Field Name="PostingDate">
+          <DataField>PostingDate</DataField>
+        </Field>
+        <Field Name="DocNo">
+          <DataField>DocNo</DataField>
+        </Field>
+        <Field Name="GLAccSettle__No__">
+          <DataField>GLAccSettle__No__</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup__TABLECAPTION__________VATPostingSetupFilter">
+          <DataField>VAT_Posting_Setup__TABLECAPTION__________VATPostingSetupFilter</DataField>
+        </Field>
+        <Field Name="HeaderText">
+          <DataField>HeaderText</DataField>
+        </Field>
+        <Field Name="Calc__and_Post_VAT_SettlementCaption">
+          <DataField>Calc__and_Post_VAT_SettlementCaption</DataField>
+        </Field>
+        <Field Name="CurrReport_PAGENOCaption">
+          <DataField>CurrReport_PAGENOCaption</DataField>
+        </Field>
+        <Field Name="PostingDateCaption">
+          <DataField>PostingDateCaption</DataField>
+        </Field>
+        <Field Name="DocNoCaption">
+          <DataField>DocNoCaption</DataField>
+        </Field>
+        <Field Name="GLAccSettle__No__Caption">
+          <DataField>GLAccSettle__No__Caption</DataField>
+        </Field>
+        <Field Name="TVACaption">
+          <DataField>TVACaption</DataField>
+        </Field>
+        <Field Name="HTCaption">
+          <DataField>HTCaption</DataField>
+        </Field>
+        <Field Name="TTCCaption">
+          <DataField>TTCCaption</DataField>
+        </Field>
+        <Field Name="TOTALCaption">
+          <DataField>TOTALCaption</DataField>
+        </Field>
+        <Field Name="TOTALCaption_Control67">
+          <DataField>TOTALCaption_Control67</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup_VAT_Bus__Posting_Group">
+          <DataField>VAT_Posting_Setup_VAT_Bus__Posting_Group</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup_VAT_Prod__Posting_Group">
+          <DataField>VAT_Posting_Setup_VAT_Prod__Posting_Group</DataField>
+        </Field>
+        <Field Name="UseAmtsInAddCurr">
+          <DataField>UseAmtsInAddCurr</DataField>
+        </Field>
+        <Field Name="ReversingEntry">
+          <DataField>ReversingEntry</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Base_Amount_">
+          <DataField>GenJnlLine__VAT_Base_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Base_Amount_Format">
+          <DataField>GenJnlLine__VAT_Base_Amount_Format</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Amount_">
+          <DataField>GenJnlLine__VAT_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Amount_Format">
+          <DataField>GenJnlLine__VAT_Amount_Format</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_">
+          <DataField>GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_Format">
+          <DataField>GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_Format</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007">
+          <DataField>VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008">
+          <DataField>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Amount_">
+          <DataField>GenJnlLine__Source_Curr__VAT_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Amount_Format">
+          <DataField>GenJnlLine__Source_Curr__VAT_Amount_Format</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Base_Amount_">
+          <DataField>GenJnlLine__Source_Curr__VAT_Base_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Base_Amount_Format">
+          <DataField>GenJnlLine__Source_Curr__VAT_Base_Amount_Format</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_">
+          <DataField>GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_Format">
+          <DataField>GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_Format</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000006">
+          <DataField>VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000006</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000011">
+          <DataField>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000011</DataField>
+        </Field>
+        <Field Name="GenJnlLine2_Amount">
+          <DataField>GenJnlLine2_Amount</DataField>
+        </Field>
+        <Field Name="GenJnlLine2_AmountFormat">
+          <DataField>GenJnlLine2_AmountFormat</DataField>
+        </Field>
+        <Field Name="VATEntry_Base">
+          <DataField>VATEntry_Base</DataField>
+        </Field>
+        <Field Name="VATEntry_BaseFormat">
+          <DataField>VATEntry_BaseFormat</DataField>
+        </Field>
+        <Field Name="GenJnlLine2_Amount__VATEntry_Base">
+          <DataField>GenJnlLine2_Amount__VATEntry_Base</DataField>
+        </Field>
+        <Field Name="GenJnlLine2_Amount__VATEntry_BaseFormat">
+          <DataField>GenJnlLine2_Amount__VATEntry_BaseFormat</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000014">
+          <DataField>VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000014</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000015">
+          <DataField>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000015</DataField>
+        </Field>
+        <Field Name="GenJnlLine2__Source_Currency_Amount_">
+          <DataField>GenJnlLine2__Source_Currency_Amount_</DataField>
+        </Field>
+        <Field Name="GenJnlLine2__Source_Currency_Amount_Format">
+          <DataField>GenJnlLine2__Source_Currency_Amount_Format</DataField>
+        </Field>
+        <Field Name="VATEntry__Additional_Currency_Base_">
+          <DataField>VATEntry__Additional_Currency_Base_</DataField>
+        </Field>
+        <Field Name="VATEntry__Additional_Currency_Base_Format">
+          <DataField>VATEntry__Additional_Currency_Base_Format</DataField>
+        </Field>
+        <Field Name="GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_">
+          <DataField>GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_</DataField>
+        </Field>
+        <Field Name="GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_Format">
+          <DataField>GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_Format</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000016">
+          <DataField>VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000016</DataField>
+        </Field>
+        <Field Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000018">
+          <DataField>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000018</DataField>
+        </Field>
+        <Field Name="Close_VAT_Entries_Number">
+          <DataField>Close_VAT_Entries_Number</DataField>
+        </Field>
+        <Field Name="VATAmount">
+          <DataField>VATAmount</DataField>
+        </Field>
+        <Field Name="VATAmountFormat">
+          <DataField>VATAmountFormat</DataField>
+        </Field>
+        <Field Name="GDec_VATBase">
+          <DataField>GDec_VATBase</DataField>
+        </Field>
+        <Field Name="GDec_VATBaseFormat">
+          <DataField>GDec_VATBaseFormat</DataField>
+        </Field>
+        <Field Name="VATAmount_GDec_VATBase">
+          <DataField>VATAmount_GDec_VATBase</DataField>
+        </Field>
+        <Field Name="VATAmount_GDec_VATBaseFormat">
+          <DataField>VATAmount_GDec_VATBaseFormat</DataField>
+        </Field>
+        <Field Name="VATAmountAddCurr">
+          <DataField>VATAmountAddCurr</DataField>
+        </Field>
+        <Field Name="VATAmountAddCurrFormat">
+          <DataField>VATAmountAddCurrFormat</DataField>
+        </Field>
+        <Field Name="GDec_VATBaseAddCurr">
+          <DataField>GDec_VATBaseAddCurr</DataField>
+        </Field>
+        <Field Name="GDec_VATBaseAddCurrFormat">
+          <DataField>GDec_VATBaseAddCurrFormat</DataField>
+        </Field>
+        <Field Name="VATAmount_GDec_VATBase_Control1000000026">
+          <DataField>VATAmount_GDec_VATBase_Control1000000026</DataField>
+        </Field>
+        <Field Name="VATAmount_GDec_VATBase_Control1000000026Format">
+          <DataField>VATAmount_GDec_VATBase_Control1000000026Format</DataField>
+        </Field>
+        <Field Name="GTotal1">
+          <DataField>GTotal1</DataField>
+        </Field>
+        <Field Name="GTotal1Format">
+          <DataField>GTotal1Format</DataField>
+        </Field>
+        <Field Name="GTotal2">
+          <DataField>GTotal2</DataField>
+        </Field>
+        <Field Name="GTotal2Format">
+          <DataField>GTotal2Format</DataField>
+        </Field>
+        <Field Name="GTotal">
+          <DataField>GTotal</DataField>
+        </Field>
+        <Field Name="GTotalFormat">
+          <DataField>GTotalFormat</DataField>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>DataSet</rd:DataSetName>
+        <rd:SchemaPath>Report.xsd</rd:SchemaPath>
+        <rd:TableName>Result</rd:TableName>
+      </rd:DataSetInfo>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Textbox Name="TVACaption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!TVACaption.Value)</Value>
+                    <Style>
+                      <FontSize>8pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                      <Color>White</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>3.384cm</Top>
+            <Left>9.6cm</Left>
+            <Height>0.846cm</Height>
+            <Width>2.5cm</Width>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </RightBorder>
+              <BackgroundColor>#4c68a2</BackgroundColor>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="HeaderText">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!HeaderText.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Top>2.538cm</Top>
+            <Height>0.423cm</Height>
+            <Width>9.6cm</Width>
+            <ZIndex>1</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="VAT_Posting_Setup__TABLECAPTION__________VATPostingSetupFilter">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!VAT_Posting_Setup__TABLECAPTION__________VATPostingSetupFilter.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Top>1.692cm</Top>
+            <Height>0.423cm</Height>
+            <Width>14.7cm</Width>
+            <ZIndex>2</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Tablix Name="Table1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>2.55cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.25cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.7cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.6cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.2cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.2cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.2cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.2cm</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.15cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__VAT_Base_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__VAT_Base_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__VAT_Base_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__VAT_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__VAT_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__VAT_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__VAT_Base_Amount__GenJnlLine__VAT_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="STRSUBSTNO_Text005_VATDateFilter_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!STRSUBSTNO_Text005_VATDateFilter_.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="COMPANYNAME">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!COMPANYNAME.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Calc__and_Post_VAT_SettlementCaption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Calc__and_Post_VAT_SettlementCaption.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="CurrReport_PAGENOCaption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!CurrReport_PAGENOCaption.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000006">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000011">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.15cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__Source_Curr__VAT_Base_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__Source_Curr__VAT_Base_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__Source_Curr__VAT_Base_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__Source_Curr__VAT_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__Source_Curr__VAT_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__Source_Curr__VAT_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine__Source_Curr__VAT_Base_Amount__GenJnlLine__Source_Curr__VAT_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox12">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>4</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000014">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000015">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.15cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VATEntry_Base">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VATEntry_Base.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!VATEntry_BaseFormat.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine2_Amount">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine2_Amount.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine2_AmountFormat.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine2_Amount__VATEntry_Base">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine2_Amount__VATEntry_Base.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine2_Amount__VATEntry_BaseFormat.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox13">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>4</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000016">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000018">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.15cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VATEntry__Additional_Currency_Base_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!VATEntry__Additional_Currency_Base_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!VATEntry__Additional_Currency_Base_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine2__Source_Currency_Amount_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine2__Source_Currency_Amount_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine2__Source_Currency_Amount_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>=Fields!GenJnlLine2__Source_Currency_Amount__VATEntry__Additional_Currency_Base_Format.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox14">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>4</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TOTALCaption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=First(Fields!TOTALCaption.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox1">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GDec_VATBase">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Sum(Fields!GTotal1.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GDec_VATBase2">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Sum(Fields!GTotal2.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VATAmount_GDec_VATBase">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Sum(Fields!GTotal.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!VATAmount_GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <rd:Selected>true</rd:Selected>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox15">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>4</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TOTALCaption_Control67">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=First(Fields!TOTALCaption_Control67.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox11">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GDec_VATBase5">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Sum(Fields!GTotal1.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="GDec_VATBase4">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Last(Fields!GTotal2.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.15cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="VATAmount_GDec_VATBase2">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Last(Fields!GTotal.Value)</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Format>=First(Fields!VATAmount_GDec_VATBaseFormat.Value)</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </Border>
+                            <TopBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                              <Width>0.75pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox16">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto" />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>4</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Table1_Group1">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!VAT_Posting_Setup_VAT_Bus__Posting_Group.Value</GroupExpression>
+                      <GroupExpression>=Fields!VAT_Posting_Setup_VAT_Prod__Posting_Group.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <TablixMembers>
+                    <TablixMember>
+                      <Group Name="Table1_Details_Group">
+                        <DataElementName>Detail</DataElementName>
+                      </Group>
+                      <TablixMembers>
+                        <TablixMember>
+                          <Visibility>
+                            <Hidden>=iif((First(Fields!UseAmtsInAddCurr.Value) = False) and ((Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value &lt;&gt; "") or (Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value &lt;&gt;  "") or (Fields!GenJnlLine__VAT_Base_Amount_.Value &lt;&gt; 0)),False,True)</Hidden>
+                          </Visibility>
+                        </TablixMember>
+                        <TablixMember>
+                          <Visibility>
+                            <Hidden>=iif((First(Fields!UseAmtsInAddCurr.Value) = True) and ((Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value &lt;&gt; "") or (Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value &lt;&gt;  "") or (Fields!GenJnlLine__VAT_Base_Amount_.Value &lt;&gt; 0)),False,True)</Hidden>
+                          </Visibility>
+                        </TablixMember>
+                        <TablixMember>
+                          <Visibility>
+                            <Hidden>=iif((First(Fields!ReversingEntry.Value) = True) and ((Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value &lt;&gt; "") or (Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value &lt;&gt;  "") or (Fields!GenJnlLine__VAT_Base_Amount_.Value &lt;&gt; 0)),False,True)</Hidden>
+                          </Visibility>
+                        </TablixMember>
+                        <TablixMember>
+                          <Visibility>
+                            <Hidden>=iif((First(Fields!UseAmtsInAddCurr.Value) = True) and (First(Fields!ReversingEntry.Value) = True) and ((Fields!VAT_Posting_Setup___VAT_Bus__Posting_Group__Control1000000007.Value &lt;&gt; "") or (Fields!VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value &lt;&gt;  "") or (Fields!GenJnlLine__VAT_Base_Amount_.Value &lt;&gt; 0)),False,True)</Hidden>
+                          </Visibility>
+                        </TablixMember>
+                      </TablixMembers>
+                      <DataElementName>Detail_Collection</DataElementName>
+                      <DataElementOutput>Output</DataElementOutput>
+                      <KeepTogether>true</KeepTogether>
+                    </TablixMember>
+                  </TablixMembers>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=iif(First(Fields!UseAmtsInAddCurr.Value) = False,False,True)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <Visibility>
+                    <Hidden>=iif(First(Fields!UseAmtsInAddCurr.Value) = True,False,True)</Hidden>
+                  </Visibility>
+                  <KeepWithGroup>Before</KeepWithGroup>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>DataSet_Result</DataSetName>
+            <SortExpressions>
+              <SortExpression>
+                <Value>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000007.Value</Value>
+              </SortExpression>
+              <SortExpression>
+                <Value>VAT_Posting_Setup___VAT_Prod__Posting_Group__Control1000000008.Value</Value>
+              </SortExpression>
+            </SortExpressions>
+            <Top>4.23cm</Top>
+            <Left>2.1cm</Left>
+            <Height>5.076cm</Height>
+            <Width>13.4cm</Width>
+            <ZIndex>3</ZIndex>
+            <Style />
+          </Tablix>
+          <Textbox Name="TTCCaption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!TTCCaption.Value)</Value>
+                    <Style>
+                      <FontSize>8pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                      <Color>White</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>3.384cm</Top>
+            <Left>12.1cm</Left>
+            <Height>0.846cm</Height>
+            <Width>2.6cm</Width>
+            <ZIndex>4</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </RightBorder>
+              <BackgroundColor>#4c68a2</BackgroundColor>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="HTCaption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!HTCaption.Value)</Value>
+                    <Style>
+                      <FontSize>8pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                      <Color>White</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>3.384cm</Top>
+            <Left>6.9cm</Left>
+            <Height>0.846cm</Height>
+            <Width>2.7cm</Width>
+            <ZIndex>5</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+                <Width>0.75pt</Width>
+              </RightBorder>
+              <BackgroundColor>#4c68a2</BackgroundColor>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="DocNoCaption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!DocNoCaption.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.423cm</Top>
+            <Height>0.423cm</Height>
+            <Width>3cm</Width>
+            <ZIndex>6</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="PostingDate">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!PostingDate.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                      <Format>dd/MM/yy</Format>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Left>3.15cm</Left>
+            <Height>0.423cm</Height>
+            <Width>1.2cm</Width>
+            <ZIndex>7</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="PostingDateCaption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!PostingDateCaption.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Height>0.423cm</Height>
+            <Width>3cm</Width>
+            <ZIndex>8</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="GLAccSettle__No__">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!GLAccSettle__No__.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.846cm</Top>
+            <Left>3.15cm</Left>
+            <Height>0.423cm</Height>
+            <Width>3cm</Width>
+            <ZIndex>9</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="GLAccSettle__No__Caption">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!GLAccSettle__No__Caption.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.846cm</Top>
+            <Height>0.423cm</Height>
+            <Width>3cm</Width>
+            <ZIndex>10</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Textbox Name="DocNo">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value EvaluationMode="Auto">=First(Fields!DocNo.Value)</Value>
+                    <Style>
+                      <FontSize>7pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.423cm</Top>
+            <Left>3.15cm</Left>
+            <Height>0.423cm</Height>
+            <Width>1.5cm</Width>
+            <ZIndex>11</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+        </ReportItems>
+        <Height>9.306cm</Height>
+        <Style />
+      </Body>
+      <Width>18cm</Width>
+      <Page>
+        <PageHeader>
+          <Height>1.692cm</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="COMPANYNAME1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!COMPANYNAME.Value</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.846cm</Top>
+              <Height>0.423cm</Height>
+              <Width>7.5cm</Width>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Calc__and_Post_VAT_SettlementCaption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Calc__and_Post_VAT_SettlementCaption.Value</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Height>0.423cm</Height>
+              <Width>7.5cm</Width>
+              <ZIndex>1</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="CurrReport_PAGENOCaption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!CurrReport_PAGENOCaption.Value</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>13.5cm</Left>
+              <Height>0.423cm</Height>
+              <Width>0.75cm</Width>
+              <ZIndex>2</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="STRSUBSTNO_Text005_VATDateFilter_1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!STRSUBSTNO_Text005_VATDateFilter_.Value</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Height>0.423cm</Height>
+              <Width>7.5cm</Width>
+              <ZIndex>3</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="PageNumberTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=Globals!PageNumber</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>14.25cm</Left>
+              <Height>0.423cm</Height>
+              <Width>0.45cm</Width>
+              <ZIndex>4</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="UserIdTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=User!UserID</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.846cm</Top>
+              <Left>11.45cm</Left>
+              <Height>0.423cm</Height>
+              <Width>3.25cm</Width>
+              <ZIndex>5</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="ExecutionTimeTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=Globals!ExecutionTime</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Left>11.55cm</Left>
+              <Height>0.423cm</Height>
+              <Width>3.15cm</Width>
+              <ZIndex>6</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style />
+        </PageHeader>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>20.95cm</PageWidth>
+        <LeftMargin>2.1cm</LeftMargin>
+        <TopMargin>2cm</TopMargin>
+        <BottomMargin>2cm</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Cm</rd:ReportUnitType>
+  <rd:ReportID>d1a58f00-6f07-4d99-9563-e5e1ec2d2f34</rd:ReportID>
+</Report>
+    END_OF_RDLDATA
+  }
+}
+

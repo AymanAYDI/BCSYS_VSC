@@ -1,0 +1,60 @@
+OBJECT Table 50005 Global temporary table
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;Line No.            ;Integer       ;Description=FNP-SA }
+    { 2   ;   ;Document No.        ;Text100       ;Description=FNP-SA }
+    { 3   ;   ;External document No.;Text100      ;Description=FNP-SA }
+    { 4   ;   ;Account No.         ;Text100       ;Description=FNP-SA }
+    { 5   ;   ;Posting date        ;Date          ;Description=FNP-SA }
+    { 6   ;   ;Document date       ;Date          ;Description=FNP-SA }
+    { 7   ;   ;Credit amount       ;Decimal       ;DecimalPlaces=2:5;
+                                                   Description=FNP-SA }
+    { 8   ;   ;Debit amount        ;Decimal       ;DecimalPlaces=2:5;
+                                                   Description=FNP-SA }
+    { 9   ;   ;Description         ;Text100       ;Description=FNP-SA }
+    { 10  ;   ;Vendor No.          ;Text100       ;Description=FNP-SA }
+    { 11  ;   ;Axe 0               ;Text100       ;Description=FNP-SA }
+    { 12  ;   ;Axe 1               ;Text100       ;Description=FNP-SA }
+    { 13  ;   ;Axe 2               ;Text100       ;Description=FNP-SA }
+    { 14  ;   ;Axe 3               ;Text100       ;Description=FNP-SA }
+    { 15  ;   ;Axe 4               ;Text100       ;Description=FNP-SA }
+    { 16  ;   ;Axe 5               ;Text100       ;Description=FNP-SA }
+    { 17  ;   ;Vendor name         ;Text50        ;Description=FNP-SA }
+    { 18  ;   ;VAT rates           ;Decimal       ;Description=FNP-SA }
+    { 20  ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   Description=FNP-SA }
+  }
+  KEYS
+  {
+    {    ;Document No.,Line No.                   ;Clustered=Yes }
+    {    ;Account No.                              }
+    {    ;Document No.,External document No.       }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      ----------------------------------- VSC1.2 -----------------------------------
+      CREATION JX-XAD 11/12/2009 : FNP semi-automatiques
+      Table temporaire pouvant ˆtre utilis‚e par toute application
+      Ici, les champs marqu‚s FNP-SA sont utilisis‚s dans le cadre de la g‚n‚ration des FNP semi-automatiques.
+    }
+    END.
+  }
+}
+

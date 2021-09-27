@@ -1,0 +1,150 @@
+OBJECT Page 50052 Sales Activities VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26/08/16;
+    Time=16:38:18;
+    Modified=Yes;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Sales Activities;
+               FRA=Activit‚s ventes];
+    SourceTable=Table9053;
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+
+                 SetRespCenterFilter;
+                 SETRANGE("Date Filter",0D,WORKDATE - 1);
+                 SETFILTER("Date Filter2",'>=%1',WORKDATE);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       CalculateCueFieldValues;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 5       ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 13      ;1   ;Action    ;
+                      Name=Set Up Cues;
+                      CaptionML=[ENU=Set Up Cues;
+                                 FRA=Param‚trer piles];
+                      Image=Setup;
+                      OnAction=VAR
+                                 CueRecordRef@1000 : RecordRef;
+                               BEGIN
+                                 CueRecordRef.GETTABLE(Rec);
+                                 CueSetup.OpenCustomizePageForCurrentUser(CueRecordRef.NUMBER);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[ENU=Sales orders;
+                           FRA=Commandes ventes];
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 3       ;0   ;Action    ;
+                                  CaptionML=[ENU=New Sales Quote;
+                                             FRA=Nouveau devis];
+                                  RunObject=Page 41;
+                                  Image=Quote;
+                                  RunPageMode=Create }
+                  { 9       ;0   ;Action    ;
+                                  CaptionML=[ENU=New Sales Order;
+                                             FRA=Nouvelle commande vente];
+                                  RunObject=Page 42;
+                                  RunPageMode=Create }
+                }
+                 }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Sales Orders";
+                DrillDownPageID=Sales Order List }
+
+    { 1000000001;1;Group  ;
+                CaptionML=FRA=Commandes ventes-Ouvertes..;
+                Visible=False;
+                GroupType=CueGroup }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Sales Orders - Open";
+                Visible=False;
+                DrillDownPageID=Sales Order List }
+
+    { 12  ;2   ;Field     ;
+                Name=ReadyToShip;
+                CaptionML=[ENU=Ready To Ship;
+                           FRA=Prˆt pour exp‚dition];
+                SourceExpr="Ready to Ship";
+                Visible=False;
+                DrillDownPageID=Sales Order List;
+                OnDrillDown=BEGIN
+                              ShowOrders(FIELDNO("Ready to Ship"));
+                            END;
+                             }
+
+    { 11  ;2   ;Field     ;
+                Name=PartiallyShipped;
+                CaptionML=[ENU=Partially Shipped;
+                           FRA=Partiellement livr‚];
+                SourceExpr="Partially Shipped";
+                Visible=False;
+                DrillDownPageID=Sales Order List;
+                OnDrillDown=BEGIN
+                              ShowOrders(FIELDNO("Partially Shipped"));
+                            END;
+                             }
+
+    { 10  ;2   ;Field     ;
+                Name=DelayedOrders;
+                CaptionML=[ENU=Delayed;
+                           FRA=En retard];
+                SourceExpr=Delayed;
+                Visible=False;
+                DrillDownPageID=Sales Order List;
+                OnDrillDown=BEGIN
+                              ShowOrders(FIELDNO(Delayed));
+                            END;
+                             }
+
+  }
+  CODE
+  {
+    VAR
+      CueSetup@1000 : Codeunit 9701;
+
+    LOCAL PROCEDURE CalculateCueFieldValues@6();
+    BEGIN
+      IF FIELDACTIVE("Average Days Delayed") THEN
+        "Average Days Delayed" := CalculateAverageDaysDelayed;
+
+      IF FIELDACTIVE("Ready to Ship") THEN
+        "Ready to Ship" := CountOrders(FIELDNO("Ready to Ship"));
+
+      IF FIELDACTIVE("Partially Shipped") THEN
+        "Partially Shipped" := CountOrders(FIELDNO("Partially Shipped"));
+
+      IF FIELDACTIVE(Delayed) THEN
+        Delayed := CountOrders(FIELDNO(Delayed));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

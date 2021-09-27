@@ -2,9 +2,10 @@ OBJECT Page 30 Item Card
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
+    Date=22/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00.00.39368;
+    Modified=Yes;
+    Version List=NAVW16.00.01,KITNA6.00,JX-VSC1.1-XAD,,JX-VSC1.2-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -48,6 +49,17 @@ OBJECT Page 30 Item Card
                   EnablePlanningControls;
                   EnableCostingControls;
                 END;
+
+    OnInsertRecord=BEGIN
+                     //MODIF JX-AUD le 20/08/2012
+                     Grec_ItemUnitOfMeasure.INIT;
+                     Grec_ItemUnitOfMeasure."Item No." := "No.";
+                     Grec_ItemUnitOfMeasure.Code := 'EUROS';
+                     Grec_ItemUnitOfMeasure."Qty. per Unit of Measure" :=1;
+                     Grec_ItemUnitOfMeasure.INSERT;
+                     "Base Unit of Measure" := 'EUROS';
+                     //MODIF JX-AUD le 20/08/2012
+                   END;
 
     ActionList=ACTIONS
     {
@@ -127,6 +139,27 @@ OBJECT Page 30 Item Card
                       RunPageView=SORTING(Item No.,Variant Code,Unit of Measure Code);
                       RunPageLink=Item No.=FIELD(No.);
                       Image=BarCode }
+      { 1000000000;2 ;Separator  }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=[ENU=Duplicate to another company;
+                                 FRA=Dupliquer vers une autre soci‚t‚];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyFromChartOfAccounts;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 03/04/2009
+
+                                 //DEBUT MODIF JX-XAD 15/06/2010
+                                 //GForm_Dupliquer.initialiser(Gopt_TypeFiche::Item,"No.");
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::Item,"No.",'');
+                                 //FIN MODIF JX-XAD 15/06/2010
+
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 03/04/2009
+                               END;
+                                }
       { 124     ;1   ;ActionGroup;
                       CaptionML=[ENU=Availability;
                                  FRA=Disponibilit‚];
@@ -1152,6 +1185,9 @@ OBJECT Page 30 Item Card
     VAR
       SkilledResourceList@1001 : Page 6023;
       CalculateStdCost@1005 : Codeunit 5812;
+      GForm_Dupliquer@1000000001 : Page 50013;
+      Gopt_TypeFiche@1000000000 : ',Vendor,G/L Account,Item,VendorBankAccount';
+      Grec_ItemUnitOfMeasure@1000000002 : Record 5404;
       ItemAvailFormsMgt@1000 : Codeunit 353;
       ShowStockoutWarningDefaultYes@1006 : Boolean;
       ShowStockoutWarningDefaultNo@1004 : Boolean;
@@ -1252,6 +1288,18 @@ OBJECT Page 30 Item Card
     END;
 
     BEGIN
+    {
+      //Ajout JX-XAD le 03/04/2009
+      //Ajout de la fonction "Dupliquer" dans le menu Article
+
+      ---------------------------- V1.2 ----------------------------
+
+      //MODIF JX-XAD le 15/06/2010 (fait le 15/10/2010)
+      //Modification suite … l'ajout de la duplication de la fiche bancaire
+
+      //MODIF JX-AUD le 20/08/2012
+      //Mise en place de l'unit‚ 'EUROS' par d‚faut
+    }
     END.
   }
 }

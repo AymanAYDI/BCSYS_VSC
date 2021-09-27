@@ -1,0 +1,33 @@
+OBJECT Page 50099 Company Picture
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table79;
+    PageType=CardPart;
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Field  ;
+                CaptionML=ENU=Picture;
+                SourceExpr=Picture;
+                ShowCaption=No }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

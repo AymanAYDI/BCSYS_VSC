@@ -1,0 +1,44 @@
+OBJECT Page 50090 Printer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=25/06/15;
+    Time=08:39:37;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table2000000039;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1000000002;2;Field  ;
+                SourceExpr=ID }
+
+    { 1000000003;2;Field  ;
+                SourceExpr=Name }
+
+    { 1000000004;2;Field  ;
+                SourceExpr=Driver }
+
+    { 1000000005;2;Field  ;
+                SourceExpr=Device }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

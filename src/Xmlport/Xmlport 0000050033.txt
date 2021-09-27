@@ -1,0 +1,169 @@
+OBJECT XMLport 50033 Yooz Export Vendor
+{
+  OBJECT-PROPERTIES
+  {
+    Date=11/11/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Yooz Export Vendor;
+               FRA=Yooz Export fournisseurs];
+    Direction=Export;
+    TextEncoding=WINDOWS;
+    OnPreXMLport=BEGIN
+                   Grec_YoozParameters.GET;
+                   Gtext_PathFolder := Grec_YoozParameters."Yooz Export Path" + '\' +
+                   FORMAT(CURRENTDATETIME,0,'<Year><Month,2><Day,2><Hours24><Minutes,2><Seconds,2>') + '_Yooz_Export_Vendors.csv';
+
+                   currXMLport.FILENAME := Gtext_PathFolder;
+
+                   GTextBlank := '';
+                 END;
+
+    OnPostXMLport=BEGIN
+                    MESSAGE(STRSUBSTNO(Text001,CONVERTSTR(Gtext_PathFolder,'\','>')))
+                  END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=<TAB>;
+    TableSeparator=<NewLine>;
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{59C5FFA2-002E-4E78-AEBD-3EEE454D0649}];  ;Root                ;Element ;Text     }
+
+    { [{2269A827-CF9F-40E5-9BDB-0680EED05528}];1 ;Header              ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         Integer.SETRANGE(Number,1,2);
+                                                                       END;
+
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             IF Integer.Number = 1 THEN
+                                                                              GTextHeader := 'v20120430'
+                                                                             ELSE
+                                                                              GTextHeader := 'SUPPLIER_TAB';
+                                                                           END;
+                                                                            }
+
+    { [{1FD40231-99D9-4A09-A37D-7F29F55C1067}];2 ;GTextHeader         ;Element ;Text    ;
+                                                  VariableName=GTextHeader }
+
+    { [{56F951F9-4281-476F-8DE1-48AC2CB2FD61}];1 ;Vendor              ;Element ;Table   ;
+                                                  SourceTable=Table23;
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             //Vendor.Address := "Gcu_ANSI-ASCII".Ascii2Ansi(Vendor.Address);
+                                                                             //Vendor.Name := "Gcu_ANSI-ASCII".Ascii2Ansi(Vendor.Name);
+                                                                           END;
+                                                                            }
+
+    { [{B78A15D0-B58E-44DB-8AFD-C516E6E5C883}];2 ;No                  ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Vendor::No. }
+
+    { [{B7B8835D-B498-438F-B7D8-791EC6212393}];2 ;Name                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Name }
+
+    { [{BD92ED3D-91B2-4F12-B06D-5A2B9BC2932D}];2 ;VAT                 ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::VAT Registration No. }
+
+    { [{04A9FDB4-87ED-4696-BC9C-1E51FCCD56A2}];2 ;Phone               ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Phone No. }
+
+    { [{F3CD63DA-C57A-450F-AF81-A3B0BE909FA5}];2 ;FAX                 ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Fax No. }
+
+    { [{E5056F90-D536-48A0-8EAB-25473163D3E3}];2 ;Home                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Home Page }
+
+    { [{6E7BD76B-514B-4A3D-954A-F91536571266}];2 ;Address             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Address }
+
+    { [{46FFCD08-65DB-456B-BDE4-894E7559108B}];2 ;Address2            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Address 2 }
+
+    { [{F2742921-9217-4670-A23D-8C0F4C5EB9E2}];2 ;PostCode            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Vendor::Post Code }
+
+    { [{3D41AA2E-4F2A-4133-BB48-DCAA926B0B43}];2 ;City                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::City }
+
+    { [{1660DBE1-B158-49DF-9345-DD9588BB1157}];2 ;Country             ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Vendor::Country/Region Code }
+
+    { [{E3E425F7-80A4-45CF-9692-11416E49A345}];2 ;Contact             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Vendor::Contact }
+
+    { [{A13B1FBE-360D-458B-B0A5-9C6F2F50B282}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank1 }
+
+    { [{70EDE4EF-ED63-4F8F-8BFE-C6DD5A3B4BC8}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank2 }
+
+    { [{402DF84E-FD66-43B8-88AD-5D2C2B3D0F32}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank3 }
+
+    { [{2A3DCCEF-5EE7-4723-9A44-8F0A14B46A16}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank4 }
+
+    { [{61BDB13A-545A-4954-B371-C6900CB7A753}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank5 }
+
+    { [{5922D590-A719-4A8C-BC4C-EE54D44FDDD0}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank6 }
+
+    { [{27936C67-64F3-4599-A19B-7C223F24C477}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank7 }
+
+    { [{9552BBEE-9C3C-41A9-AA92-2458462289C1}];2 ;GTextBlank          ;Element ;Text    ;
+                                                  VariableName=GTextBlank8 }
+
+    { [{9D3386F0-2B16-49A6-A06F-C8211B900F50}];2 ;Registration        ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Vendor::Registration No. }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gtext_PathFolder@1000000003 : Text[250];
+      Grec_YoozParameters@1000000002 : Record 50013;
+      "Gcu_ANSI-ASCII"@1000000001 : Codeunit 50002;
+      GTextBlank@1000000000 : Text[2];
+      Text001@1000000005 : TextConst 'ENU=Export vendor has been realized in folder %1;FRA=L''export des fournisseurs s''est bien effectu‚ dans le dossier %1';
+      Text002@1000000004 : TextConst 'ENU=Error: File is not created;FRA=Erreur: Le fichier ne s''est pas cr‚‚';
+
+    BEGIN
+    END.
+  }
+}
+

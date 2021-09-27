@@ -1,0 +1,66 @@
+OBJECT Table 50012 Import Group Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/08/16;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[ENU=Import Group Invoice;
+               FRA=Import Facture Groupe];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Invoice type        ;Option        ;CaptionML=FRA=Type facture;
+                                                   OptionCaptionML=[ENU=Purchase,Sale;
+                                                                    FRA=Achat,Vente];
+                                                   OptionString=Purchase,Sale }
+    { 2   ;   ;Society code        ;Code20        ;CaptionML=FRA=Code soci‚t‚ }
+    { 3   ;   ;Line No.            ;Text30        ;CaptionML=FRA=Nø ligne }
+    { 4   ;   ;Cus. Vend. No.      ;Code20        ;CaptionML=FRA=Nø client/fourn }
+    { 5   ;   ;Posting date        ;Date          ;CaptionML=FRA=Date comptable }
+    { 6   ;   ;Document date       ;Date          ;CaptionML=FRA=Date document }
+    { 7   ;   ;Assigned user ID    ;Code50        ;CaptionML=FRA=Code utilisateur affect‚ }
+    { 8   ;   ;Your reference      ;Text50        ;CaptionML=FRA=Votre r‚f‚rence }
+    { 9   ;   ;External doc. No.   ;Code20        ;CaptionML=FRA=Nø doc. externe }
+    { 10  ;   ;Invoice No.         ;Code20        ;CaptionML=FRA=Nø facture }
+    { 11  ;   ;Line type           ;Option        ;CaptionML=FRA=Type ligne;
+                                                   OptionCaptionML=[ENU=" ,G/L Account,Item,Resource,Fixed Asset,Charge (Item)";
+                                                                    FRA=" ,Compte g‚n‚ral,Article,Ressource,Immobilisation,Frais annexes"];
+                                                   OptionString=[ ,G/L Account,Item,Resource,Fixed Asset,Charge (Item)] }
+    { 12  ;   ;Account No.         ;Code20        ;CaptionML=FRA=Nø compte g‚n‚ral }
+    { 13  ;   ;Designation         ;Text50        ;CaptionML=FRA=D‚signation }
+    { 14  ;   ;Quantity            ;Decimal       ;CaptionML=FRA=Quantit‚ }
+    { 15  ;   ;Axe 0               ;Code20        ;CaptionML=FRA=Axe 0 }
+    { 16  ;   ;Axe 1               ;Code20        ;CaptionML=FRA=Axe 1 }
+    { 17  ;   ;Axe 2               ;Code20        ;CaptionML=FRA=Axe 2 }
+    { 18  ;   ;Axe 3               ;Code20        ;CaptionML=FRA=Axe 3 }
+    { 19  ;   ;Axe 4               ;Code20        ;CaptionML=FRA=Axe 4 }
+    { 20  ;   ;Axe 5               ;Code20        ;CaptionML=FRA=Axe 5 }
+    { 21  ;   ;Gen. Prod. Posting Group;Code10    ;CaptionML=[ENU=Gen. Prod. Posting Group;
+                                                              FRA=Groupe compta. Produit] }
+    { 22  ;   ;Axe 6               ;Code20        ;CaptionML=FRA=Axe 4 }
+    { 23  ;   ;Axe 7               ;Code20        ;CaptionML=FRA=Axe 5 }
+  }
+  KEYS
+  {
+    {    ;Invoice type,Society code,Line No.      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //JX-AUD CREATION du 10/04/14
+    }
+    END.
+  }
+}
+

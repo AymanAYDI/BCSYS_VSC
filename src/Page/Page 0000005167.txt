@@ -2,9 +2,10 @@ OBJECT Page 5167 Purchase Order Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.0-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -14,10 +15,27 @@ OBJECT Page 5167 Purchase Order Archive
     SourceTable=Table5109;
     SourceTableView=WHERE(Document Type=CONST(Order));
     PageType=Document;
+    OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+               END;
+
     ActionList=ACTIONS
     {
       { 1900000003;0 ;ActionContainer;
                       ActionContainerType=RelatedInformation }
+      { 1000000000;1 ;ActionGroup;
+                      CaptionML=[ENU=O&rder;
+                                 FRA=&Commande] }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      RunObject=Page 50019;
+                      RunPageLink=Order No.=FIELD(No.) }
       { 116     ;1   ;ActionGroup;
                       CaptionML=[ENU=Ver&sion;
                                  FRA=Ver&sion];
@@ -26,7 +44,7 @@ OBJECT Page 5167 Purchase Order Archive
                       ShortCutKey=Shift+F7;
                       CaptionML=[ENU=Card;
                                  FRA=Fiche];
-                      RunObject=Page 26;
+                      RunObject=Page 27;
                       RunPageLink=No.=FIELD(Buy-from Vendor No.);
                       Image=EditLines }
       { 120     ;2   ;Action    ;
@@ -95,6 +113,10 @@ OBJECT Page 5167 Purchase Order Archive
 
     { 14  ;2   ;Field     ;
                 SourceExpr="Buy-from Contact" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Matricule No.";
+                Editable=FALSE }
 
     { 16  ;2   ;Field     ;
                 SourceExpr="Posting Date" }
@@ -293,8 +315,20 @@ OBJECT Page 5167 Purchase Order Archive
   {
     VAR
       DocPrint@1000 : Codeunit 229;
+      UserMgt@1000000000 : Codeunit 5700;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 26/02/2010
+      Gestion des contrats : ajout du bouton "Contrat"
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Matricule" et traitement de celui-ci
+    }
     END.
   }
 }

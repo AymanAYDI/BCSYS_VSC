@@ -1,0 +1,34 @@
+OBJECT Query 50002 Montant Achat
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/06/15;
+    Time=14:27:42;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+  }
+  ELEMENTS
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table38 }
+
+    { 1000000001;1;Column;                   ;
+               DataSource=Payment Terms Code }
+
+    { 1000000002;1;Column;                   ;
+               DataSource=Amount;
+               MethodType=Totals;
+               Method=Sum }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,197 @@
+OBJECT Codeunit 50010 Vendor Payments
+{
+  OBJECT-PROPERTIES
+  {
+    Date=31/08/16;
+    Time=15:06:53;
+    Modified=Yes;
+    Version List=JX-VSC4.1-PBD;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 25=rm;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      PaymHeader@1000000000 : Record 10865;
+      PaymLine@1000000001 : Record 10866;
+      PaymLine2@1000000005 : Record 10866;
+      VendLedgEntry@1000000007 : Record 25;
+      CompInfo@1000000004 : Record 79;
+      GLSetup@1000000006 : Record 98;
+      PaymentStep@1000000011 : Record 10862;
+      PaymentMgt@1000000012 : Codeunit 10860;
+      AmountToPay@1000000002 : Decimal;
+      Text001@1000000003 : TextConst 'FRA=Un de vos bordereaux est en cours de saisie. Voulez-vous ajouter ce paiement … ce bordereau ?';
+      Text002@1000000008 : TextConst 'FRA=Ce document a ‚t‚ d‚j… r‚gl‚ par avance. Etes-vous s–r ?';
+      Text003@1000000009 : TextConst 'FRA=Cette facture a ‚t‚ int‚gralement pay‚e. Cr‚ation du bordereau impossible.';
+      Text004@1000000010 : TextConst 'FRA=Ecriture comptable fournisseur non trouv‚e.';
+      Text005@1000000013 : TextConst 'FRA="Voulez-vous valider ce bordereau (Non = Affichage du bordereau) ?"';
+      Text006@1000000014 : TextConst 'FRA=Ce document d‚j… figure sur le bordereau %1. Souhaitez-vous continuer ?';
+
+    PROCEDURE CreatePaymentDoc@1000000000(pPurchHeader@1000000000 : Record 38);
+    VAR
+      PaymentPage@1000000001 : Page 50055;
+      PaymentLine@1000000002 : Record 10866;
+    BEGIN
+      PaymentLine.RESET;
+      PaymentLine.SETCURRENTKEY("Pay Document Type","Pay Document No.");
+      PaymentLine.SETRANGE("Pay Document Type",pPurchHeader."Document Type" + 1);
+      PaymentLine.SETRANGE("Pay Document No.",pPurchHeader."No.");
+      PaymentLine.SETRANGE("Status No.",0);
+      IF PaymentLine.FINDFIRST THEN
+       IF NOT CONFIRM(STRSUBSTNO(Text006,PaymentLine."No."),FALSE) THEN
+        EXIT;
+
+      VendLedgEntry.RESET;
+      VendLedgEntry.SETCURRENTKEY("Vendor No.","Document Type Prepaid","Document Prepaid");
+      VendLedgEntry.SETRANGE("Vendor No.",pPurchHeader."Pay-to Vendor No.");
+      VendLedgEntry.SETRANGE("Document Type Prepaid",pPurchHeader."Document Type" + 1);
+      VendLedgEntry.SETRANGE("Document Prepaid",pPurchHeader."No.");
+      IF VendLedgEntry.FINDFIRST THEN
+       IF NOT CONFIRM(Text002,FALSE) THEN
+        EXIT;
+
+      CLEAR(PaymentPage);
+      PaymentPage.SETRECORD(pPurchHeader);
+      PaymentPage.LOOKUPMODE(TRUE);
+      IF PaymentPage.RUNMODAL = ACTION::LookupCancel THEN
+       EXIT;
+      AmountToPay := PaymentPage.ReturnAmount;
+      IF AmountToPay = 0 THEN
+       EXIT;
+      CreatePayment(pPurchHeader."Document Type" + 1,pPurchHeader."No.",pPurchHeader."Pay-to Vendor No.");
+      pPurchHeader."Document Prepaid" := TRUE;
+      pPurchHeader."Amount Prepaid" += AmountToPay;
+      pPurchHeader."Document Type Prepaid" := pPurchHeader."Document Type" + 1;
+      pPurchHeader."Document No. Prepaid" := pPurchHeader."No.";
+      pPurchHeader.MODIFY;
+    END;
+
+    PROCEDURE CreatePaymentInv@1000000001(pInvoiceHeader@1000000000 : Record 122);
+    VAR
+      lVendorLedger@1000000001 : Record 25;
+      PaymentLine@1000000002 : Record 10866;
+    BEGIN
+      PaymentLine.RESET;
+      PaymentLine.SETCURRENTKEY("Pay Document Type","Pay Document No.");
+      PaymentLine.SETRANGE("Pay Document Type",PaymentLine."Pay Document Type"::Invoice);
+      PaymentLine.SETRANGE("Pay Document No.",pInvoiceHeader."No.");
+      PaymentLine.SETRANGE("Status No.",0);
+      IF PaymentLine.FINDFIRST THEN
+       IF NOT CONFIRM(STRSUBSTNO(Text006,PaymentLine."No."),FALSE) THEN
+        EXIT;
+
+      lVendorLedger.RESET;
+      lVendorLedger.SETCURRENTKEY("Vendor No.","Document No.","Posting Date");
+      lVendorLedger.SETRANGE("Vendor No.",pInvoiceHeader."Pay-to Vendor No.");
+      lVendorLedger.SETRANGE("Document No.",pInvoiceHeader."No.");
+      lVendorLedger.SETRANGE("Document Type",lVendorLedger."Document Type"::Invoice);
+      IF lVendorLedger.FINDFIRST THEN BEGIN
+       lVendorLedger.CALCFIELDS("Remaining Amount");
+       IF NOT lVendorLedger.Open THEN
+        ERROR(Text003);
+       AmountToPay := lVendorLedger."Remaining Amount";
+       CreatePayment(0,pInvoiceHeader."No.",pInvoiceHeader."Pay-to Vendor No.");
+      END ELSE
+       ERROR(Text004);
+    END;
+
+    LOCAL PROCEDURE CreatePayment@1000000002(TypeDoc@1000000000 : 'Invoice,Quote,Order,FAP';DocNo@1000000001 : Code[20];VendorNo@1000000002 : Code[20]);
+    VAR
+      PaymentSlip@1000000003 : Page 10868;
+    BEGIN
+      {
+      PaymHeader.RESET;
+      PaymHeader.SETCURRENTKEY("User ID","Status No.");
+      PaymHeader.SETRANGE("User ID",USERID);
+      PaymHeader.SETRANGE("Status No.",0);
+      IF PaymHeader.FINDFIRST THEN BEGIN
+       IF NOT CONFIRM(Text001,TRUE) THEN
+        CreateHeader
+       ELSE BEGIN
+        PaymHeader."Modifcation Date" := WORKDATE;
+        PaymHeader.MODIFY;
+       END;
+      END ELSE
+      }
+      CreateHeader;
+
+      PaymLine2.RESET;
+      PaymLine2.SETRANGE("No.",PaymHeader."No.");
+      PaymLine.INIT;
+      PaymLine."No." := PaymHeader."No.";
+      IF PaymLine2.FINDLAST THEN
+       PaymLine."Line No." := PaymLine2."Line No." + 10000
+      ELSE
+       PaymLine."Line No." := 10000;
+      PaymLine.INSERT;
+      PaymLine."Account Type" := PaymLine."Account Type"::Vendor;
+      PaymLine.VALIDATE("Account No.",VendorNo);
+      PaymLine."Due Date" := WORKDATE;
+      PaymLine."Payment Class" := PaymHeader."Payment Class";
+      IF TypeDoc > TypeDoc::Invoice THEN BEGIN
+        PaymLine."Pay Document Type" := TypeDoc;
+        PaymLine."Pay Document No." := DocNo;
+      END ELSE BEGIN
+        PaymLine."Pay Document Type" := TypeDoc;
+        PaymLine."Pay Document No." := DocNo;
+        VendLedgEntry.RESET;
+        VendLedgEntry.SETCURRENTKEY("Vendor No.","Document No.","Posting Date");
+        VendLedgEntry.SETRANGE("Vendor No.",VendorNo);
+        VendLedgEntry.SETRANGE("Document No.",DocNo);
+        VendLedgEntry.SETRANGE("Document Type",VendLedgEntry."Document Type"::Invoice);
+        IF VendLedgEntry.FINDFIRST THEN BEGIN
+         VendLedgEntry."Applies-to ID" := PaymHeader."No." + '/' + FORMAT(PaymLine."Line No.");
+         VendLedgEntry.MODIFY;
+         PaymLine."Applies-to ID" := PaymHeader."No." + '/' + FORMAT(PaymLine."Line No.");
+        END;
+      END;
+      PaymLine.VALIDATE(Amount,AmountToPay);
+      PaymLine.MODIFY;
+
+      COMMIT;
+      PaymLine.SETRANGE("No.",PaymHeader."No.");
+      PaymHeader.SETRANGE("No.",PaymHeader."No.");
+      PaymHeader.MARK(TRUE);
+      PaymentStep.SETRANGE("Action Type",PaymentStep."Action Type"::Report);
+      PaymentMgt.ProcessPaymentSteps(PaymHeader,PaymentStep);
+      PaymHeader.MARK(FALSE);
+      IF NOT CONFIRM(Text005,FALSE) THEN BEGIN
+       CLEAR(PaymentSlip);
+       PaymentSlip.SETRECORD(PaymHeader);
+       PaymentSlip.SETTABLEVIEW(PaymHeader);
+       COMMIT;
+       PaymentSlip.RUNMODAL;
+      END ELSE BEGIN
+       PaymentStep.SETFILTER("Action Type",'%1|%2',PaymentStep."Action Type"::None,PaymentStep."Action Type"::Ledger);
+       PaymentMgt.ProcessPaymentSteps(PaymHeader,PaymentStep);
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateHeader@1000000003();
+    BEGIN
+      CompInfo.GET;
+      GLSetup.GET;
+      PaymHeader.RESET;
+      PaymHeader.INIT;
+      PaymHeader."No." := '';
+      PaymHeader."Payment Class" := GLSetup."Default Payment Class";
+      PaymHeader.INSERT(TRUE);
+      PaymHeader."Account Type" := PaymHeader."Account Type"::"Bank Account";
+      PaymHeader.VALIDATE("Account No.",CompInfo."Default Bank Account No.");
+      PaymHeader."User ID" := USERID;
+      PaymHeader."Creation Date" := WORKDATE;
+      PaymHeader."Alone Payment" := TRUE;
+      PaymHeader.MODIFY;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

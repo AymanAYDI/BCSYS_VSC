@@ -1,0 +1,443 @@
+OBJECT Query 50000 Cust
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+  }
+  ELEMENTS
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table18 }
+
+    { 1000000001;1;Column;                   ;
+               DataSource=No. }
+
+    { 1000000002;1;Column;                   ;
+               DataSource=Name }
+
+    { 1000000003;1;Column;                   ;
+               DataSource=Search Name }
+
+    { 1000000004;1;Column;                   ;
+               DataSource=Name 2 }
+
+    { 1000000005;1;Column;                   ;
+               DataSource=Address }
+
+    { 1000000006;1;Column;                   ;
+               DataSource=Address 2 }
+
+    { 1000000007;1;Column;                   ;
+               DataSource=City }
+
+    { 1000000008;1;Column;                   ;
+               DataSource=Contact }
+
+    { 1000000009;1;Column;                   ;
+               DataSource=Phone No. }
+
+    { 1000000010;1;Column;                   ;
+               DataSource=Telex No. }
+
+    { 1000000011;1;Column;                   ;
+               DataSource=Our Account No. }
+
+    { 1000000012;1;Column;                   ;
+               DataSource=Territory Code }
+
+    { 1000000013;1;Column;                   ;
+               DataSource=Global Dimension 1 Code }
+
+    { 1000000014;1;Column;                   ;
+               DataSource=Global Dimension 2 Code }
+
+    { 1000000015;1;Column;                   ;
+               DataSource=Chain Name }
+
+    { 1000000016;1;Column;                   ;
+               DataSource=Budgeted Amount }
+
+    { 1000000017;1;Column;                   ;
+               DataSource=Credit Limit (LCY) }
+
+    { 1000000018;1;Column;                   ;
+               DataSource=Customer Posting Group }
+
+    { 1000000019;1;Column;                   ;
+               DataSource=Currency Code }
+
+    { 1000000020;1;Column;                   ;
+               DataSource=Customer Price Group }
+
+    { 1000000021;1;Column;                   ;
+               DataSource=Language Code }
+
+    { 1000000022;1;Column;                   ;
+               DataSource=Statistics Group }
+
+    { 1000000023;1;Column;                   ;
+               DataSource=Payment Terms Code }
+
+    { 1000000024;1;Column;                   ;
+               DataSource=Fin. Charge Terms Code }
+
+    { 1000000025;1;Column;                   ;
+               DataSource=Salesperson Code }
+
+    { 1000000026;1;Column;                   ;
+               DataSource=Shipment Method Code }
+
+    { 1000000027;1;Column;                   ;
+               DataSource=Shipping Agent Code }
+
+    { 1000000028;1;Column;                   ;
+               DataSource=Place of Export }
+
+    { 1000000029;1;Column;                   ;
+               DataSource=Invoice Disc. Code }
+
+    { 1000000030;1;Column;                   ;
+               DataSource=Customer Disc. Group }
+
+    { 1000000031;1;Column;                   ;
+               DataSource=Country/Region Code }
+
+    { 1000000032;1;Column;                   ;
+               DataSource=Collection Method }
+
+    { 1000000033;1;Column;                   ;
+               DataSource=Amount }
+
+    { 1000000034;1;Column;                   ;
+               DataSource=Comment }
+
+    { 1000000035;1;Column;                   ;
+               DataSource=Blocked }
+
+    { 1000000036;1;Column;                   ;
+               DataSource=Invoice Copies }
+
+    { 1000000037;1;Column;                   ;
+               DataSource=Last Statement No. }
+
+    { 1000000038;1;Column;                   ;
+               DataSource=Print Statements }
+
+    { 1000000039;1;Column;                   ;
+               DataSource=Bill-to Customer No. }
+
+    { 1000000040;1;Column;                   ;
+               DataSource=Priority }
+
+    { 1000000041;1;Column;                   ;
+               DataSource=Payment Method Code }
+
+    { 1000000042;1;Column;                   ;
+               DataSource=Last Date Modified }
+
+    { 1000000046;1;Column;                   ;
+               DataSource=Balance }
+
+    { 1000000047;1;Column;                   ;
+               DataSource=Balance (LCY) }
+
+    { 1000000048;1;Column;                   ;
+               DataSource=Net Change }
+
+    { 1000000049;1;Column;                   ;
+               DataSource=Net Change (LCY) }
+
+    { 1000000050;1;Column;                   ;
+               DataSource=Sales (LCY) }
+
+    { 1000000051;1;Column;                   ;
+               DataSource=Profit (LCY) }
+
+    { 1000000052;1;Column;                   ;
+               DataSource=Inv. Discounts (LCY) }
+
+    { 1000000053;1;Column;                   ;
+               DataSource=Pmt. Discounts (LCY) }
+
+    { 1000000054;1;Column;                   ;
+               DataSource=Balance Due }
+
+    { 1000000055;1;Column;                   ;
+               DataSource=Balance Due (LCY) }
+
+    { 1000000056;1;Column;                   ;
+               DataSource=Payments }
+
+    { 1000000057;1;Column;                   ;
+               DataSource=Invoice Amounts }
+
+    { 1000000058;1;Column;                   ;
+               DataSource=Cr. Memo Amounts }
+
+    { 1000000059;1;Column;                   ;
+               DataSource=Finance Charge Memo Amounts }
+
+    { 1000000060;1;Column;                   ;
+               DataSource=Payments (LCY) }
+
+    { 1000000061;1;Column;                   ;
+               DataSource=Inv. Amounts (LCY) }
+
+    { 1000000062;1;Column;                   ;
+               DataSource=Cr. Memo Amounts (LCY) }
+
+    { 1000000063;1;Column;                   ;
+               DataSource=Fin. Charge Memo Amounts (LCY) }
+
+    { 1000000064;1;Column;                   ;
+               DataSource=Outstanding Orders }
+
+    { 1000000065;1;Column;                   ;
+               DataSource=Shipped Not Invoiced }
+
+    { 1000000066;1;Column;                   ;
+               DataSource=Application Method }
+
+    { 1000000067;1;Column;                   ;
+               DataSource=Prices Including VAT }
+
+    { 1000000068;1;Column;                   ;
+               DataSource=Location Code }
+
+    { 1000000069;1;Column;                   ;
+               DataSource=Fax No. }
+
+    { 1000000070;1;Column;                   ;
+               DataSource=Telex Answer Back }
+
+    { 1000000071;1;Column;                   ;
+               DataSource=VAT Registration No. }
+
+    { 1000000072;1;Column;                   ;
+               DataSource=Combine Shipments }
+
+    { 1000000073;1;Column;                   ;
+               DataSource=Gen. Bus. Posting Group }
+
+    { 1000000075;1;Column;                   ;
+               DataSource=Post Code }
+
+    { 1000000076;1;Column;                   ;
+               DataSource=County }
+
+    { 1000000077;1;Column;                   ;
+               DataSource=Debit Amount }
+
+    { 1000000078;1;Column;                   ;
+               DataSource=Credit Amount }
+
+    { 1000000079;1;Column;                   ;
+               DataSource=Debit Amount (LCY) }
+
+    { 1000000080;1;Column;                   ;
+               DataSource=Credit Amount (LCY) }
+
+    { 1000000081;1;Column;                   ;
+               DataSource=E-Mail }
+
+    { 1000000082;1;Column;                   ;
+               DataSource=Home Page }
+
+    { 1000000083;1;Column;                   ;
+               DataSource=Reminder Terms Code }
+
+    { 1000000084;1;Column;                   ;
+               DataSource=Reminder Amounts }
+
+    { 1000000085;1;Column;                   ;
+               DataSource=Reminder Amounts (LCY) }
+
+    { 1000000086;1;Column;                   ;
+               DataSource=No. Series }
+
+    { 1000000087;1;Column;                   ;
+               DataSource=Tax Area Code }
+
+    { 1000000088;1;Column;                   ;
+               DataSource=Tax Liable }
+
+    { 1000000089;1;Column;                   ;
+               DataSource=VAT Bus. Posting Group }
+
+    { 1000000091;1;Column;                   ;
+               DataSource=Outstanding Orders (LCY) }
+
+    { 1000000092;1;Column;                   ;
+               DataSource=Shipped Not Invoiced (LCY) }
+
+    { 1000000093;1;Column;                   ;
+               DataSource=Reserve }
+
+    { 1000000094;1;Column;                   ;
+               DataSource=Block Payment Tolerance }
+
+    { 1000000095;1;Column;                   ;
+               DataSource=Pmt. Disc. Tolerance (LCY) }
+
+    { 1000000096;1;Column;                   ;
+               DataSource=Pmt. Tolerance (LCY) }
+
+    { 1000000097;1;Column;                   ;
+               DataSource=IC Partner Code }
+
+    { 1000000098;1;Column;                   ;
+               DataSource=Refunds }
+
+    { 1000000099;1;Column;                   ;
+               DataSource=Refunds (LCY) }
+
+    { 1000000100;1;Column;                   ;
+               DataSource=Other Amounts }
+
+    { 1000000101;1;Column;                   ;
+               DataSource=Other Amounts (LCY) }
+
+    { 1000000102;1;Column;                   ;
+               DataSource=Prepayment % }
+
+    { 1000000103;1;Column;                   ;
+               DataSource=Outstanding Invoices (LCY) }
+
+    { 1000000104;1;Column;                   ;
+               DataSource=Outstanding Invoices }
+
+    { 1000000105;1;Column;                   ;
+               DataSource=Bill-to No. Of Archived Doc. }
+
+    { 1000000106;1;Column;                   ;
+               DataSource=Sell-to No. Of Archived Doc. }
+
+    { 1000000107;1;Column;                   ;
+               DataSource=Partner Type }
+
+    { 1000000108;1;Column;                   ;
+               DataSource=Preferred Bank Account }
+
+    { 1000000109;1;Column;                   ;
+               DataSource=Cash Flow Payment Terms Code }
+
+    { 1000000110;1;Column;                   ;
+               DataSource=Primary Contact No. }
+
+    { 1000000111;1;Column;                   ;
+               DataSource=Responsibility Center }
+
+    { 1000000112;1;Column;                   ;
+               DataSource=Shipping Advice }
+
+    { 1000000113;1;Column;                   ;
+               DataSource=Shipping Time }
+
+    { 1000000114;1;Column;                   ;
+               DataSource=Shipping Agent Service Code }
+
+    { 1000000115;1;Column;                   ;
+               DataSource=Service Zone Code }
+
+    { 1000000116;1;Column;                   ;
+               DataSource=Contract Gain/Loss Amount }
+
+    { 1000000118;1;Column;                   ;
+               DataSource=Outstanding Serv. Orders (LCY) }
+
+    { 1000000119;1;Column;                   ;
+               DataSource=Serv Shipped Not Invoiced(LCY) }
+
+    { 1000000120;1;Column;                   ;
+               DataSource=Outstanding Serv.Invoices(LCY) }
+
+    { 1000000121;1;Column;                   ;
+               DataSource=Allow Line Disc. }
+
+    { 1000000122;1;Column;                   ;
+               DataSource=No. of Quotes }
+
+    { 1000000123;1;Column;                   ;
+               DataSource=No. of Blanket Orders }
+
+    { 1000000124;1;Column;                   ;
+               DataSource=No. of Orders }
+
+    { 1000000125;1;Column;                   ;
+               DataSource=No. of Invoices }
+
+    { 1000000126;1;Column;                   ;
+               DataSource=No. of Return Orders }
+
+    { 1000000127;1;Column;                   ;
+               DataSource=No. of Credit Memos }
+
+    { 1000000128;1;Column;                   ;
+               DataSource=No. of Pstd. Shipments }
+
+    { 1000000129;1;Column;                   ;
+               DataSource=No. of Pstd. Invoices }
+
+    { 1000000130;1;Column;                   ;
+               DataSource=No. of Pstd. Return Receipts }
+
+    { 1000000131;1;Column;                   ;
+               DataSource=No. of Pstd. Credit Memos }
+
+    { 1000000132;1;Column;                   ;
+               DataSource=No. of Ship-to Addresses }
+
+    { 1000000133;1;Column;                   ;
+               DataSource=Bill-To No. of Quotes }
+
+    { 1000000134;1;Column;                   ;
+               DataSource=Bill-To No. of Blanket Orders }
+
+    { 1000000135;1;Column;                   ;
+               DataSource=Bill-To No. of Orders }
+
+    { 1000000136;1;Column;                   ;
+               DataSource=Bill-To No. of Invoices }
+
+    { 1000000137;1;Column;                   ;
+               DataSource=Bill-To No. of Return Orders }
+
+    { 1000000138;1;Column;                   ;
+               DataSource=Bill-To No. of Credit Memos }
+
+    { 1000000139;1;Column;                   ;
+               DataSource=Bill-To No. of Pstd. Shipments }
+
+    { 1000000140;1;Column;                   ;
+               DataSource=Bill-To No. of Pstd. Invoices }
+
+    { 1000000141;1;Column;                   ;
+               DataSource=Bill-To No. of Pstd. Return R. }
+
+    { 1000000142;1;Column;                   ;
+               DataSource=Bill-To No. of Pstd. Cr. Memos }
+
+    { 1000000143;1;Column;                   ;
+               DataSource=Base Calendar Code }
+
+    { 1000000144;1;Column;                   ;
+               DataSource=Copy Sell-to Addr. to Qte From }
+
+    { 1000000145;1;Column;                   ;
+               DataSource=Payment in progress (LCY) }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

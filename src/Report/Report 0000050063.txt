@@ -1,0 +1,161 @@
+OBJECT Report 50063 Modifier axes ‚critures compta
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/09/15;
+    Time=15:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 17=rm,
+                TableData 21=rm,
+                TableData 25=rm,
+                TableData 5601=rm;
+    ProcessingOnly=Yes;
+    OnInitReport=VAR
+                   Lrec_Dimension@1000000000 : Record 348;
+                 BEGIN
+                   Gcode_AxeReserve := 'RESERVE';
+                 END;
+
+    OnPreReport=BEGIN
+                  Window.OPEN('#1########################');
+                END;
+
+    OnPostReport=BEGIN
+                   Window.CLOSE;
+                 END;
+
+    UseRequestPage=No;
+  }
+  DATASET
+  {
+    { 7069;    ;DataItem;                    ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=VAR
+                               Lrec_GL_Entry@1000000000 : Record 17;
+                             BEGIN
+                               { // Modification PBD 04/09/15
+                               IF (COPYSTR(Gcode_DocumentNo,1,3) = 'FNP') OR
+                                  (COPYSTR(Gcode_DocumentNo,1,5) = 'EXFNP') OR
+                                  (COPYSTR(Gcode_DocumentNo,1,6) = 'EXTFNP') THEN
+                               BEGIN
+                                 IF Lrec_GL_Entry.GET(Gint_EntryNo) THEN
+                                   SETFILTER("G/L Entry"."Transaction No.",'%1',Lrec_GL_Entry."Transaction No.")
+                                 ELSE
+                                   SETFILTER("G/L Entry"."Entry No.",'%1',Gint_EntryNo);
+                               END ELSE                      }
+
+                               SETFILTER("G/L Entry"."Entry No.",'%1',Gint_EntryNo);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  "Dimension Set ID" := Gnew_DimSetID;
+                                  MODIFY;
+                                END;
+                                 }
+
+    { 8503;1   ;DataItem;                    ;
+               DataItemTable=Table21;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               Window.UPDATE(1,'Phase 1/3 Cust. Ledger Entry');
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  "Dimension Set ID" := Gnew_DimSetID;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+    { 4114;1   ;DataItem;                    ;
+               DataItemTable=Table25;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               Window.UPDATE(1,'Phase 2/3 Vendor Ledger Entry');
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  "Dimension Set ID" := Gnew_DimSetID;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+    { 9888;1   ;DataItem;                    ;
+               DataItemTable=Table5601;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               Window.UPDATE(1,'Phase 3/3 FA Ledger Entry');
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  "Dimension Set ID" := Gnew_DimSetID;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=G/L Entry No.=FIELD(Entry No.) }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gcode_AxeReserve@1000000000 : Code[20];
+      Gcode_DocumentNo@1000000027 : Code[20];
+      Gint_EntryNo@1000000026 : Integer;
+      Gint_FA_EntryNo@1000000045 : Integer;
+      Gcode_AccountNo@1000000025 : Code[20];
+      Text001@1000000044 : TextConst 'ENU=All accounting will be updated to the invoice %1;FRA=Toute la comptabilit‚ analytique sera mise … jour pour la facture %1';
+      Text002@1000000043 : TextConst 'ENU=Operation canceled !;FRA=Op‚ration annul‚e !';
+      Text003@1000000042 : TextConst 'ENU="Posted invoice No. : ";FRA="Facture enregistr‚e nø : "';
+      Text004@1000000041 : TextConst 'ENU=Error ! line is empty;FRA=Erreur ! cette ligne est vide';
+      Text006@1000000039 : TextConst 'ENU=This document was created before the introduction of the modified analytical functionality.\\The accounting entries will not be updated.\\Would you still continue?;FRA=Ce document a ‚t‚ cr‚‚ avant la mise en place de la fonctionnalit‚ de modification analytique.\\Les ‚critures comptables ne pourront pas ˆtre mises … jour.\\Souhaitez-vous tout de mˆme poursuivre ?';
+      Text007@1000000038 : TextConst 'ENU=Invoice;FRA=Document';
+      Text008@1000000037 : TextConst 'ENU=G/L account No.;FRA=Nø compte g‚n‚ral';
+      Text009@1000000046 : TextConst 'ENU=Entry No.;FRA=Nø s‚quence';
+      Text010@1000000051 : TextConst 'ENU=The dimension update should be done from the document %1;FRA=La modification analytique doit ˆtre effectu‚e depuis le document %1';
+      Gnew_DimSetID@1000000052 : Integer;
+      Window@1000000040 : Dialog;
+
+    PROCEDURE SetGLEntry@1000000000(Prec_GLEntry@1000000000 : Record 17;pi_NewDimSetID@1000000001 : Integer);
+    BEGIN
+      Gcode_DocumentNo := Prec_GLEntry."Document No.";
+      Gint_EntryNo := Prec_GLEntry."Entry No.";
+      Gint_FA_EntryNo := Prec_GLEntry."FA Entry No.";
+      Gcode_AccountNo := Prec_GLEntry."G/L Account No.";
+      Gnew_DimSetID := pi_NewDimSetID;
+    END;
+
+    BEGIN
+    {
+      JX-XAD 25/05/2011
+      Modification des axes analytiques pour les ‚critures comptables
+
+      JX-AUD 26/05/2011
+      Modification sur la visibilit‚ des axes analytiques s'ils existent.
+      Pour les FNP, on modifie l'ensemble de la transaction (filtre sur nø transaction).
+      Les ‚critures immo ne peuvent pas ˆtre modifi‚es.
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

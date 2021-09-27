@@ -2,8 +2,9 @@ OBJECT Codeunit 1230 SEPA DD-Export File
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=16/07/15;
+    Time=16:15:00;
+    Modified=Yes;
     Version List=NAVW18.00,NAVFR8.00;
   }
   PROPERTIES
@@ -19,7 +20,8 @@ OBJECT Codeunit 1230 SEPA DD-Export File
             DirectDebitCollection.TESTFIELD("To Bank Account No.");
             BankAccount.GET(DirectDebitCollection."To Bank Account No.");
             BankAccount.TESTFIELD(IBAN);
-            BankAccount.TESTFIELD("SWIFT Code");
+            IF (BankAccount."Country/Region Code" <> 'FR') THEN
+             BankAccount.TESTFIELD("SWIFT Code");
             DirectDebitCollection.LOCKTABLE;
             DirectDebitCollection.DeletePaymentFileErrors;
             COMMIT;

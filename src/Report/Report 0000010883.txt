@@ -2,8 +2,9 @@ OBJECT Report 10883 SEPA ISO20022
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=16/07/15;
+    Time=16:15:00;
+    Modified=Yes;
     Version List=NAVFR8.00;
   }
   PROPERTIES
@@ -38,7 +39,8 @@ OBJECT Report 10883 SEPA ISO20022
                DataItemTable=Table10865;
                OnAfterGetRecord=BEGIN
                                   TESTFIELD(IBAN);
-                                  TESTFIELD("SWIFT Code");
+                                  IF PaymentHeader."Bank Country/Region Code" <> 'FR' THEN
+                                   TESTFIELD("SWIFT Code");
                                   TESTFIELD("Bank Country/Region Code");
                                   IF NOT CheckBankCountrySEPAAllowed("Bank Country/Region Code") THEN
                                     ERROR(SEPANotEnabledForPaymentErr,"Bank Country/Region Code");
@@ -398,12 +400,14 @@ OBJECT Report 10883 SEPA ISO20022
       IF PaymentLine.FIND('-') THEN
         REPEAT
           PaymentLine.TESTFIELD(IBAN);
-          PaymentLine.TESTFIELD("SWIFT Code");
+      //    PaymentLine.TESTFIELD("SWIFT Code");
           CASE PaymentLine."Account Type" OF
             PaymentLine."Account Type"::Vendor:
               BEGIN
                 VendorBankAcc.GET(PaymentLine."Account No.",PaymentLine."Bank Account Code");
                 VendorBankAcc.TESTFIELD("Country/Region Code");
+                IF VendorBankAcc."Country/Region Code" <> 'FR' THEN
+                 PaymentLine.TESTFIELD("SWIFT Code");
                 IF NOT CheckBankCountrySEPAAllowed(VendorBankAcc."Country/Region Code") THEN
                   ERROR(SEPANotEnabledForVendorErr,SEPACountry.Code,
                     VendorBankAcc."Vendor No." + ',' + VendorBankAcc.Code);
@@ -412,6 +416,8 @@ OBJECT Report 10883 SEPA ISO20022
               BEGIN
                 CustomerBankAcc.GET(PaymentLine."Account No.",PaymentLine."Bank Account Code");
                 CustomerBankAcc.TESTFIELD("Country/Region Code");
+                IF CustomerBankAcc."Country/Region Code" <> 'FR' THEN
+                 PaymentLine.TESTFIELD("SWIFT Code");
                 IF NOT CheckBankCountrySEPAAllowed(CustomerBankAcc."Country/Region Code") THEN
                   ERROR(SEPANotEnabledForVendorErr,SEPACountry.Code,
                     CustomerBankAcc."Customer No." + ',' + CustomerBankAcc.Code);

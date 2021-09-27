@@ -2,9 +2,10 @@ OBJECT Page 5628 Fixed Asset G/L Journal
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-LAB;
   }
   PROPERTIES
   {
@@ -134,6 +135,10 @@ OBJECT Page 5628 Fixed Asset G/L Journal
                                  FRA=Ins‚rer lignes arr. conv. DS];
                       RunObject=Codeunit 407;
                       Image=InsertCurrency }
+      { 1000000000;2 ;Separator  }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=FRA=Mise … jour Axe P‚riode;
+                      RunObject=Report 50020 }
       { 47      ;1   ;ActionGroup;
                       CaptionML=[ENU=P&osting;
                                  FRA=&Validation];
@@ -629,6 +634,10 @@ OBJECT Page 5628 Fixed Asset G/L Journal
     END;
 
     BEGIN
+    {
+      //Modif LAB du 07/11/08
+      //Nouvelle fonction "Mise … jour axe P‚riode sur LFC"
+    }
     END.
   }
 }

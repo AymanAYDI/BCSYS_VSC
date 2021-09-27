@@ -2,9 +2,10 @@ OBJECT Codeunit 5063 ArchiveManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-AUD;
   }
   PROPERTIES
   {
@@ -46,6 +47,18 @@ OBJECT Codeunit 5063 ArchiveManagement
         StorePurchDocument(PurchHeader,FALSE);
         MESSAGE(Text001,PurchHeader."No.");
       END;
+    END;
+
+    PROCEDURE ArchivePurchDocument2@1000000000(VAR PurchHeader@1000 : Record 38);
+    BEGIN
+      //MODIF JX-AUD du 13/05/14
+      //IF CONFIRM(
+      //  Text007,TRUE,PurchHeader."Document Type",
+      //  PurchHeader."No.")
+      //THEN BEGIN
+        StorePurchDocument(PurchHeader,FALSE);
+      //  MESSAGE(Text001,PurchHeader."No.");
+      //END;
     END;
 
     PROCEDURE StoreSalesDocument@4(VAR SalesHeader@1000 : Record 36;InteractionExist@1005 : Boolean);
@@ -408,6 +421,11 @@ OBJECT Codeunit 5063 ArchiveManagement
     END;
 
     BEGIN
+    {
+
+      //MODIF JX-AUD du 13/05/14
+      //Ajout de la fonction ArchivePurchDocument2
+    }
     END.
   }
 }

@@ -1,0 +1,57 @@
+OBJECT Page 50017 Users-Staff
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Users-Staff;
+               FRA=Utilisateurs-Personnels];
+    SourceTable=Table50007;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Last Name" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="First name" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Full name" }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="User status" }
+
+    { 1000000012;2;Field  ;
+                SourceExpr="release date" }
+
+    { 1000000014;2;Field  ;
+                CaptionML=[ENU=Location 2;
+                           FRA=Emplacement salari‚];
+                SourceExpr="Location 2" }
+
+    { 1000000016;2;Field  ;
+                SourceExpr=Company;
+                Editable=TRUE }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -2,9 +2,10 @@ OBJECT Table 121 Purch. Rcpt. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=31/10/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38457;
+    Date=09/01/17;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38457,JX-VSC1.0-XAD-LAB,JX-VSC1.1-XAD-LAB,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -391,6 +392,25 @@ OBJECT Table 121 Purch. Rcpt. Line
     { 6608;   ;Return Reason Code  ;Code10        ;TableRelation="Return Reason";
                                                    CaptionML=[ENU=Return Reason Code;
                                                               FRA=Code motif retour] }
+    { 50000;  ;Nom Fournisseur     ;Text50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purch. Rcpt. Header"."Buy-from Vendor Name" WHERE (No.=FIELD(Document No.))) }
+    { 50001;  ;Order Number        ;Code20        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purch. Rcpt. Header"."Order No." WHERE (No.=FIELD(Document No.)));
+                                                   CaptionML=FRA=Nø Commande }
+    { 50002;  ;Vendor Order Number ;Code20        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purch. Rcpt. Header"."Vendor Order No." WHERE (No.=FIELD(Document No.)));
+                                                   CaptionML=FRA=Nø Commande fournisseur }
+    { 50003;  ;Code Utilisateur Commande;Code50   ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purchase Header"."Assigned User ID" WHERE (Document Type=CONST(Order),
+                                                                                                                  No.=FIELD(Order No.)));
+                                                   Editable=No }
+    { 50004;  ;Your Reference      ;Text35        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purchase Header"."Your Reference" WHERE (Document Type=CONST(Order),
+                                                                                                                No.=FIELD(Order No.)));
+                                                   CaptionML=[ENU=Your Reference;
+                                                              FRA=Votre r‚f‚rence];
+                                                   Editable=No }
+    { 50005;  ;Matricule No.       ;Code20        ;CaptionML=FRA=Code matricule }
     { 99000750;;Routing No.        ;Code20        ;TableRelation="Routing Header";
                                                    CaptionML=[ENU=Routing No.;
                                                               FRA=Nø gamme] }
@@ -427,7 +447,7 @@ OBJECT Table 121 Purch. Rcpt. Line
   CODE
   {
     VAR
-      Text000@1000 : TextConst 'ENU=Receipt No. %1:;FRA=Nø r‚ception %1 :';
+      Text000@1000 : TextConst 'ENU=Receipt No. %1- order %2 :;FRA=Nø r‚ception %1 - Commande %2 :';
       Text001@1001 : TextConst 'ENU=The program cannot find this purchase line.;FRA=Le programme ne trouve pas cette ligne achat.';
       Currency@1005 : Record 4;
       PurchRcptHeader@1004 : Record 120;
@@ -444,8 +464,19 @@ OBJECT Table 121 Purch. Rcpt. Line
     END;
 
     PROCEDURE ShowDimensions@25();
+    VAR
+      lNewDimSet@1000000001 : Integer;
+      lUpdateDim@1000000000 : Report 50039;
     BEGIN
-      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Ligne standard Nav
+      //DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Migration Nav 2015 => Modification imputation analytique
+      lNewDimSet := DimMgt.EditDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      IF "Dimension Set ID" <> lNewDimSet THEN BEGIN
+       CLEAR(lUpdateDim);
+       lUpdateDim.SetPostedInvoice(Rec,lNewDimSet);
+       lUpdateDim.RUN;
+      END;
     END;
 
     PROCEDURE ShowItemTrackingLines@3();
@@ -470,9 +501,11 @@ OBJECT Table 121 Purch. Rcpt. Line
 
       TempPurchLine := PurchLine;
       IF PurchLine.FIND('+') THEN
-        NextLineNo := PurchLine."Line No." + 10000
+         NextLineNo := PurchLine."Line No." + 10000
+
       ELSE
         NextLineNo := 10000;
+
 
       IF PurchInvHeader."No." <> TempPurchLine."Document No." THEN
         PurchInvHeader.GET(TempPurchLine."Document Type",TempPurchLine."Document No.");
@@ -482,9 +515,18 @@ OBJECT Table 121 Purch. Rcpt. Line
         PurchLine."Line No." := NextLineNo;
         PurchLine."Document Type" := TempPurchLine."Document Type";
         PurchLine."Document No." := TempPurchLine."Document No.";
-        PurchLine.Description := STRSUBSTNO(Text000,"Document No.");
+
+      // Modif LAB du 11/12/2008
+      // Ajout Num‚ro de commande depuis extraction ligne r‚ception sur ligne facture
+
+      //  PurchLine.Description := STRSUBSTNO(Text000,"Document No.");
+        PurchLine.Description := STRSUBSTNO(Text000,"Document No.","Order No.");
+
+      //fin modif LAB du 11/12/2008
+
         PurchLine.INSERT;
         NextLineNo := NextLineNo + 10000;
+
       END;
 
       TransferOldExtLines.ClearLineNumbers;
@@ -549,6 +591,11 @@ OBJECT Table 121 Purch. Rcpt. Line
         PurchLine."Receipt No." := "Document No.";
         PurchLine."Receipt Line No." := "Line No.";
         PurchLine."Appl.-to Item Entry" := 0;
+
+        // Migration 2015 : A la demande de VSC
+        PurchLine.VALIDATE("VAT Bus. Posting Group",PurchInvHeader."VAT Bus. Posting Group");
+        // Migration 2015 : A la demande de VSC
+
         IF NOT ExtTextLine THEN BEGIN
           PurchLine.VALIDATE(Quantity,Quantity - "Quantity Invoiced");
           PurchLine.VALIDATE("Direct Unit Cost",PurchOrderLine."Direct Unit Cost");
@@ -593,6 +640,7 @@ OBJECT Table 121 Purch. Rcpt. Line
         ItemTrackingMgt.CopyHandledItemTrkgToInvLine2(PurchOrderLine,PurchLine);
 
         NextLineNo := NextLineNo + 10000;
+
         IF "Attached to Line No." = 0 THEN
           SETRANGE("Attached to Line No.","Line No.");
       UNTIL (NEXT = 0) OR ("Attached to Line No." = 0);
@@ -725,6 +773,34 @@ OBJECT Table 121 Purch. Rcpt. Line
     END;
 
     BEGIN
+    {
+
+      Modif JX-XAD du 11/06/2008
+      Ajout de 3 champs (flowfields) : Nom du fournisseur, nø commande et nø commande fournisseur.
+      Modif JX-XAD du 16/09/2008
+      Ajout de 1 champ (flowfield) : Code utilisateur de la commande li‚e
+      Modif JX-LAB du 18/09/2008
+      Passage du champ 50003 "Code Utilisateur Commande" de Code 10 … 20
+
+      // Modif LAB du 11/12/2008
+      // Ajout Num‚ro de commande depuis extraction ligne r‚ception sur ligne facture
+      // Et modification text constant Text000
+
+      Modif JX-XAD du 15/06/2009
+      Correction bug concernant l'analytique. Il est question ici de ramener l'analytique des r‚ceptions et non des commandes
+      lors de l'utilisation de la fonction "Extraire lignes r‚ception".
+
+      // Modif LAB du 20/07/2009
+      // Ajout flowfield "Your Reference"
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Code Matricule"
+
+      // Migration 2015 : A la demande de VSC
+
+      // Modif LAB du 31/05/2016
+      // Mise … jour du champ "votre r‚f‚rence" … 35 caractŠres
+    }
     END.
   }
 }

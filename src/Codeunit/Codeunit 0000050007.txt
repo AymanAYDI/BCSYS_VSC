@@ -1,0 +1,53 @@
+OBJECT Codeunit 50007 Yooz Auto. Import
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21/12/15;
+    Time=15:30:00;
+    Modified=Yes;
+    Version List=JX-VSC3.0-PBD,JX-YOOZ2AUTO;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+            YoozImport.RESET;
+            YoozImport.SETCURRENTKEY("Yooz Import","Yooz Import Date");
+            YoozImport.SETRANGE("Yooz Import",FALSE);
+            YoozImport.SETFILTER("Yooz Import Date",'%1',0D);
+            IF YoozImport.FINDFIRST THEN
+             REPEAT
+               ImportXmlFile.OPEN(YoozImport."File Name" + YoozImport."File Name 2");
+               ImportXmlFile.CREATEINSTREAM(XmlINStream);
+               XMLPORT.IMPORT(50025, XmlINStream);
+               ImportXmlFile.CLOSE;
+               YoozImport2.GET(YoozImport."Entry No.");
+               YoozImport2."Yooz Import Date" := TODAY;
+               YoozImport2.MODIFY;
+            UNTIL YoozImport.NEXT = 0;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text001@1000000001 : TextConst 'ENU=Export vendor has been realized in folder %1;FRA=L''export des fournisseurs s''est bien effectu‚ dans le dossier %1';
+      YoozImport@1000000000 : Record 50015;
+      YoozImport2@1000000002 : Record 50015;
+      Grec_YoozParameters@1000000005 : Record 50013;
+      Text002@1000000006 : TextConst 'ENU=Error: File is not created;FRA=Erreur: Le fichier ne s''est pas cr‚‚';
+      ImportXmlFile@1000000004 : File;
+      XmlINStream@1000000003 : InStream;
+
+    LOCAL PROCEDURE YoozFileImport@1000000000();
+    BEGIN
+    END;
+
+    BEGIN
+    {
+      //JX-YOOZ2-PBE
+      //Codeunit pour lancer l'import des fichiers yooz par le NAS
+    }
+    END.
+  }
+}
+

@@ -1,0 +1,165 @@
+OBJECT Page 50015 Invoices related to ordering
+{
+  OBJECT-PROPERTIES
+  {
+    Date=14/09/16;
+    Time=14:34:28;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-AUD,JX-VSC4.1-PBD;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=Invoices related to ordering;
+               FRA=Factures li‚es … la commande];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table2000000026;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 //***** Appel de la fonction de recherche des factures li‚es … une commande *****
+                 gInt_Count := gCU_linksBetweenDocuments.SearchInvoices(gCode_Commande,gCode_Invoice);
+                 IF gInt_Count <> 0 THEN
+                  Rec.SETFILTER(Number,'%1..%2',1,gInt_Count)
+                 ELSE
+                  Rec.SETFILTER(Number,'%1..%2',1,1);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       OnAfterGetCurrRecord;
+                     END;
+
+    OnNewRecord=BEGIN
+                  OnAfterGetCurrRecord;
+                END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                Editable=FALSE;
+                GroupType=Repeater }
+
+    { 1000000006;2;Field  ;
+                CaptionML=[ENU=Invoices;
+                           FRA=Factures];
+                SourceExpr=gCode_Invoice[1,Number];
+                Editable=FALSE;
+                OnLookup=VAR
+                           Lrec_PurchInvHeader@1000000002 : Record 122;
+                           Lrec_PurchaseHeader@1000000003 : Record 38;
+                         BEGIN
+                           IF Lrec_PurchInvHeader.GET(gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(138,Lrec_PurchInvHeader)
+                           ELSE IF Lrec_PurchaseHeader.GET(Lrec_PurchaseHeader."Document Type"::Invoice,gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(50003,Lrec_PurchaseHeader);
+                           CurrPage.UPDATE(FALSE);
+                         END;
+                          }
+
+    { 1000000010;2;Field  ;
+                CaptionML=[ENU=Amount;
+                           FRA=Montant HT];
+                SourceExpr=gCode_Invoice[2,Number] }
+
+    { 1000000001;2;Field  ;
+                Name=Ouvert;
+                CaptionML=[ENU=Open;
+                           FRA=Ouvert];
+                SourceExpr=gbool_Ouvert }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Invoices;
+                           FRA=Nø Yooz];
+                SourceExpr=gCode_Invoice[4,Number];
+                Editable=FALSE;
+                OnLookup=VAR
+                           Lrec_PurchInvHeader@1000000002 : Record 122;
+                           Lrec_PurchaseHeader@1000000003 : Record 38;
+                         BEGIN
+                           IF Lrec_PurchInvHeader.GET(gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(138,Lrec_PurchInvHeader)
+                           ELSE IF Lrec_PurchaseHeader.GET(Lrec_PurchaseHeader."Document Type"::Invoice,gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(50003,Lrec_PurchaseHeader);
+                           CurrPage.UPDATE(FALSE);
+                         END;
+                          }
+
+    { 1000000002;2;Field  ;
+                ExtendedDatatype=URL;
+                CaptionML=[ENU=Amount;
+                           FRA=Lien Yooz];
+                SourceExpr=gCode_Invoice[5,Number] }
+
+    { 1000000004;2;Field  ;
+                CaptionML=[ENU=Invoices;
+                           FRA=Nø BC];
+                SourceExpr=gCode_Invoice[6,Number];
+                Editable=FALSE;
+                OnLookup=VAR
+                           Lrec_PurchInvHeader@1000000002 : Record 122;
+                           Lrec_PurchaseHeader@1000000003 : Record 38;
+                         BEGIN
+                           IF Lrec_PurchInvHeader.GET(gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(138,Lrec_PurchInvHeader)
+                           ELSE IF Lrec_PurchaseHeader.GET(Lrec_PurchaseHeader."Document Type"::Invoice,gCode_Invoice[1,Number]) THEN
+                             PAGE.RUNMODAL(50003,Lrec_PurchaseHeader);
+                           CurrPage.UPDATE(FALSE);
+                         END;
+                          }
+
+  }
+  CODE
+  {
+    VAR
+      gCode_Commande@1000000000 : Code[20];
+      gRec_PurchaseLine@1000000001 : Record 39;
+      gRec_PurchRcptHeader@1000000002 : Record 120;
+      gCode_Invoice@1000000003 : ARRAY [6,1000] OF Text;
+      gInt_Count@1000000004 : Integer;
+      gBool_InvoiceExist@1000000005 : Boolean;
+      i@1000000006 : Integer;
+      gCU_linksBetweenDocuments@1000000007 : Codeunit 50004;
+      gbool_Ouvert@1000000008 : Boolean;
+
+    PROCEDURE jx_InitForm@1000000000(pCode_Commande@1000000000 : Code[20]);
+    BEGIN
+      gCode_Commande := pCode_Commande;
+    END;
+
+    LOCAL PROCEDURE OnAfterGetCurrRecord@19077479();
+    BEGIN
+      xRec := Rec;
+      //Modif JX-AUD du 30/10/2012
+      IF Number <> 0 THEN
+       IF gCode_Invoice[3,Number] = 'TRUE' THEN
+        gbool_Ouvert := TRUE
+       ELSE
+        gbool_Ouvert := FALSE
+      //Fin Modif JX-AUD du 30/10/2012
+    END;
+
+    BEGIN
+    {
+      ------------------------------------- V1.2 -------------------------------------
+      CREATION JX-XAD LE 05/01/2010
+      Objectif : rechercher et afficher toutes les factures (en cours et enregistr‚es) li‚es … une commande
+                 La commande est initialis‚e grƒce … la fonction jx_InitForm
+
+      MODIF JX-XAD le 12/02/2010
+      Ajout de lookup pour les factures FA et FAP
+
+      //Modif JX-AUD du 30/10/2012
+      //Ajout du champ Ouvert
+
+      // Modif JX-ABE du 14/09/2016
+      // modifier "l'extended datatype" du champ "Yooz Tooken link" en URL
+    }
+    END.
+  }
+}
+

@@ -1,0 +1,40 @@
+OBJECT Table 50013 Yooz Parameters
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21/12/15;
+    Time=15:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD,JX-YOOZ2AUTO;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Yooz Parameters;
+               FRA=ParamŠtres Yooz];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10         }
+    { 2   ;   ;Yooz Export Path    ;Text250       ;CaptionML=FRA=R‚pertoire Export Yooz }
+    { 3   ;   ;Yooz Import Path    ;Text250       ;CaptionML=FRA=R‚pertoire Import Automatique Yooz }
+    { 4   ;   ;Yooz Imported File Path;Text250    ;CaptionML=FRA=D‚placer Fichiers Import‚s Automatiquement dans le r‚pertoire }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //CREATION JX-VSC2.0-AUD
+      //Developpement Yooz
+    }
+    END.
+  }
+}
+

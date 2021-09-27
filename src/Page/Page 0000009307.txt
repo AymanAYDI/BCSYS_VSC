@@ -2,9 +2,10 @@ OBJECT Page 9307 Purchase Order List
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC1.0,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -21,6 +22,13 @@ OBJECT Page 9307 Purchase Order List
                  SetSecurityFilterOnRespCenter;
 
                  JobQueueActive := PurchasesPayablesSetup.JobQueueActive;
+
+                 //D‚but Modif JX-XAD du 11/06/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 11/06/2008
                END;
 
     ActionList=ACTIONS
@@ -151,8 +159,16 @@ OBJECT Page 9307 Purchase Order List
                       Promoted=Yes;
                       Image=Print;
                       PromotedCategory=Process;
-                      OnAction=BEGIN
-                                 DocPrint.PrintPurchHeader(Rec);
+                      OnAction=VAR
+                                 DocPrintENU@1000000000 : Codeunit 50001;
+                               BEGIN
+                                 //modifcation AUD le 08/04/2009
+                                 //mise en commentaire du code
+                                   //DocPrint.PrintPurchHeader(Rec);
+
+                                 DocPrintENU.PrintOrderVSC(Rec);
+
+                                 //fin modification
                                END;
                                 }
       { 10      ;1   ;ActionGroup;
@@ -187,7 +203,7 @@ OBJECT Page 9307 Purchase Order List
                       Image=Action }
       { 1102601018;2 ;Action    ;
                       CaptionML=[ENU=Send A&pproval Request;
-                                 FRA=Envoyer demande d'a&pprobation];
+                                 FRA=Envoyer demande d'approbation];
                       Image=SendApprovalRequest;
                       OnAction=VAR
                                  ApprovalMgt@1001 : Codeunit 439;
@@ -197,7 +213,7 @@ OBJECT Page 9307 Purchase Order List
                                 }
       { 1102601019;2 ;Action    ;
                       CaptionML=[ENU=Cancel Approval Re&quest;
-                                 FRA=Annuler demande d'appro&bation];
+                                 FRA=Annuler l'approbation];
                       Image=Cancel;
                       OnAction=VAR
                                  ApprovalMgt@1001 : Codeunit 439;
@@ -218,6 +234,18 @@ OBJECT Page 9307 Purchase Order List
                                BEGIN
                                  IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN
                                    ICInOutboxMgt.SendPurchDoc(Rec,FALSE);
+                               END;
+                                }
+      { 1000000008;2 ;Action    ;
+                      CaptionML=FRA=Payer ce document;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=VendorPayment;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 lPaymentMgt@1000000000 : Codeunit 50010;
+                               BEGIN
+                                 lPaymentMgt.CreatePaymentDoc(Rec);
                                END;
                                 }
       { 12      ;1   ;ActionGroup;
@@ -335,8 +363,30 @@ OBJECT Page 9307 Purchase Order List
     { 6   ;2   ;Field     ;
                 SourceExpr="Buy-from Vendor Name" }
 
-    { 15  ;2   ;Field     ;
-                SourceExpr="Vendor Authorization No." }
+    { 1000000006;2;Field  ;
+                SourceExpr="Your Reference" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Lines Amount" }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Assigned User ID" }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Matricule No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Quote No." }
+
+    { 1000000000;2;Field  ;
+                SourceExpr=Status }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Status Code";
+                Visible=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Creation date" }
 
     { 27  ;2   ;Field     ;
                 SourceExpr="Buy-from Post Code";
@@ -412,14 +462,11 @@ OBJECT Page 9307 Purchase Order List
 
     { 115 ;2   ;Field     ;
                 SourceExpr="Location Code";
-                Visible=TRUE }
+                Visible=FALSE }
 
     { 99  ;2   ;Field     ;
                 SourceExpr="Purchaser Code";
                 Visible=FALSE }
-
-    { 31  ;2   ;Field     ;
-                SourceExpr="Assigned User ID" }
 
     { 11  ;2   ;Field     ;
                 SourceExpr="Currency Code";
@@ -427,10 +474,6 @@ OBJECT Page 9307 Purchase Order List
 
     { 1102601001;2;Field  ;
                 SourceExpr="Document Date";
-                Visible=FALSE }
-
-    { 1102601003;2;Field  ;
-                SourceExpr=Status;
                 Visible=FALSE }
 
     { 1102601005;2;Field  ;
@@ -456,6 +499,16 @@ OBJECT Page 9307 Purchase Order List
     { 1102601027;2;Field  ;
                 SourceExpr="Requested Receipt Date";
                 Visible=FALSE }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Document Prepaid";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="Amount Prepaid";
+                Importance=Additional;
+                Editable=FALSE }
 
     { 5   ;2   ;Field     ;
                 SourceExpr="Job Queue Status";
@@ -489,8 +542,16 @@ OBJECT Page 9307 Purchase Order List
       ReportPrint@1102601001 : Codeunit 228;
       DocPrint@1102601000 : Codeunit 229;
       JobQueueActive@1003 : Boolean INDATASET;
+      UserMgt@1000000000 : Codeunit 5700;
 
     BEGIN
+    {
+      NAVW16.00.01,JX-VSC1.0-XAD,JX-VSC1.1-AUD-XAD,JX-VSC1.2-XAD,JX-VSC1.3-XAD
+
+      D‚but Modif JX-XAD du 11/06/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+      Ajout du champ "Code utilisateur affect‚" sur l'en-tˆte du formulaire
+    }
     END.
   }
 }

@@ -2,9 +2,10 @@ OBJECT Table 98 General Ledger Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -469,6 +470,36 @@ OBJECT Table 98 General Ledger Setup
 
                                                    CaptionML=[ENU=Currency Euro;
                                                               FRA=Devise Euro] }
+    { 50000;  ;Report Dimension 1  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 1 dans Etats }
+    { 50001;  ;Report Dimension 2  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 2 dans Etats }
+    { 50002;  ;Report Dimension 3  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 3 dans Etats }
+    { 50003;  ;Report Dimension 4  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 4 dans Etats }
+    { 50004;  ;Report Dimension 5  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 5 dans Etats }
+    { 50020;  ;Shortcut Dimension 9 Code;Code20   ;TableRelation=Dimension;
+                                                   OnValidate=BEGIN
+                                                                MODIFY;
+                                                              END;
+
+                                                   AccessByPermission=TableData 350=R;
+                                                   CaptionML=[ENU=Shortcut Dimension 8 Code;
+                                                              FRA=Code raccourci axe 9];
+                                                   Description=//Modif JX-VSC4.0-PBD du 26/01/15 }
+    { 50021;  ;Shortcut Dimension 10 Code;Code20  ;TableRelation=Dimension;
+                                                   OnValidate=BEGIN
+                                                                MODIFY;
+                                                              END;
+
+                                                   AccessByPermission=TableData 350=R;
+                                                   CaptionML=[ENU=Shortcut Dimension 8 Code;
+                                                              FRA=Code raccourci axe 10];
+                                                   Description=//Modif JX-VSC4.0-PBD du 26/01/15 }
+    { 50060;  ;Default Payment Class;Code20       ;TableRelation="Payment Class".Code;
+                                                   CaptionML=FRA=Type Bordereau par d‚faut }
   }
   KEYS
   {
@@ -671,6 +702,10 @@ OBJECT Table 98 General Ledger Setup
     END;
 
     BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 26/01/15
+      Ajout Axes analytique (Shortcut 9 et 10)
+    }
     END.
   }
 }

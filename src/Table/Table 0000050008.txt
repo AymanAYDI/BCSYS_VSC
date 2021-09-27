@@ -1,0 +1,77 @@
+OBJECT Table 50008 Contract
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Contract;
+               FRA=Contrat];
+    LookupPageID=Page50021;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Initial quote No    ;Code20        ;CaptionML=[ENU=Initial quote No.;
+                                                              FRA=Nø Devis initial] }
+    { 2   ;   ;Order No.           ;Code20        ;CaptionML=[ENU=Order No.;
+                                                              FRA=Nø Commande] }
+    { 3   ;   ;Signature status    ;Text100       ;CaptionML=[ENU=Signature status;
+                                                              FRA=Statut de la signature] }
+    { 4   ;   ;Date of entry       ;Date          ;CaptionML=[ENU=Date of entry;
+                                                              FRA=Date d'entr‚e en vigueur] }
+    { 5   ;   ;End date            ;Date          ;CaptionML=[ENU=End date;
+                                                              FRA=Date de fin] }
+    { 6   ;   ;Term of service     ;Decimal       ;CaptionML=[ENU=Term of service;
+                                                              FRA=Dur‚e de la prestation] }
+    { 7   ;   ;Speaking supplier   ;Text100       ;CaptionML=[ENU=Speaking supplier;
+                                                              FRA=Intervenant fournisseur] }
+    { 8   ;   ;Speaking VSCT       ;Code50        ;TableRelation="User Setup";
+                                                   CaptionML=[ENU=Speaking VSCT;
+                                                              FRA=Intervenant VSCT] }
+    { 9   ;   ;Date de mise au coffre;Date        ;CaptionML=[ENU=Date de mise au coffre;
+                                                              FRA=Date de mise au coffre] }
+    { 10  ;   ;Description1        ;Text250       ;CaptionML=[ENU=Description 1;
+                                                              FRA=Description 1] }
+    { 11  ;   ;Description2        ;Text250        }
+    { 12  ;   ;Description3        ;Text250        }
+    { 13  ;   ;Description4        ;Text250        }
+    { 14  ;   ;Description5        ;Text250        }
+    { 15  ;   ;Description6        ;Text250        }
+    { 16  ;   ;Description7        ;Text250        }
+    { 17  ;   ;Description8        ;Text250        }
+    { 18  ;   ;TJM                 ;Decimal       ;CaptionML=[ENU=TJM;
+                                                              FRA=TJM] }
+    { 19  ;   ;Date de commande    ;Date           }
+    { 20  ;   ;Approbateur         ;Text50        ;CaptionML=[ENU=Approver;
+                                                              FRA=Approbateur] }
+    { 21  ;   ;User                ;Code50         }
+    { 22  ;   ;Nom prestataire     ;Text30        ;CaptionML=[ENU=Provider name;
+                                                              FRA=Nom prestataire] }
+    { 23  ;   ;Pr‚nom prestataire  ;Text30        ;CaptionML=[ENU=Provider first name;
+                                                              FRA=Pr‚nom prestataire] }
+  }
+  KEYS
+  {
+    {    ;Initial quote No                        ;Clustered=Yes }
+    {    ;Order No.                                }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 22/02/2010
+      Table utilis‚e dans le cadre des contrats r‚gie
+    }
+    END.
+  }
+}
+

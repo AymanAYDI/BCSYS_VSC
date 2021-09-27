@@ -1,0 +1,324 @@
+OBJECT XMLport 50027 Import BC Masse Presta
+{
+  OBJECT-PROPERTIES
+  {
+    Date=14/02/20;
+    Time=17:20:04;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    OnInitXMLport=BEGIN
+                    IF (COMPANYNAME <> 'VSCT') AND (COMPANYNAME <> 'VSC') THEN
+
+                    //IF (COMPANYNAME <> 'VSCT') AND (COMPANYNAME <> 'VSC') AND (COMPANYNAME <> 'VSCT Copy For Cl“ture 2018') THEN
+
+                     ERROR(Text010);
+                    Gint_Compteur :=0;
+                  END;
+
+    OnPreXMLport=BEGIN
+                   //bloquer la table Purchase Header
+                   Grec_PurchaseHeader.LOCKTABLE;
+
+                   //r‚cup‚ration des codes axe analytique
+                   IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                       Gcode_Axe[1] := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";//PERIODE
+                       Gcode_Axe[2] := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";//ORGANISATION
+                       Gcode_Axe[3] := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";//CLIENT
+                       Gcode_Axe[4] := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";//PRODUIT
+                       Gcode_Axe[5] := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";//INTRAGROUPE
+                   END;
+                 END;
+
+    OnPostXMLport=BEGIN
+                    MESSAGE(Text009);
+                  END;
+
+    Format=Variable Text;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;ImportBCMassePresta ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Gint_Compteur += 1;//pour passer l'en tˆte du fichier
+                                                                                 IF Gint_Compteur = 1 THEN
+                                                                                   currXMLport.SKIP;
+
+                                                                                 IF Vend.GET(Gtext_Champ1) THEN BEGIN
+                                                                                   //Creation de l'entˆte de commande
+                                                                                   CLEAR(Grec_PurchaseHeader);
+                                                                                   Grec_PurchaseHeader.INIT;
+                                                                                   Grec_PurchaseHeader.VALIDATE("Document Type", Grec_PurchaseHeader."Document Type"::Order);
+                                                                                   Grec_PurchaseHeader.VALIDATE("No.");
+                                                                                   Grec_PurchaseHeader.VALIDATE("Buy-from Vendor No.",Gtext_Champ1);
+                                                                                   Grec_PurchaseHeader."Your Reference" := COPYSTR(Gtext_Champ2,1,30);
+                                                                                   Grec_PurchaseHeader."Matricule No." := Gtext_Champ3;
+                                                                                   Grec_PurchaseHeader."Import Vendor Email" := Gtext_Champ28;//Modif JX-AUD du 17/06/2013
+                                                                                   Grec_PurchaseHeader.INSERT(TRUE);
+
+                                                                                   Grec_PurchaseHeader.VALIDATE("Posting Date",TODAY);
+                                                                                   Grec_PurchaseHeader."Assigned User ID" := Gtext_Champ6;
+                                                                                   Grec_PurchaseHeader.MODIFY;
+
+                                                                                   //Cr‚ation de la ligne de commande
+                                                                                   //Cl‚ primaire: Document Type,Document No.,Line No.
+                                                                                   CLEAR(Grec_PurchaseLines);
+                                                                                   Grec_PurchaseLines."Document Type" := Grec_PurchaseHeader."Document Type"::Order;
+                                                                                   Grec_PurchaseLines."Document No." := Grec_PurchaseHeader."No.";
+                                                                                   EVALUATE(Grec_PurchaseLines.Type,Gtext_Champ7);
+                                                                                   Grec_PurchaseLines."Line No." := 10000;
+                                                                                   Grec_PurchaseLines.VALIDATE("No.", Gtext_Champ8);
+                                                                                   Grec_PurchaseLines.Description := COPYSTR(Gtext_Champ9,1,50);
+                                                                                   EVALUATE(Grec_PurchaseLines.Quantity,Gtext_Champ10);
+                                                                                   Grec_PurchaseLines.VALIDATE(Quantity);
+                                                                                   EVALUATE(Grec_PurchaseLines."Direct Unit Cost",Gtext_Champ11);
+                                                                                   Grec_PurchaseLines.VALIDATE("Direct Unit Cost");
+                                                                                   Grec_PurchaseLines."Matricule No." := Gtext_Champ3;
+                                                                                   Grec_PurchaseLines.INSERT(TRUE);
+
+                                                                                   //Insertion des axes analytiques pour la ligne
+                                                                                   Ins‚rerAnalytique;
+
+                                                                                   //Cr‚ation du contrat de la commande
+                                                                                   CLEAR(Grec_Matricule);
+                                                                                   CLEAR(Grec_Contract);
+                                                                                   IF NOT Grec_Matricule.GET(Grec_PurchaseHeader."Matricule No.")  THEN BEGIN
+                                                                                    Grec_Matricule.INIT;
+                                                                                    Grec_Matricule."Matricule No." := Grec_PurchaseHeader."Matricule No.";
+                                                                                    Grec_Matricule.INSERT;
+                                                                                   //  ERROR(STRSUBSTNO(Text014,Grec_PurchaseHeader."Matricule No."))
+                                                                                   END ELSE
+                                                                                   BEGIN
+                                                                                     IF NOT Grec_Contract.GET(Grec_PurchaseHeader."No.") THEN
+                                                                                     BEGIN
+                                                                                       Grec_Contract."Initial quote No" := Grec_PurchaseHeader."No.";
+                                                                                       Grec_Contract."Order No." := Grec_PurchaseHeader."No.";
+                                                                                       Grec_Contract.User := Grec_PurchaseHeader."Assigned User ID";
+                                                                                       Grec_Contract."Speaking VSCT" := Grec_PurchaseHeader."Assigned User ID";
+                                                                                       Grec_Contract."Speaking supplier" := Gtext_Champ17;
+                                                                                       Grec_Contract."Nom prestataire" := Grec_Matricule."Provider name";
+                                                                                       Grec_Contract."Pr‚nom prestataire" := Grec_Matricule."Provider first name";
+                                                                                       //EVALUATE(Grec_Contract."Date of entry",FORMAT('01' + DELSTR(Gtext_Champ12,1,2) + DELSTR(Gtext_Champ12,3)));;
+                                                                                       //Grec_Contract."End date" := CALCDATE('<CM>', Grec_Contract."Date of entry");
+                                                                                       EVALUATE(Grec_Contract."Date of entry",Gtext_Champ18);
+                                                                                       EVALUATE(Grec_Contract."End date",Gtext_Champ19);
+                                                                                       Grec_Contract.Description1 := COPYSTR(Gtext_Champ20,1,250);
+                                                                                       Grec_Contract.Description2 := COPYSTR(Gtext_Champ21,1,250);
+                                                                                       Grec_Contract.Description3 := COPYSTR(Gtext_Champ22,1,250);
+                                                                                       Grec_Contract.Description4 := COPYSTR(Gtext_Champ23,1,250);
+                                                                                       Grec_Contract.Description5 := COPYSTR(Gtext_Champ24,1,250);
+                                                                                       Grec_Contract.Description6 := COPYSTR(Gtext_Champ25,1,250);
+                                                                                       Grec_Contract.Description7 := COPYSTR(Gtext_Champ26,1,250);
+                                                                                       Grec_Contract.Description8 := COPYSTR(Gtext_Champ27,1,250);
+                                                                                       Grec_Contract.INSERT;
+
+                                                                                       Gcu_ContractManagement.AutoInit(Grec_PurchaseHeader."No.");
+                                                                                     END;
+                                                                                   END;
+
+                                                                                   //Modif JX-AUD du 17/06/2013
+                                                                                   Grec_PurchaseHeader.Import := TRUE;
+                                                                                   Grec_PurchaseHeader.MODIFY;
+                                                                                   //Fin Modif JX-AUD du 17/06/2013
+                                                                                 END;
+                                                                                  lu += 1;
+                                                                               END;
+                                                                                }
+
+    { [{705E3C22-5192-484B-95C4-885DF7308394}];2 ;Gtext_Champ1        ;Element ;Text     }
+
+    { [{ADFD8EB3-3D39-4E37-B507-A9221D07F8C8}];2 ;Gtext_Champ2        ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ2 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ2);
+                                                                                END;
+                                                                                 }
+
+    { [{F72712AD-F18B-4B31-90CC-2CF6CC596051}];2 ;Gtext_Champ3        ;Element ;Text     }
+
+    { [{39E5B98B-50B7-4525-95BB-1829916AD264}];2 ;Gtext_Champ4        ;Element ;Text     }
+
+    { [{8A9B9BAE-5697-44EC-9521-6179C05C6356}];2 ;Gtext_Champ5        ;Element ;Text     }
+
+    { [{CC6AA3E2-A1E0-4E86-ABAE-D20AA79398DA}];2 ;Gtext_Champ6        ;Element ;Text     }
+
+    { [{5D32829B-A412-475F-97DB-1A061A5FB675}];2 ;Gtext_Champ7        ;Element ;Text     }
+
+    { [{FEF19003-3608-4A2D-A642-1F7474BBB251}];2 ;Gtext_Champ8        ;Element ;Text     }
+
+    { [{035D3F73-645E-41D5-92CF-30879D9C3499}];2 ;Gtext_Champ9        ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ9 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ9);
+                                                                                END;
+                                                                                 }
+
+    { [{3F7B4DD9-18ED-4470-BBE7-8978EAA53F79}];2 ;Gtext_Champ10       ;Element ;Text     }
+
+    { [{4721B5A5-C49D-47F2-9BEC-2B63EFF18E74}];2 ;Gtext_Champ11       ;Element ;Text     }
+
+    { [{B3CD50AE-73B8-47C2-B09A-4FD6E77F14AE}];2 ;Gtext_Champ12       ;Element ;Text     }
+
+    { [{7674990C-D17C-45BB-91D8-E3A014E851CD}];2 ;Gtext_Champ13       ;Element ;Text     }
+
+    { [{67802F19-87E1-433A-AA13-8EDC5E7BD8C6}];2 ;Gtext_Champ14       ;Element ;Text     }
+
+    { [{0E956569-9774-4A17-B056-0D006D50B37F}];2 ;Gtext_Champ15       ;Element ;Text     }
+
+    { [{A8AE8C97-E49E-4BA1-B427-0D1BD77411AC}];2 ;Gtext_Champ16       ;Element ;Text     }
+
+    { [{92B014E3-ABFE-4DCF-9E2A-323EFEC042CD}];2 ;Gtext_Champ17       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ17 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ17);
+                                                                                END;
+                                                                                 }
+
+    { [{A7A2124E-7380-4221-A288-E46C5111616C}];2 ;Gtext_Champ18       ;Element ;Text     }
+
+    { [{31AABF1F-37B7-4C59-83A5-4980B4DDB6B4}];2 ;Gtext_Champ19       ;Element ;Text     }
+
+    { [{9783A6DF-81AD-45A4-8CCC-BEBCA8446BD1}];2 ;Gtext_Champ20       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ20 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ20);
+                                                                                END;
+                                                                                 }
+
+    { [{B6C6B689-C6B0-4639-B092-1CCDD0DFF0B4}];2 ;Gtext_Champ21       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ21 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ21);
+                                                                                END;
+                                                                                 }
+
+    { [{97E08E15-7D2E-4C6A-8278-09EB88772A50}];2 ;Gtext_Champ22       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ22 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ22);
+                                                                                END;
+                                                                                 }
+
+    { [{64DE9C48-926E-4872-B80F-E4F3C2D5F710}];2 ;Gtext_Champ23       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ23 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ23);
+                                                                                END;
+                                                                                 }
+
+    { [{7418247E-D1F8-4146-8BCF-DFA7F87302C9}];2 ;Gtext_Champ24       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ24 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ24);
+                                                                                END;
+                                                                                 }
+
+    { [{2468C7AA-9757-41EA-BBB1-C5DDC137F28C}];2 ;Gtext_Champ25       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ25 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ25);
+                                                                                END;
+                                                                                 }
+
+    { [{E7353006-45F8-4330-BD3F-98BE083F3860}];2 ;Gtext_Champ26       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ26 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ26);
+                                                                                END;
+                                                                                 }
+
+    { [{D22E1C08-18F7-4B69-AD4A-DD4E1BE1E3B6}];2 ;Gtext_Champ27       ;Element ;Text    ;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Gtext_Champ27 := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ27);
+                                                                                END;
+                                                                                 }
+
+    { [{03E48702-9199-4C8F-975B-5BC967E25824}];2 ;Gtext_Champ28       ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gint_Compteur@1000000013 : Integer;
+      Grec_PurchaseHeader@1000000012 : Record 38;
+      Grec_PurchaseLines@1000000011 : Record 39;
+      Grec_NoSeries@1000000010 : Record 308;
+      Grecord_GeneralLedgerSetup@1000000008 : Record 98;
+      Gcode_Axe@1000000007 : ARRAY [50] OF Code[20];
+      Gcode_Section@1000000009 : ARRAY [50] OF Code[20];
+      i@1000000006 : Integer;
+      Grec_DefaultDimension@1000000005 : Record 352;
+      Grec_DimensionValue@1000000004 : Record 349;
+      Grec_Contract@1000000003 : Record 50008;
+      Grec_Matricule@1000000002 : Record 50010;
+      Gcu_ContractManagement@1000000001 : Codeunit 50005;
+      "Gcu_ANSI-ASCII"@1000000000 : Codeunit 50002;
+      Text009@1000000018 : TextConst 'FRA=Le fichier a bien ‚t‚ import‚.';
+      Text010@1000000017 : TextConst 'FRA=Ce traitement ne concerne que les soci‚t‚s VSCT et VSC';
+      Text013@1000000016 : TextConst 'FRA=Erreur sur la ligne "%3" pour la commande"%4".\\Le code "%1" pour la section analytique "%2" n''existe pas.';
+      Text014@1000000015 : TextConst 'FRA=Le matricule %1 n''existe pas';
+      Vend@1000000014 : Record 23;
+      lu@1000000019 : Integer;
+      C@1000000020 : Char;
+      J@1000000021 : Integer;
+
+    PROCEDURE "Ins‚rerAnalytique"@1000000001();
+    VAR
+      Lcu_Dimension@1000000000 : Codeunit 408;
+    BEGIN
+      //Insertion des axes en rapport avec le fichier
+      CLEAR(Gcode_Section);
+      Gcode_Section[1] := Gtext_Champ12;
+      Gcode_Section[2] := Gtext_Champ13;
+      Gcode_Section[3] := Gtext_Champ14;
+      Gcode_Section[4] := Gtext_Champ15;
+      Gcode_Section[5] := Gtext_Champ16;
+
+      FOR i := 1 TO 5 DO BEGIN
+       //test si le code analytique existe
+       IF NOT Grec_DimensionValue.GET(Gcode_Axe[i],Gcode_Section[i]) THEN
+         ERROR(STRSUBSTNO(Text013,Gcode_Section[i],Gcode_Axe[i],Grec_PurchaseLines."Line No.",
+           Grec_PurchaseHeader."No."));
+       //Correction aprŠs lecture du fichier Excel si des 0 sont manquants lors d'une mise … jour par l'utilisateur.
+       IF Gcode_Axe[i] = 'PERIODE' THEN
+         IF STRLEN(Gcode_Section[i]) = 3 THEN
+           Gcode_Section[i] := '0' + Gcode_Section[i]
+         ELSE IF STRLEN(Gcode_Section[i]) = 2 THEN
+           Gcode_Section[i] := '00' + Gcode_Section[i]
+         ELSE IF STRLEN(Gcode_Section[i]) = 1 THEN
+           Gcode_Section[i] := '000' + Gcode_Section[i];
+       //Fin correction
+      END;
+
+       // Ajout des sections et attribuation dimension set id
+      Grec_PurchaseLines."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(Grec_PurchaseLines."Dimension Set ID",Grec_PurchaseLines."Shortcut Dimension 1 Code",
+                                   Grec_PurchaseLines."Shortcut Dimension 2 Code",Gcode_Axe,Gcode_Section);
+      Grec_PurchaseLines.MODIFY;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD 09/04/2013
+      //Import BC Masse Presta
+
+      //Modif JX-AUD du 17/06/2013
+      //Champ "Import" et "Import email fournisseur"
+    }
+    END.
+  }
+}
+

@@ -1,0 +1,50 @@
+OBJECT Page 50038 Yooz Parameters
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21/12/15;
+    Time=15:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD,JX-YOOZ2AUTO;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Yooz Parameters;
+               FRA=Paramätres Yooz];
+    SourceTable=Table50013;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 IF NOT GET THEN BEGIN
+                  INIT;
+                  INSERT;
+                 END;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Paramätres Yooz;
+                GroupType=Group }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Yooz Export Path" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Yooz Import Path" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Yooz Imported File Path" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

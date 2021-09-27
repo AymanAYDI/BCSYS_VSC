@@ -1,0 +1,75 @@
+OBJECT Table 50003 Duplicating list
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.1-XAD,JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=FRA=Liste de duplication;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Name                ;Text30        ;Editable=No }
+    { 2   ;   ;Duplication         ;Boolean       ;OnValidate=BEGIN
+                                                                IF NOT Duplication THEN
+                                                                  Dimension := FALSE;
+                                                              END;
+                                                               }
+    { 3   ;   ;Dimension           ;Boolean       ;OnValidate=BEGIN
+                                                                IF NOT Duplication THEN
+                                                                  Dimension := FALSE;
+                                                              END;
+                                                               }
+    { 4   ;   ;Echec               ;Boolean        }
+  }
+  KEYS
+  {
+    {    ;Name                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SelectAll@1000000000(Pbool_SelectAll@1000000001 : Boolean);
+    BEGIN
+      //DEBUT MODIF JX-XAD 07/06/2011
+      IF FIND('-') THEN
+      REPEAT
+        VALIDATE(Duplication,Pbool_SelectAll);
+        MODIFY;
+      UNTIL NEXT = 0;
+      COMMIT;
+      //FIN MODIF JX-XAD 07/06/2011
+    END;
+
+    PROCEDURE SelectAllWithDim@1000000001(Pbool_SelectAllWithDim@1000000000 : Boolean);
+    BEGIN
+      //DEBUT MODIF JX-XAD 07/06/2011
+      IF FIND('-') THEN
+      REPEAT
+        VALIDATE(Dimension,Pbool_SelectAllWithDim);
+        MODIFY;
+      UNTIL NEXT = 0;
+      COMMIT;
+      //FIN MODIF JX-XAD 07/06/2011
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD 01/04/2009
+      Cette table est utilis‚e pour la duplication de fiches (fournisseurs, comptes g‚n‚raux, articles)
+      dans le cadre d'une gestion multi-soci‚t‚s.
+
+      MODIF JX-XAD 07/06/2011
+      Ajout de deux fonctions permettant de tout s‚lectionner (ou d‚selectionner) depuis le formulaire de duplication
+    }
+    END.
+  }
+}
+

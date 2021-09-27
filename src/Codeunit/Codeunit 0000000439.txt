@@ -2,9 +2,10 @@ OBJECT Codeunit 439 Approvals Management
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39663;
+    Date=21/09/15;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39663,JX-VSC1.0-XAD,JX-VSC1.1-LAB;
   }
   PROPERTIES
   {
@@ -53,7 +54,7 @@ OBJECT Codeunit 439 Approvals Management
       Text110@1038 : TextConst 'ENU=S-BLANKET ORDER;FRA=COMMANDE OUVERTE VTE';
       Text111@1037 : TextConst 'ENU=Sales Blanket Order Approval;FRA=Approbation commande ouverte vente';
       Text112@1036 : TextConst 'ENU=P-QUOTE;FRA=DEMANDE PRIX';
-      Text113@1035 : TextConst 'ENU=Purchase Quote Approval;FRA=Approbation demande de prix';
+      Text113@1035 : TextConst 'ENU=Purchase Quote Approval;FRA=Approbation devis';
       Text114@1034 : TextConst 'ENU=P-ORDER;FRA=COMMANDE ACHAT';
       Text115@1033 : TextConst 'ENU=Purchase Order Approval;FRA=Approbation commande achat';
       Text116@1032 : TextConst 'ENU=P-INVOICE;FRA=FACTURE ACHAT';
@@ -604,7 +605,11 @@ OBJECT Codeunit 439 Approvals Management
         SETRANGE("Document No.",PurchaseHeader."No.");
         IF FINDSET THEN
           REPEAT
-            IF (Quantity <> 0) AND ("Line Amount" <> 0) THEN
+      //d‚but modif JX-XAD du 09/06/2008
+      //Ne pas tester le montant … z‚ro pour les approbations
+      //    IF (Quantity <> 0) AND ("Line Amount" <> 0) THEN
+          IF (PurchaseLines.Quantity <> 0) THEN
+      //d‚but modif JX-XAD du 09/06/2008
               EXIT(TRUE);
           UNTIL NEXT = 0;
       END;
@@ -920,6 +925,7 @@ OBJECT Codeunit 439 Approvals Management
       ReleaseSalesDoc@1001 : Codeunit 414;
       ReleasePurchaseDoc@1002 : Codeunit 415;
       ApprovalMgtNotification@1007 : Codeunit 440;
+      AppManagement@1000000000 : Codeunit 440;
     BEGIN
       IF ApprovalEntry."Table ID" <> 0 THEN BEGIN
         ApprovalEntry.Status := ApprovalEntry.Status::Approved;
@@ -957,6 +963,51 @@ OBJECT Codeunit 439 Approvals Management
         END ELSE
           IF PurchaseHeader.GET(ApprovalEntry."Document Type",ApprovalEntry."Document No.") THEN
             ReleasePurchaseDoc.RUN(PurchaseHeader);
+
+      // Modif JX-LAB du 20/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+
+          IF ApprovalEntry."Table ID" = DATABASE::"Sales Header" THEN
+            BEGIN
+              ApprovalSetup.FIND('-');
+              IF ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Quote) AND
+                 (ApprovalSetup."Sales Quote Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Order) AND
+                 (ApprovalSetup."Sales Order Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Invoice) AND
+                 (ApprovalSetup."Sales Invoice Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Credit Memo") AND
+                 (ApprovalSetup."Sales Credit Memo Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Blanket Order") AND
+                 (ApprovalSetup."Sales Blanket Order Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Return Order") AND
+                 (ApprovalSetup."Sales Return Order Yes/No" = TRUE)) THEN
+
+                    IF SalesHeader.GET(ApprovalEntry."Document Type",ApprovalEntry."Document No.") AND
+                       ApprovalSetup.Approved = TRUE THEN
+                         AppManagement.SendSalesApprovedMail(SalesHeader,ApprovalEntry)
+
+            END ELSE BEGIN
+              ApprovalSetup.FIND('-');
+              IF ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Quote) AND
+                 (ApprovalSetup."Purchases Quote Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Order) AND
+                 (ApprovalSetup."Purchases Order Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::Invoice) AND
+                 (ApprovalSetup."Purchases Invoice Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Credit Memo") AND
+                 (ApprovalSetup."Purchases Credit Memo Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Blanket Order") AND
+                 (ApprovalSetup."Purchases Blanket Order Yes/No" = TRUE)) OR
+                 ((ApprovalEntry."Document Type" = ApprovalEntry."Document Type"::"Return Order") AND
+                 (ApprovalSetup."Purchases Return Order Yes/No" = TRUE)) THEN
+
+               IF PurchaseHeader.GET(ApprovalEntry."Document Type",ApprovalEntry."Document No.") AND
+                  ApprovalSetup.Approved = TRUE THEN
+                    AppManagement.SendPurchaseApprovedMail(PurchaseHeader,ApprovalEntry);
+            END;
+      //fin Modif JX-LAB du 20/04/09
+
         EXIT(TRUE);
       END;
     END;
@@ -1642,8 +1693,8 @@ OBJECT Codeunit 439 Approvals Management
           SETRANGE(Status);
           FINDLAST;
           DocReleased := ApproveApprovalRequest(ApprovalEntry);
-          IF DocReleased THEN
-            PurchHeader.FIND;
+      //    IF DocReleased THEN
+      //      PurchHeader.FIND;
         END;
 
         IF DocReleased THEN BEGIN
@@ -1677,6 +1728,14 @@ OBJECT Codeunit 439 Approvals Management
     END;
 
     BEGIN
+    {
+
+      //modif JX-XAD du 09/06/2008
+      //Ne pas tester le montant … z‚ro pour les approbations
+
+      // Modif JX-LAB du 20/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+    }
     END.
   }
 }

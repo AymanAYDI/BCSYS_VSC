@@ -1,0 +1,387 @@
+OBJECT XMLport 50015 Export Magnitude
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/01/20;
+    Time=11:07:44;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Export;
+    TextEncoding=WINDOWS;
+    OnPreXMLport=BEGIN
+                   "Global temporary table".LOCKTABLE;
+                 END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    TableSeparator=<NewLine>;
+    UseRequestPage=No;
+  }
+  ELEMENTS
+  {
+    { [{59C5FFA2-002E-4E78-AEBD-3EEE454D0649}];  ;Root                ;Element ;Text     }
+
+    { [{2269A827-CF9F-40E5-9BDB-0680EED05528}];1 ;Header              ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  SourceTableView=SORTING(Field1)
+                                                                  WHERE(Field1=CONST(1));
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         Grec_Societe.GET;
+                                                                         Gtext_NomChamp := 'd_ca;d_dp;d_ru;d_tftr;d_metier;d_libre1;d_libre2;d_libre3;d_echeances;d_dossiers;d_geoactivite;d_pe;d_oru;d_ac;';
+                                                                         Gtext_NomChamp += 'd_fl;d_au;d_t1;d_t2;d_cu;d_to;d_go;d_le;d_nu;d_libre5;d_dest;d_area;d_geosite;d_geocontrat;P_COMMENT;P_AMOUNT';
+                                                                       END;
+                                                                        }
+
+    { [{1FD40231-99D9-4A09-A37D-7F29F55C1067}];2 ;Gtext_NomChamp      ;Element ;Text    ;
+                                                  VariableName=Gtext_NomChamp }
+
+    { [{56F951F9-4281-476F-8DE1-48AC2CB2FD61}];1 ;GlobalTempTable     ;Element ;Table   ;
+                                                  SourceTable=Table50005;
+                                                  SourceTableView=SORTING(Field2,Field1);
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         //mettre tous les montants … 0 de la table MagnitudeCorrespondence
+                                                                         IF Grec_MagnitudeCorrespondence1.FIND('-') THEN
+                                                                         REPEAT
+                                                                           Grec_MagnitudeCorrespondence1.Amount := 0;
+                                                                           Grec_MagnitudeCorrespondence1.MODIFY;
+                                                                         UNTIL Grec_MagnitudeCorrespondence1.NEXT =0;
+                                                                         Gbool_exit := TRUE;
+                                                                         i :=0;
+
+                                                                         //MODIFICATION DU 26/10/10 JX-AUD
+                                                                         IF Grec_MagnitudeCorrespondence2.FIND('-') THEN
+                                                                         REPEAT
+                                                                           Grec_GL_Account.RESET;
+                                                                           Grec_GL_Account.SETFILTER(Grec_GL_Account."No.", Grec_MagnitudeCorrespondence2."Account No.");
+                                                                           Grec_GL_Account.SETFILTER(Grec_GL_Account."Account Type",'%1',Grec_GL_Account."Account Type"::Posting);
+                                                                           Grec_GL_Account.SETFILTER(Grec_GL_Account."Date Filter",'..%1',Gdate_Comptabilisation);
+                                                                           Grec_GL_Account.SETFILTER(Grec_GL_Account."G/L Entry Type Filter",'%1',Grec_GL_Account."G/L Entry Type Filter"::Definitive);
+
+                                                                           Grec_Temporary.RESET;
+                                                                           Grec_Temporary.DELETEALL;
+                                                                           //INITIALISATION DE LA TABLE TEMPORAIRE AVEC LE PREMIER FILTRE
+                                                                           IF Grec_GL_Account.FIND('-') THEN
+                                                                           REPEAT
+                                                                             i +=1;
+                                                                             Grec_Temporary.INIT;
+                                                                             Grec_Temporary.PiŠce := i;
+                                                                             Grec_Temporary.Compte := Grec_GL_Account."No.";
+                                                                             Grec_Temporary.INSERT;
+                                                                           UNTIL Grec_GL_Account.NEXT =0;
+
+                                                                           //FILTRE SUR LES COMPTES DE NIVEAU S'IL Y EN A
+                                                                           IF Grec_MagnitudeCorrespondence.GET(Grec_MagnitudeCorrespondence2."Line No.") THEN
+                                                                           BEGIN
+                                                                              IF Grec_MagnitudeCorrespondence.FIND('>') THEN
+                                                                              WHILE (Grec_MagnitudeCorrespondence.Level > Grec_MagnitudeCorrespondence2.Level) AND (Gbool_exit) DO
+                                                                               BEGIN
+                                                                                 Grec_Temporary.SETFILTER(Grec_Temporary.Compte,Grec_MagnitudeCorrespondence."Account No.");
+                                                                                 Grec_Temporary1.DELETEALL;
+
+                                                                                 IF Grec_Temporary.FIND('-') THEN
+                                                                                 REPEAT
+                                                                                   Grec_Temporary1.INIT;
+                                                                                   Grec_Temporary1.PiŠce := Grec_Temporary.PiŠce;
+                                                                                   Grec_Temporary1.Compte := Grec_Temporary.Compte;
+                                                                                   Grec_Temporary1.INSERT;
+                                                                                 UNTIL Grec_Temporary.NEXT =0;
+
+                                                                                 Grec_Temporary.RESET;
+
+                                                                                 IF Grec_Temporary1.FIND('-') THEN
+                                                                                 REPEAT
+                                                                                   IF Grec_Temporary.GET(Grec_Temporary1.PiŠce) THEN
+                                                                                   Grec_Temporary.DELETE;
+                                                                                 UNTIL Grec_Temporary1.NEXT =0;
+
+                                                                                 IF NOT Grec_MagnitudeCorrespondence.FIND('>') THEN  Gbool_exit := FALSE;
+                                                                               END;
+                                                                           END ;
+
+
+                                                                           //CALCUL MONTANT
+                                                                           IF Grec_Temporary.FIND('-') THEN
+                                                                           REPEAT
+                                                                             IF Grec_GL_Account.GET(Grec_Temporary.Compte) THEN
+                                                                             BEGIN
+                                                                               Grec_GL_Account.CALCFIELDS(Grec_GL_Account."Net Change");
+
+                                                                                CASE Grec_MagnitudeCorrespondence2.Sign OF
+                                                                                  '<=0','<0' : BEGIN
+                                                                                                IF Grec_GL_Account."Net Change" > 0 THEN
+                                                                                                Grec_GL_Account."Net Change" := 0;
+                                                                                               END;
+                                                                                  '>=0','>0'  : BEGIN
+                                                                                                  IF Grec_GL_Account."Net Change" <= 0 THEN
+                                                                                                  Grec_GL_Account."Net Change" := 0;
+                                                                                                END;
+                                                                                  ELSE ;
+                                                                                END;
+
+                                                                               //DEBUT MODIFICATION JX-XAD du 15/12/2010
+                                                                               //Grec_MagnitudeCorrespondence2.Amount += (Grec_GL_Account."Net Change"/(-1000));
+                                                                               IF COPYSTR(Grec_MagnitudeCorrespondence2.Rubric,1,1) = 'A' THEN
+                                                                                 Grec_MagnitudeCorrespondence2.Amount += (Grec_GL_Account."Net Change"/(1000))
+                                                                               ELSE
+                                                                                 Grec_MagnitudeCorrespondence2.Amount += (Grec_GL_Account."Net Change"/(-1000));
+                                                                               //FIN MODIFICATION JX-XAD du 15/12/2010
+
+                                                                             END;
+                                                                            UNTIL Grec_Temporary.NEXT =0;
+                                                                           Grec_MagnitudeCorrespondence2.MODIFY;
+                                                                         UNTIL Grec_MagnitudeCorrespondence2.NEXT=0;
+
+                                                                         //********DEUXIEME TRAITEMENT***************************************************************************//
+
+
+                                                                         Grec_MagnitudeCorrespondence.RESET;
+
+                                                                         "Global temporary table".DELETEALL;
+                                                                         IF Grec_MagnitudeCorrespondence.FIND('-') THEN
+                                                                         REPEAT
+                                                                           IF "Global temporary table".GET(Grec_MagnitudeCorrespondence.Rubric,1) THEN
+                                                                             BEGIN
+                                                                               "Global temporary table"."Credit amount" += Grec_MagnitudeCorrespondence.Amount;
+                                                                               "Global temporary table".MODIFY;
+                                                                             END
+                                                                           ELSE
+                                                                             BEGIN
+                                                                               "Global temporary table".INIT;
+                                                                               "Global temporary table"."Line No." :=1;
+                                                                               "Global temporary table"."Document No." := Grec_MagnitudeCorrespondence.Rubric;
+                                                                               "Global temporary table"."Credit amount" := Grec_MagnitudeCorrespondence.Amount;
+                                                                               "Global temporary table".INSERT;
+                                                                             END;
+                                                                         UNTIL Grec_MagnitudeCorrespondence.NEXT =0;
+
+                                                                         d_ru := '';
+                                                                         CASE Grec_Societe."IC Partner Code" OF
+                                                                           'TEC' : d_ru := 'GLI85';
+                                                                           'COM' : d_ru := 'GLI80';
+                                                                           'GLI' : d_ru := 'GLI81';
+                                                                           'EXP','AGE' : d_ru := 'GLI82'; //MODIF JX-XAD 09/03/2011
+                                                                           'HEX': d_ru := 'GLI99'; //MODIF JX-AUD 07/09/2012
+                                                                           'C25' : d_ru := 'GLI112'; //BCSYS 0912020
+                                                                           '' : ERROR(Text001);
+                                                                           ELSE
+                                                                             ERROR(Text002);
+                                                                         END;
+                                                                       END;
+
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             d_ca := 'C';
+
+                                                                             d_dp := Gtxt_Annee + '.' + Gtxt_Mois;
+
+                                                                             //MODIF AUD
+                                                                             {d_ru := '';
+                                                                             CASE COMPANYNAME OF
+                                                                               'VSCT','VSCT TEST' : d_ru := 'GLI85';
+                                                                               'VSC','VSC TEST' : d_ru := 'GLI80';
+                                                                               'VFEC','VFEC TEST' : d_ru := 'GLI81';      //MODIF JX-XAD 15/04/2011
+                                                                               'Agence','Agence TEST' : d_ru := 'GLI82';
+                                                                             END;}
+                                                                             //FIN MODIF AUD
+
+                                                                             d_tftr := '';
+                                                                             d_metier := '';
+                                                                             d_libre1 := '';
+                                                                             d_libre2 := '';
+                                                                             d_libre3 := '';
+                                                                             d_echeances := '';
+                                                                             d_dossiers := '';
+                                                                             d_geoactivite := '';
+                                                                             d_pe := Gtxt_Annee + '.' + Gtxt_Mois;
+                                                                             d_oru := '';
+                                                                             d_ac := "Global temporary table"."Document No.";
+                                                                             d_fl := 'F99';
+                                                                             d_au := '0LIA01';
+                                                                             d_t1 := '';
+                                                                             d_t2 := '';
+                                                                             d_cu := 'EUR';
+                                                                             d_to := '';
+                                                                             d_go := '';
+                                                                             d_le := '';
+                                                                             d_nu := '';
+                                                                             d_libre5 := '';
+                                                                             d_dest := '';
+                                                                             d_area := '';
+                                                                             d_geosite := '';
+                                                                             d_geocontrat := '';
+                                                                             P_COMMENT := '';
+
+                                                                             P_AMOUNT := DELCHR(FORMAT("Global temporary table"."Credit amount",30,'<Sign,1><Integer><Decimals>'),'=',' ');
+                                                                             P_AMOUNT := CONVERTSTR(P_AMOUNT,',','.');
+
+                                                                             //FIN MODIFICATION DU 26/10/10 JX-AUD
+                                                                           END;
+                                                                            }
+
+    { [{B07849A2-989C-4E98-8833-116DD32F60AB}];2 ;d_ca                ;Element ;Text    ;
+                                                  VariableName=d_ca }
+
+    { [{6563294E-9A08-4912-B504-966D8161AB1A}];2 ;d_dp                ;Element ;Text    ;
+                                                  VariableName=d_dp }
+
+    { [{D336CBC6-AE95-4B61-9055-032CFE9A8DEE}];2 ;d_ru                ;Element ;Text    ;
+                                                  VariableName=d_ru }
+
+    { [{B618DDE0-08EF-43CE-92CF-0F56DFEA6232}];2 ;d_tftr              ;Element ;Text    ;
+                                                  VariableName=d_tftr }
+
+    { [{327C90C0-D331-4928-8735-006178F4BDC3}];2 ;d_metier            ;Element ;Text    ;
+                                                  VariableName=d_metier }
+
+    { [{9E19FEDB-52CC-4EA2-A60D-3358CF0A3D96}];2 ;d_libre1            ;Element ;Text    ;
+                                                  VariableName=d_libre1 }
+
+    { [{40A25053-FEAA-419D-B838-97BC550EF46C}];2 ;d_libre2            ;Element ;Text    ;
+                                                  VariableName=d_libre2 }
+
+    { [{DFF4731F-A2E9-432B-AE22-C9CA6ECF11C6}];2 ;d_libre3            ;Element ;Text    ;
+                                                  VariableName=d_libre3 }
+
+    { [{A849AC6A-1FCF-42D3-89EA-730469B3C1C6}];2 ;d_echeances         ;Element ;Text    ;
+                                                  VariableName=d_echeances }
+
+    { [{9ABB0B46-B8A4-4B2E-B415-C4F717625742}];2 ;d_dossiers          ;Element ;Text    ;
+                                                  VariableName=d_dossiers }
+
+    { [{4864F2E7-34ED-4E45-A6D6-8D09B14139F0}];2 ;d_geoactivite       ;Element ;Text    ;
+                                                  VariableName=d_geoactivite }
+
+    { [{FBAD0F34-D315-49F4-8A16-8D7AD740DD71}];2 ;d_pe                ;Element ;Text    ;
+                                                  VariableName=d_pe }
+
+    { [{EDB6DEB8-2D19-4565-B2B0-4CCB6CFB862F}];2 ;d_oru               ;Element ;Text    ;
+                                                  VariableName=d_oru }
+
+    { [{A6C5D77B-4A9A-43AB-B5AD-C3ECCAAF22BA}];2 ;d_ac                ;Element ;Text    ;
+                                                  VariableName=d_ac }
+
+    { [{82B8270E-AFE5-4DEF-AA6F-AAEA2A3F1FFF}];2 ;d_fl                ;Element ;Text    ;
+                                                  VariableName=d_fl }
+
+    { [{73B0BCAD-C0D4-41F6-831D-B5C6309DF940}];2 ;d_au                ;Element ;Text    ;
+                                                  VariableName=d_au }
+
+    { [{917D5A3B-52BC-4503-A54F-B5828F934059}];2 ;d_t1                ;Element ;Text    ;
+                                                  VariableName=d_t1 }
+
+    { [{5892D127-80A2-43D2-91FA-49D38FC4474E}];2 ;d_t2                ;Element ;Text    ;
+                                                  VariableName=d_t2 }
+
+    { [{253AED8E-2CA0-4924-9401-C2B394ED499A}];2 ;d_cu                ;Element ;Text    ;
+                                                  VariableName=d_cu }
+
+    { [{BCECF17F-6EAE-4AAF-A7FD-4971A0FBB4BE}];2 ;d_to                ;Element ;Text    ;
+                                                  VariableName=d_to }
+
+    { [{47CE2B19-7365-4948-BA93-AAF26313E0A9}];2 ;d_go                ;Element ;Text    ;
+                                                  VariableName=d_go }
+
+    { [{0861FF52-DFEA-45DF-9D66-0B40E05046FC}];2 ;d_le                ;Element ;Text    ;
+                                                  VariableName=d_le }
+
+    { [{3F392FAB-59CA-497A-896E-FE2296E2EF32}];2 ;d_nu                ;Element ;Text    ;
+                                                  VariableName=d_nu }
+
+    { [{746545CB-9561-4524-B7E8-C1909D70865D}];2 ;d_libre5            ;Element ;Text    ;
+                                                  VariableName=d_libre5 }
+
+    { [{CA7C1EDB-A3D3-4003-A73E-B7CC049B3C62}];2 ;d_dest              ;Element ;Text    ;
+                                                  VariableName=d_dest }
+
+    { [{86A8D70D-B420-46F4-B20D-97313490EB85}];2 ;d_area              ;Element ;Text    ;
+                                                  VariableName=d_area }
+
+    { [{F51FEEC0-4DE6-453E-80B7-95D67365CF99}];2 ;d_geosite           ;Element ;Text    ;
+                                                  VariableName=d_geosite }
+
+    { [{969A2CA5-3B03-418C-8D73-CF04D2EA89C8}];2 ;d_geocontrat        ;Element ;Text    ;
+                                                  VariableName=d_geocontrat }
+
+    { [{777E6F54-D1AE-45A2-8DE4-E652BD17DE3D}];2 ;P_COMMENT           ;Element ;Text    ;
+                                                  VariableName=P_COMMENT }
+
+    { [{8CB496D7-7866-4181-BB70-3CCB98F3CDF0}];2 ;P_AMOUNT            ;Element ;Text    ;
+                                                  VariableName=P_AMOUNT }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Grec_GL_Entry@1000000017 : Record 17;
+      Gdec_Amount@1000000016 : Decimal;
+      "Gcu_ANSI-ASCII"@1000000015 : Codeunit 50002;
+      Gdec_SubstractAmount@1000000014 : Decimal;
+      Grec_MagnitudeCorrespondence@1000000013 : Record 50009;
+      Gdec_TotalSubstractAmount@1000000012 : Decimal;
+      Gdate_DateMagnitude@1000000011 : Date;
+      Gtxt_Annee@1000000010 : Text[4];
+      Gtxt_Mois@1000000009 : Text[2];
+      Grec_GL_Account@1000000008 : Record 15;
+      Gdate_Comptabilisation@1000000007 : Date;
+      Gbool_exit@1000000006 : Boolean;
+      i@1000000005 : Integer;
+      Grec_Temporary@1000000004 : TEMPORARY Record 50001;
+      Grec_Temporary1@1000000003 : TEMPORARY Record 50001;
+      Grec_Societe@1000000002 : Record 79;
+      Grec_MagnitudeCorrespondence2@1000000001 : Record 50009;
+      Grec_MagnitudeCorrespondence1@1000000000 : Record 50009;
+      Text001@1000000050 : TextConst 'ENU=No company code found;FRA=Aucun code soci‚t‚ trouv‚';
+      Text002@1000000049 : TextConst 'ENU=Error on the company code;FRA=Erreur sur le code soci‚t‚';
+
+    PROCEDURE SetParameters@1000000000(Pdate_Comptabilisation@1000000002 : Date);
+    BEGIN
+      Gdate_Comptabilisation := Pdate_Comptabilisation;
+      Gtxt_Annee := FORMAT(DATE2DMY(Gdate_Comptabilisation,3));
+      Gtxt_Mois := FORMAT(DATE2DMY(Gdate_Comptabilisation,2));
+      IF STRLEN(Gtxt_Mois) < 2 THEN
+        Gtxt_Mois := '0' + Gtxt_Mois;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD le 08/09/2010
+      G‚n‚ration du fichier Magnitude suivant la table de correspondance 50009
+
+      //MODIFICATION JX-AUD du 26/10/10
+      //REFONTE DU CODE
+      //Pour la table Global tempory table les champs utilis‚s sont :
+      //- Line No pour le num‚ro de ligne
+      //- Document No. pour le num‚ro Rubric
+      //- Credit Amount pour le montant Amount
+
+      //MODIFICATION JX-XAD du 15/12/2010
+      //Inversion du signe pour toutes les rubriques autre que A
+
+      // MODIF JX-XAD 09/03/2011
+      // Le code IC Partner doit ˆtre GLI82 pour Agence
+
+      MODIF JX-XAD 15/04/2011
+      Mise … jour pour VFEC
+
+      //MODIF JX-AUD 07/09/2012
+      Ajout du code 'HEX' GLI99 pour HEXATOURISME
+    }
+    END.
+  }
+}
+

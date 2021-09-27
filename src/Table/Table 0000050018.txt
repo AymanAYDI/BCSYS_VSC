@@ -1,0 +1,37 @@
+OBJECT Table 50018 No. Yooz
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/08/16;
+    Time=14:30:00;
+    Modified=Yes;
+    Version List=JX-VSC4.2-PBD;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;TableRelation="Payment Header";
+                                                   CaptionML=[ENU=No.;
+                                                              FRA=Nø] }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
+                                                              FRA=Nø ligne] }
+    { 3   ;   ;Applied Yooz No.    ;Text250       ;CaptionML=FRA=Nø Yooz lettr‚s;
+                                                   Description=JX-YOOZ2 }
+  }
+  KEYS
+  {
+    {    ;No.,Line No.                            ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

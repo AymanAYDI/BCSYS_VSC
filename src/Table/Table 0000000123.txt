@@ -2,9 +2,10 @@ OBJECT Table 123 Purch. Inv. Line
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=26/05/16;
+    Time=18:53:11;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -384,6 +385,7 @@ OBJECT Table 123 Purch. Inv. Line
     { 6608;   ;Return Reason Code  ;Code10        ;TableRelation="Return Reason";
                                                    CaptionML=[ENU=Return Reason Code;
                                                               FRA=Code motif retour] }
+    { 50005;  ;Matricule No.       ;Code20        ;CaptionML=FRA=Code matricule }
     { 99000750;;Routing No.        ;Code20        ;TableRelation="Routing Header";
                                                    CaptionML=[ENU=Routing No.;
                                                               FRA=Nø gamme] }
@@ -434,8 +436,19 @@ OBJECT Table 123 Purch. Inv. Line
     END;
 
     PROCEDURE ShowDimensions@25();
+    VAR
+      lNewDimSet@1000000001 : Integer;
+      lUpdateDim@1000000000 : Report 50037;
     BEGIN
-      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Ligne standard Nav
+      //DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Migration Nav 2015 => Modification imputation analytique
+      lNewDimSet := DimMgt.EditDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      IF "Dimension Set ID" <> lNewDimSet THEN BEGIN
+       CLEAR(lUpdateDim);
+       lUpdateDim.SetPostedInvoice(Rec,lNewDimSet);
+       lUpdateDim.RUN;
+      END;
     END;
 
     PROCEDURE ShowItemTrackingLines@3();
@@ -640,7 +653,18 @@ OBJECT Table 123 Purch. Inv. Line
       PurchDocCommentSheet.RUNMODAL;
     END;
 
+    PROCEDURE ShowShortcutDimCode@27(VAR ShortcutDimCode@1000 : ARRAY [10] OF Code[20]);
     BEGIN
+      //Modif JX-VSC4.0-PBD du 26/01/15 ARRAY [8] => ARRAY[10]
+      DimMgt.GetShortcutDimensions("Dimension Set ID",ShortcutDimCode);
+    END;
+
+    BEGIN
+    {
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Code matricule"
+    }
     END.
   }
 }

@@ -1,0 +1,68 @@
+OBJECT Page 50098 Code Coverage Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/08/12;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=CodeCoverage;
+  }
+  PROPERTIES
+  {
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table2000000049;
+    PageType=List;
+    OnAfterGetRecord=BEGIN
+                       LineStyle := 'None';
+
+                       CASE TRUE OF
+                         "Line Type" = "Line Type"::Object: LineStyle := 'Strong';
+                         "Line Type" = "Line Type"::"Trigger/Function": LineStyle := 'StrongAccent';
+                         ("Line Type" = "Line Type"::Code) AND ("No. of Hits" = 0): LineStyle := 'Ambiguous';
+                         ("Line Type" = "Line Type"::Empty): LineStyle := 'Ambiguous';
+                       END;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1010000;0;Container ;
+                ContainerType=ContentArea }
+
+    { 1010001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1010004;2;Field     ;
+                SourceExpr="Line No.";
+                StyleExpr=LineStyle }
+
+    { 1010006;2;Field     ;
+                SourceExpr=Line;
+                StyleExpr=LineStyle }
+
+  }
+  CODE
+  {
+    VAR
+      LineStyle@1010000 : Text;
+
+    BEGIN
+    {
+      **************************************************************************************************************************
+      Microsoft provides programming examples for illustration only, without warranty either expressed or implied, including,
+      but not limited to, the implied warranties of merchantability or fitness for a particular purpose. This posting assumes
+      that you are familiar with the programming language that is being demonstrated and the tools that are used to create and
+      debug procedures.
+
+      Copyright © Microsoft Corporation. All Rights Reserved.
+      This code released under the terms of the
+      Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html)
+      **************************************************************************************************************************
+    }
+    END.
+  }
+}
+

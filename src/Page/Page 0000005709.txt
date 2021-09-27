@@ -2,9 +2,10 @@ OBJECT Page 5709 Get Receipt Lines
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=13/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Modified=Yes;
+    Version List=NAVW13.60,JX-VSC1.0-XAD,JX-VSC1.1-LAB,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -13,8 +14,30 @@ OBJECT Page 5709 Get Receipt Lines
                FRA=Extraire lignes r‚ception];
     SourceTable=Table121;
     PageType=List;
+    OnInit=BEGIN
+             "Axe 0Visible" := TRUE;
+           END;
+
+    OnOpenPage=BEGIN
+                 //Modif JX-AUD du 05/04/2011
+                 "Axe 0Visible" := TRUE;
+                 IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+
+                   Gcode_Axe1 := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe1) THEN  Gtext_ColAxe0 := Grec_Dimension."Code Caption" ELSE "Axe 0Visible" := FALSE;
+
+                 END;
+                 //Modif JX-AUD du 05/04/2011
+               END;
+
     OnAfterGetRecord=BEGIN
                        "Document No.HideValue" := FALSE;
+                       //Modif JX-AUD du 05/04/2011
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe1) THEN
+                         Gtext_Axe0 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                        Gtext_Axe0 :='';
+                       //FIN Modif JX-AUD du 05/04/2011
                        DocumentNoOnFormat;
                      END;
 
@@ -73,6 +96,30 @@ OBJECT Page 5709 Get Receipt Lines
                 SourceExpr="Document No.";
                 HideValue="Document No.HideValue";
                 StyleExpr='Strong' }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Posting Date" }
+
+    { 1000000002;2;Field  ;
+                CaptionML=[ENU=Vendor name;
+                           FRA=Nom du fournisseur];
+                SourceExpr="Nom Fournisseur" }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Code Utilisateur Commande" }
+
+    { 1000000004;2;Field  ;
+                CaptionML=[ENU=Order No.;
+                           FRA=Nø Commande];
+                SourceExpr="Order Number" }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Your Reference" }
+
+    { 1000000006;2;Field  ;
+                CaptionML=[ENU=Vendor Order No.;
+                           FRA=Nø Commande fournisseur];
+                SourceExpr="Vendor Order Number" }
 
     { 4   ;2   ;Field     ;
                 SourceExpr="Buy-from Vendor No." }
@@ -140,6 +187,13 @@ OBJECT Page 5709 Get Receipt Lines
     { 20  ;2   ;Field     ;
                 SourceExpr="Qty. Rcd. Not Invoiced" }
 
+    { 1000000012;2;Field  ;
+                Name=Axe 0;
+                SourceExpr=Gtext_Axe0;
+                CaptionClass=Gtext_ColAxe0;
+                Visible="Axe 0Visible";
+                MultiLine=Yes }
+
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
 
@@ -161,7 +215,19 @@ OBJECT Page 5709 Get Receipt Lines
       PurchRcptHeader@1001 : Record 120;
       TempPurchRcptLine@1002 : TEMPORARY Record 121;
       GetReceipts@1003 : Codeunit 74;
+      DateCompta@1000000000 : Date;
+      NomFournisseur@1000000001 : Text[50];
+      NumCommande@1000000002 : Code[20];
+      CommandeFournisseur@1000000003 : Code[20];
+      "En-tˆte r‚c. enregistr‚es"@1000000004 : Record 120;
+      Gtext_Axe0@1000000010 : Text[30];
+      Gcode_Axe1@1000000009 : Code[20];
+      Grecord_GeneralLedgerSetup@1000000008 : Record 98;
+      Gtext_ColAxe0@1000000006 : Text[30];
+      Grec_Dimension@1000000005 : Record 348;
+      "Axe 0Visible"@19066929 : Boolean INDATASET;
       "Document No.HideValue"@19020538 : Boolean INDATASET;
+      Grec_DimSetEntry@1000000007 : Record 480;
 
     PROCEDURE SetPurchHeader@1(VAR PurchHeader2@1000 : Record 38);
     BEGIN
@@ -203,6 +269,20 @@ OBJECT Page 5709 Get Receipt Lines
     END;
 
     BEGIN
+    {
+      Modif JX-XAD du 10/01/2008
+      Ajout de 4 champs dans le formulaire :
+      - Date de comptabilisation de la r‚ception
+      - Nom du fournisseur
+      - Nø de commande
+      - Nø de commande fournisseur
+
+      // Modif LAB du 20/07/2009
+      // Ajout champ "Your reference"
+
+      //Modif JX-AUD du 05/04/2011
+      //ajout du champ analytique visible periode
+    }
     END.
   }
 }

@@ -2,9 +2,10 @@ OBJECT Page 1 Company Information
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=25/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Modified=Yes;
+    Version List=NAVW16.00,NAVFR4.00.01,JX-VSC2.0-XAD;
   }
   PROPERTIES
   {
@@ -91,6 +92,9 @@ OBJECT Page 1 Company Information
     { 42  ;2   ;Field     ;
                 SourceExpr="Country/Region Code";
                 ShowMandatory=TRUE }
+
+    { 1000000001;2;Field  ;
+                SourceExpr=Leader }
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Phone No." }
@@ -261,21 +265,24 @@ OBJECT Page 1 Company Information
     { 1120014;2;Field     ;
                 SourceExpr=CISD }
 
-    { 1904604101;1;Group  ;
+    { 1000000005;2;Field  ;
+                SourceExpr=CGV }
+
+    { 1000000004;1;Group  ;
                 CaptionML=[ENU=System Indicator;
                            FRA=Indicateur systäme] }
 
-    { 100 ;2   ;Field     ;
+    { 1000000003;2;Field  ;
                 SourceExpr="System Indicator";
                 OnValidate=BEGIN
                              SystemIndicatorOnAfterValidate;
                            END;
                             }
 
-    { 104 ;2   ;Field     ;
+    { 1000000002;2;Field  ;
                 SourceExpr="System Indicator Style" }
 
-    { 102 ;2   ;Field     ;
+    { 1000000000;2;Field  ;
                 Name=System Indicator Text;
                 CaptionML=[ENU=System Indicator Text;
                            FRA=Texte indicateur systäme];
@@ -304,14 +311,14 @@ OBJECT Page 1 Company Information
   CODE
   {
     VAR
-      CustomizedCalEntry@1007 : Record 7603;
-      CustomizedCalendar@1005 : Record 7602;
-      CalendarMgmt@1004 : Codeunit 7600;
-      SystemIndicatorText@1006 : Text[250];
-      MapPointVisible@19022708 : Boolean INDATASET;
-      SystemIndicatorTextEditable@19043996 : Boolean INDATASET;
-      IBANMissing@1000 : Boolean;
-      BankBranchNoOrAccountNoMissing@1001 : Boolean;
+      CustomizedCalEntry@1000000007 : Record 7603;
+      CustomizedCalendar@1000000006 : Record 7602;
+      CalendarMgmt@1000000005 : Codeunit 7600;
+      SystemIndicatorText@1000000004 : Text[250];
+      MapPointVisible@1000000003 : Boolean INDATASET;
+      SystemIndicatorTextEditable@1000000002 : Boolean INDATASET;
+      IBANMissing@1000000001 : Boolean;
+      BankBranchNoOrAccountNoMissing@1000000000 : Boolean;
 
     PROCEDURE UpdateSystemIndicator@1008();
     VAR
@@ -338,6 +345,10 @@ OBJECT Page 1 Company Information
     END;
 
     BEGIN
+    {
+      MODIF JX-XAD 01/03/2011
+      Ajout du champ dirigeant (utilisÇ pour la gestion des signatures)
+    }
     END.
   }
 }

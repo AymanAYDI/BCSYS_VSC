@@ -1,0 +1,39 @@
+OBJECT Table 50015 Yooz Import File
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21/12/15;
+    Time=15:30:00;
+    Modified=Yes;
+    Version List=JX-VSC3.0-PBD,JX-YOOZ2AUTO;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=[ENU=Entry No.;
+                                                              FRA=Nø s‚quence] }
+    { 5   ;   ;Yooz Import         ;Boolean       ;CaptionML=FRA=Import Yooz }
+    { 10  ;   ;File Name           ;Text250       ;CaptionML=FRA=Nom du Fichier }
+    { 11  ;   ;File Name 2         ;Text250       ;CaptionML=FRA=Nom du Fichier2 }
+    { 20  ;   ;Created Date        ;Date          ;CaptionML=FRA=Date Cr‚ation }
+    { 30  ;   ;Yooz Import Date    ;Date          ;CaptionML=FRA=Date Import Yooz }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+    {    ;Yooz Import,Yooz Import Date             }
+    {    ;File Name,Yooz Import                    }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

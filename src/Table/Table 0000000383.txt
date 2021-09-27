@@ -2,9 +2,10 @@ OBJECT Table 383 Detailed CV Ledg. Entry Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {

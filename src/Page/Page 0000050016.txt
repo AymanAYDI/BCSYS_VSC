@@ -1,0 +1,137 @@
+OBJECT Page 50016 F.A. Tracking
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-LAB-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=F.A. Tracking;
+               FRA=Suivi des immos.];
+    SourceTable=Table50006;
+    PageType=Card;
+    OnModifyRecord=BEGIN
+                     IF (("User status" = "User status"::"Salari‚ CDD") OR
+                        ("User status" = "User status"::Presta)) AND ("release date" = 0D) THEN
+                        BEGIN
+                          ERROR(Text001,"Fixed Asset No.");
+                          EXIT(FALSE);
+                        END;
+                     IF "User name" = '' THEN
+                        BEGIN
+                          ERROR(Text002,"Fixed Asset No.");
+                          EXIT(FALSE);
+                        END;
+                   END;
+
+    OnQueryClosePage=BEGIN
+                       Lrec_SuiviImmos.RESET;
+                       IF Lrec_SuiviImmos.FIND('-') THEN
+                       REPEAT
+                         IF ((Lrec_SuiviImmos."User status" = Lrec_SuiviImmos."User status"::"Salari‚ CDD") OR
+                            (Lrec_SuiviImmos."User status" = Lrec_SuiviImmos."User status"::Presta))
+                            AND (Lrec_SuiviImmos."release date" = 0D) THEN
+                            BEGIN
+                              ERROR(Text001,Lrec_SuiviImmos."Fixed Asset No.");
+                              EXIT(FALSE);
+                            END;
+                         IF Lrec_SuiviImmos."User name" = '' THEN
+                           BEGIN
+                              ERROR(Text002,Lrec_SuiviImmos."Fixed Asset No.");
+                              EXIT(FALSE);
+                           END;
+                       UNTIL Lrec_SuiviImmos.NEXT = 0;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Fixed Asset No." }
+
+    { 1000000034;2;Field  ;
+                SourceExpr=Service }
+
+    { 1000000003;2;Field  ;
+                SourceExpr=Description }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Serial No." }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="type of equipment" }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="Order No." }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Vendor No." }
+
+    { 1000000013;2;Field  ;
+                SourceExpr="User name" }
+
+    { 1000000015;2;Field  ;
+                SourceExpr="User status";
+                Editable=FALSE }
+
+    { 1000000019;2;Field  ;
+                SourceExpr="release date" }
+
+    { 1000000017;2;Field  ;
+                SourceExpr=Manager }
+
+    { 1000000021;2;Field  ;
+                CaptionML=[ENU=Location 1;
+                           FRA=Emplacement immo];
+                SourceExpr="Location 1" }
+
+    { 1000000023;2;Field  ;
+                CaptionML=[ENU=Location 2;
+                           FRA=Emplacement salari‚];
+                SourceExpr="Location 2" }
+
+    { 1000000025;2;Field  ;
+                SourceExpr="Fixed asst linked" }
+
+    { 1000000027;2;Field  ;
+                SourceExpr=Comments }
+
+    { 1000000029;2;Field  ;
+                SourceExpr=Company }
+
+  }
+  CODE
+  {
+    VAR
+      Text001@1000000000 : TextConst 'ENU=Please select a release date for fixed asset No. %1;FRA=Veuillez s‚lectionner une date de sortie pour immobilisation nø %1';
+      Lrec_SuiviImmos@1000000001 : Record 50006;
+      Text002@1000000002 : TextConst 'ENU=Please select a user for fixed asset No. %1;FRA=Veuillez s‚lectionner un utilisateur pour immobilisation nø %1';
+
+    BEGIN
+    {
+      ----------------------------------- V 1.2 -----------------------------------
+      CREATION JX-XAD 29/01/2010
+      Suivi des affectations immo
+
+      //MODIF LAB DU 12/02/2010
+      //ajout du champ service
+
+      //MODIF LAB DU 17/02/2010
+      //Code utilisateur obligatoire
+
+      //MODIF AUD DU 15/10/2010
+      //Changement des en tˆtes emplacement immo et salari‚
+    }
+    END.
+  }
+}
+

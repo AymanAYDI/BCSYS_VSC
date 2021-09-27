@@ -2,9 +2,10 @@ OBJECT Table 454 Approval Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC1.0-LAB;
   }
   PROPERTIES
   {
@@ -94,6 +95,9 @@ OBJECT Table 454 Approval Entry
     { 20  ;   ;Available Credit Limit (LCY);Decimal;
                                                    CaptionML=[ENU=Available Credit Limit (LCY);
                                                               FRA=Limite cr‚dit disponible DS] }
+    { 50000;  ;Vendor Name         ;Text50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Purchase Header"."Pay-to Name" WHERE (No.=FIELD(Document No.)));
+                                                   CaptionML=FRA=Nom fournisseur }
   }
   KEYS
   {
@@ -144,10 +148,19 @@ OBJECT Table 454 Approval Entry
                 PAGE.RUN(PAGE::"Purchase Quote",PurchHeader);
               "Document Type"::Order:
                 PAGE.RUN(PAGE::"Purchase Order",PurchHeader);
+
+      //Modif LAB du 04/11/08
+      //mise en place forms non editables
+
               "Document Type"::Invoice:
-                PAGE.RUN(PAGE::"Purchase Invoice",PurchHeader);
+      //          FORM.RUN(FORM::"Purchase Invoice",PurchHeader);
+                PAGE.RUN(PAGE::"Purchase Invoice VSC",PurchHeader);
               "Document Type"::"Credit Memo":
-                PAGE.RUN(PAGE::"Purchase Credit Memo",PurchHeader);
+      //          FORM.RUN(FORM::"Purchase Credit Memo",PurchHeader);
+                PAGE.RUN(PAGE::"Purchase Credit Memo VSC",PurchHeader);
+
+      //Fin Modif LAB du 04/11/08
+
               "Document Type"::"Blanket Order":
                 PAGE.RUN(PAGE::"Blanket Purchase Order",PurchHeader);
               "Document Type"::"Return Order":
@@ -160,6 +173,11 @@ OBJECT Table 454 Approval Entry
     END;
 
     BEGIN
+    {
+
+      //Modif LAB du 04/11/08
+      //mise en place forms non editables
+    }
     END.
   }
 }

@@ -2,13 +2,14 @@ OBJECT Page 5601 Fixed Asset List
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=04/05/16;
+    Time=19:24:02;
+    Modified=Yes;
+    Version List=NAVW14.00.03,JX-VSC1.0-LAB;
   }
   PROPERTIES
   {
-    Editable=No;
+    Editable=Yes;
     CaptionML=[ENU=Fixed Asset List;
                FRA=Liste des immobilisations];
     SourceTable=Table5600;
@@ -22,6 +23,13 @@ OBJECT Page 5601 Fixed Asset List
                       CaptionML=[ENU=Fixed &Asset;
                                  FRA=I&mmo.];
                       Image=FixedAssets }
+      { 31      ;2   ;Action    ;
+                      ShortCutKey=Shift+F5;
+                      CaptionML=[ENU=Card;
+                                 FRA=Fiche];
+                      RunObject=Page 5601;
+                      RunPageLink=No.=FIELD(No.);
+                      Image=EditLines }
       { 32      ;2   ;Action    ;
                       CaptionML=[ENU=Depreciation &Books;
                                  FRA=&Lois d'amortissement];
@@ -271,40 +279,53 @@ OBJECT Page 5601 Fixed Asset List
                 GroupType=Repeater }
 
     { 2   ;2   ;Field     ;
-                SourceExpr="No." }
+                SourceExpr="No.";
+                Editable=FALSE }
 
     { 4   ;2   ;Field     ;
-                SourceExpr=Description }
+                SourceExpr=Description;
+                Editable=False }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Serial No." }
 
     { 23  ;2   ;Field     ;
-                SourceExpr="Vendor No." }
+                SourceExpr="Vendor No.";
+                Editable=False }
 
     { 6   ;2   ;Field     ;
                 SourceExpr="Maintenance Vendor No.";
-                Visible=TRUE }
+                Visible=TRUE;
+                Editable=False }
 
     { 35  ;2   ;Field     ;
                 SourceExpr="Responsible Employee";
-                Visible=TRUE }
+                Visible=TRUE;
+                Editable=False }
 
     { 25  ;2   ;Field     ;
                 SourceExpr="FA Class Code";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=False }
 
     { 27  ;2   ;Field     ;
                 SourceExpr="FA Subclass Code";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 33  ;2   ;Field     ;
                 SourceExpr="FA Location Code";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 17  ;2   ;Field     ;
                 SourceExpr="Budgeted Asset";
-                Visible=FALSE }
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 8   ;2   ;Field     ;
-                SourceExpr="Search Description" }
+                SourceExpr="Search Description";
+                Editable=FALSE }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
@@ -324,6 +345,11 @@ OBJECT Page 5601 Fixed Asset List
   {
 
     BEGIN
+    {
+
+      //Modif JX-ABE du 04/05/2016//
+      // Rendre le Nø de s‚rie modifiable
+    }
     END.
   }
 }

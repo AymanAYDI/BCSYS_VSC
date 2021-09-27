@@ -2,9 +2,10 @@ OBJECT Codeunit 1 ApplicationManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39663;
+    Date=12/01/16;
+    Time=17:30:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39663,JX-YOOZ2AUTO;
   }
   PROPERTIES
   {
@@ -27,6 +28,7 @@ OBJECT Codeunit 1 ApplicationManagement
     PROCEDURE CompanyOpen@30();
     BEGIN
       LogInManagement.CompanyOpen;
+      FctYoozImportFile; //JX-YOOZ2-PBE
     END;
 
     PROCEDURE GetSystemIndicator@51(VAR Text@1000 : Text[250];VAR Style@1001 : 'Standard,Accent1,Accent2,Accent3,Accent4,Accent5,Accent6,Accent7,Accent8,Accent9');
@@ -275,7 +277,81 @@ OBJECT Codeunit 1 ApplicationManagement
       EXIT(ScheduleAReport.ScheduleAReport(ReportId,RequestPageXml));
     END;
 
+    LOCAL PROCEDURE "-- JLX"@1000000001();
     BEGIN
+    END;
+
+    LOCAL PROCEDURE FctYoozImportFile@1000000000();
+    VAR
+      lrec_YoozParameters@1000000004 : Record 50013;
+      lrec_NameValueBuffer@1000000003 : Record 823;
+      lrec_FileYooz@1000000005 : Record 50015;
+      lrec_FileYooz2@1000000006 : Record 50015;
+      FileMgt@1000000002 : Codeunit 419;
+      ImportXmlFile@1000000001 : File;
+      XmlINStream@1000000000 : InStream;
+      FileName@1000000007 : Text[250];
+      i@1000000008 : Integer;
+    BEGIN
+      IF NOT lrec_YoozParameters.GET THEN
+       EXIT;
+      IF NOT FileMgt.ServerDirectoryExists(lrec_YoozParameters."Yooz Import Path") THEN
+       EXIT;
+      IF NOT FileMgt.ServerDirectoryExists(lrec_YoozParameters."Yooz Imported File Path") THEN
+       EXIT;
+
+      // V‚rification des fichiers import‚s par le NAS et … d‚placer
+      lrec_FileYooz.RESET;
+      lrec_FileYooz.SETCURRENTKEY("Yooz Import","Yooz Import Date");
+      lrec_FileYooz.SETRANGE("Yooz Import",FALSE);
+      lrec_FileYooz.SETFILTER("Yooz Import Date",'<>%1',0D);
+      IF lrec_FileYooz.FINDFIRST THEN
+       REPEAT
+        FOR i := STRLEN(lrec_FileYooz."File Name" + lrec_FileYooz."File Name 2") DOWNTO 1 DO
+         IF COPYSTR(lrec_FileYooz."File Name" + lrec_FileYooz."File Name 2",i,1) = '\' THEN BEGIN
+          FileName := COPYSTR(lrec_FileYooz."File Name" + lrec_FileYooz."File Name 2",i + 1);
+          i := 1;
+         END;
+
+        IF FileMgt.ClientFileExists(lrec_FileYooz."File Name" + lrec_FileYooz."File Name 2") THEN
+         FileMgt.MoveFile(lrec_FileYooz."File Name" + lrec_FileYooz."File Name 2",lrec_YoozParameters."Yooz Imported File Path" + '\' + FileName);
+
+        IF lrec_FileYooz2.GET(lrec_FileYooz."Entry No.") THEN BEGIN
+         lrec_FileYooz2."Yooz Import" := TRUE;
+         lrec_FileYooz2.MODIFY;
+        END;
+       UNTIL lrec_FileYooz.NEXT = 0;
+
+      FileMgt.GetClientDirectoryFilesList(lrec_NameValueBuffer,lrec_YoozParameters."Yooz Import Path");
+      IF lrec_NameValueBuffer.FINDFIRST THEN
+       REPEAT
+        IF lrec_NameValueBuffer.Name <> '' THEN
+          IF ImportXmlFile.OPEN(lrec_NameValueBuffer.Name) THEN BEGIN
+            lrec_FileYooz.RESET;
+            lrec_FileYooz.SETCURRENTKEY("File Name","Yooz Import");
+            lrec_FileYooz.SETRANGE("File Name",COPYSTR(lrec_NameValueBuffer.Name,1,250));
+            lrec_FileYooz.SETRANGE("Yooz Import",FALSE);
+            IF lrec_FileYooz.ISEMPTY THEN BEGIN
+              lrec_FileYooz.RESET;
+              lrec_FileYooz.INIT;
+              IF lrec_FileYooz2.FINDLAST THEN
+               lrec_FileYooz."Entry No." := lrec_FileYooz2."Entry No." + 1
+              ELSE
+               lrec_FileYooz."Entry No." := 1;
+              lrec_FileYooz."File Name" := COPYSTR(lrec_NameValueBuffer.Name,1,250);
+              lrec_FileYooz."File Name 2" := COPYSTR(lrec_NameValueBuffer.Name,251);
+              lrec_FileYooz."Created Date" := TODAY;
+              lrec_FileYooz.INSERT;
+            END;
+          END;
+      UNTIL lrec_NameValueBuffer.NEXT = 0;
+    END;
+
+    BEGIN
+    {
+      //JX-YOOZ2-PBE
+      //Ajout fonction permettant de v‚rifier si des fichiers yooz sont … importer
+    }
     END.
   }
 }

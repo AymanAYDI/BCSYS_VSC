@@ -1,0 +1,491 @@
+OBJECT Codeunit 50003 VSC_Mail
+{
+  OBJECT-PROPERTIES
+  {
+    Date=12/04/16;
+    Time=19:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.2-XAD-LAB,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      OApplication@1000000000 : Automation "{03BC4F50-2ABB-48B3-B2A6-3F08EB1D013E} 1.7:{4DD4A3AB-B2FB-4852-A2C8-7C4691C536EA}:'NS Outlook Synchronization Handler'.OApplication";
+      OAttachment@1000000001 : Automation "{03BC4F50-2ABB-48B3-B2A6-3F08EB1D013E} 1.7:{3FEDE949-33CB-4EE0-8FA2-309003459254}:'NS Outlook Synchronization Handler'.OAttachment";
+      OAttachments@1000000002 : Automation "{03BC4F50-2ABB-48B3-B2A6-3F08EB1D013E} 1.7:{355ADBA4-2CE8-417A-B4F6-75A76E36C284}:'NS Outlook Synchronization Handler'.OAttachments";
+      OSendMail@1000000003 : Automation "{03BC4F50-2ABB-48B3-B2A6-3F08EB1D013E} 1.7:{F3B45F48-1F4A-40C9-8DE6-5CC377BF4F82}:'NS Outlook Synchronization Handler'.OSendMail";
+      BSTRConverterBody@1000000004 : Automation "{A378E78B-5DB6-45E9-B598-9ED74A7CCCE1} 1.0:{30E9A1F9-9B22-4D26-91CF-C6CC2D9BC2D9}:'Navision Attain Hash 1.0'.BSTRConverter";
+      BSTRConverterAttachFileName@1000000005 : Automation "{A378E78B-5DB6-45E9-B598-9ED74A7CCCE1} 1.0:{30E9A1F9-9B22-4D26-91CF-C6CC2D9BC2D9}:'Navision Attain Hash 1.0'.BSTRConverter";
+      HideDialog@1000000006 : Boolean;
+      ErrorNo@1000000007 : Integer;
+      Text001@1000000008 : TextConst 'ENU=No registered e-mail addresses found for this %1.;FRA=Aucune adresse de messagerie pour ce(t)(tte) %1.';
+      MailGUIDValue@1000000009 : GUID;
+      Ltxt_entetebody@1000000010 : Text[200];
+      Ltxt_LigneBody@1000000011 : Text[200];
+      CR@1000000012 : Char;
+      LF@1000000013 : Char;
+      CRLF@1000000014 : Text[2];
+      TAB@1000000015 : Char;
+      STRTAB@1000000016 : Text[1];
+      Text002@1000000017 : TextConst 'ENU=Hello,;FRA=Bonjour,';
+      Text003@1000000018 : TextConst 'ENU=Thank you to verify and validate the invoice %1 vendor %2 and amount %3 %4;FRA=Merci de contr“ler puis envoyer en approbation %1 %2 du fournisseur %3 pour un montant de %4 %5 HT';
+      Text004@1000000019 : TextConst 'ENU=" Detail of lines";FRA=" D‚tail des lignes"';
+      Text005@1000000020 : TextConst 'ENU=Code;FRA=Code';
+      Text006@1000000021 : TextConst 'ENU=Description;FRA=Description';
+      Text007@1000000022 : TextConst 'ENU=Quantity;FRA=Quantit‚';
+      Text008@1000000023 : TextConst 'ENU=Unit;FRA=Unit‚';
+      Text009@1000000024 : TextConst 'ENU=the invoice;FRA=la facture';
+      Text010@1000000025 : TextConst 'ENU=the credit memo;FRA=l''avoir';
+      Text011@1000000026 : TextConst 'ENU=We''re unable to validate the invoice %1 for the following reason :;FRA=Nous ne pouvons pas mettre en validation la facture %1,pour la raison suivante:';
+      Text012@1000000027 : TextConst 'ENU=Thank you solve the problem as quickly as possible.;FRA=Merci de r‚soudre le problŠme le plus rapidement possible';
+      Text013@1000000028 : TextConst 'ENU=Accounting Service.;FRA=Service comptabilit‚.';
+      Text014@1000000029 : TextConst 'ENU=" on ";FRA=" sur "';
+      Text015@1000000030 : TextConst 'ENU=" on company ";FRA=" sur la soci‚t‚ "';
+      Text016@1000000031 : TextConst 'ENU=" with user account """;FRA=" avec le compte utilisateur """';
+      SMAIL@1000000032 : Codeunit 400;
+      Text017@1000000033 : TextConst 'FRA=Cette op‚ration est … effectuer uniquement si vous ˆtre d''accord avec le montant de l''avoir ‚mis, dans le cas contraire veuillez svp en avertir le fournisseur en nous mettant en copie.';
+      Grec_UserSetup@1000000034 : Record 91;
+      Gtext_Mail@1000000036 : Text[50];
+      Gtext_MailUser@1000000035 : Text[50];
+      Gtext_alias@1000000037 : Text[30];
+      Text018@1000000038 : TextConst 'FRA=Le mail a ‚t‚ envoy‚';
+      PurchSetup@1000000039 : Record 312;
+
+    PROCEDURE NewMessage@2(ToName@1000000000 : Text[80];CCName@1000000001 : Text[80];Subject@1000000002 : Text[260];Body@1000000003 : Text[260];AttachFileName@1000000004 : Text[260];OpenDialog@1000000005 : Boolean;VAR Prec_PurchLines@1000000006 : Record 39;Ptxt_DocNumber@1000000007 : Text[30];LtxtUser@1000000008 : Text[30]) MailSent : Boolean;
+    VAR
+      Ltxt_body@1000000009 : Text[1024];
+      LRecPurchaseHeader@1000000010 : Record 38;
+      LtxtVendorname@1000000011 : Text[50];
+      LtxtAmount@1000000012 : Text[30];
+      LtxtCurrency@1000000013 : Text[30];
+    BEGIN
+      CR := 13;
+      LF := 10;
+      TAB := 9;
+
+      CRLF := FORMAT(CR,0,'<CHAR>') +FORMAT(LF,0,'<CHAR>');
+      STRTAB := FORMAT(TAB,0,'<CHAR>');
+
+      IF ISCLEAR(OApplication) THEN
+        CREATE(OApplication,FALSE,TRUE);
+
+      IF (NOT OApplication.Logon(TRUE,'','',FALSE,FALSE)) THEN BEGIN
+        OApplication.Logoff;
+        MailSent := FALSE;
+        EXIT
+      END;
+
+      IF ISCLEAR(OSendMail) THEN
+        CREATE(OSendMail,FALSE,TRUE);
+
+      ErrorNo := 0;
+
+      OSendMail."To" := ToName;
+      OSendMail.CC := CCName;
+
+      // Modif LAB du 12/02/2010
+      // ajout de la soci‚t‚ dans le sujet du mail
+
+      //OSendMail.Subject := Subject;
+      OSendMail.Subject := Subject + Text014 + COMPANYNAME;
+
+      // Fin modif LAB
+
+      OSendMail.BodyFormat := 2; // 1 pour text et 2 pour html
+      MailGUIDValue := CREATEGUID;
+      OSendMail.SetUserProperty(GetMailGUIDFieldName,1,FORMAT(MailGUIDValue));
+
+      IF ISCLEAR(BSTRConverterBody) THEN
+        CREATE(BSTRConverterBody,FALSE,TRUE);
+
+      BSTRConverterBody.ResetBSTR;
+
+      //Ajout du corps du mail
+
+      //Ltxt_body := Text002+CRLF+CRLF+Text003+ Ptxt_Invoice +' :'
+      //              +CRLF+CRLF+Body+CRLF+CRLF+Text004+CRLF+CRLF;
+
+      // modif LAB du 16/12/2009
+      // Modification du corps de mail
+
+      //Ltxt_body := Text002+CRLF+CRLF+Text003+ Ptxt_Invoice+CRLF+CRLF+Text004+
+      //           ' ('+Text005+', '+Text006+', '+Text007+', '+Text008+') :'+CRLF+CRLF;
+
+      IF Prec_PurchLines.FIND('-') THEN
+        IF LRecPurchaseHeader.GET(Prec_PurchLines."Document Type",Prec_PurchLines."Document No.") THEN
+          BEGIN
+            LRecPurchaseHeader.CALCFIELDS(LRecPurchaseHeader."Lines Amount");
+            IF LRecPurchaseHeader."Currency Code" <> '' THEN
+              LtxtCurrency := LRecPurchaseHeader."Currency Code"
+            ELSE
+              LtxtCurrency := 'EUR';
+            LtxtVendorname := LRecPurchaseHeader."Buy-from Vendor Name";
+            LtxtAmount := FORMAT(LRecPurchaseHeader."Lines Amount");
+            IF Prec_PurchLines."Document Type" = Prec_PurchLines."Document Type"::Invoice THEN
+            BEGIN
+              IF Body = 'Facture' THEN
+              BEGIN
+
+      // modif LAB du 12/02/2010
+      // ajout dans les corps de mail de la soci‚t‚ et code utilisateur
+
+                Ltxt_body := Text002 + CRLF + CRLF
+                          + STRSUBSTNO(Text003,Text009,Ptxt_DocNumber,LtxtVendorname,LtxtAmount,LtxtCurrency)
+                          + Text015 + COMPANYNAME + Text016 + LtxtUser
+                          + '".' + CRLF + CRLF + Text013;
+              END ELSE IF Body = 'Reception' THEN
+                Ltxt_body := Text002 + CRLF + CRLF
+                          + STRSUBSTNO(Text011,Ptxt_DocNumber)
+      //                     + CRLF + CRLF + Prec_PurchLines.Description + CRLF + CRLF + Text012 + CRLF + CRLF + Text013;
+                          + CRLF + CRLF + Prec_PurchLines.Description + CRLF + CRLF + Text012
+                          + Text015 + COMPANYNAME + Text016 + LtxtUser
+                          + '".' + CRLF + CRLF + Text013;
+            END ELSE IF Prec_PurchLines."Document Type" = Prec_PurchLines."Document Type"::"Credit Memo" THEN
+              Ltxt_body := Text002 + CRLF + CRLF
+                        + STRSUBSTNO(Text003,Text010,Ptxt_DocNumber,LtxtVendorname,LtxtAmount,LtxtCurrency)
+                        + Text015 + COMPANYNAME + Text016 + LtxtUser
+                        + '".' + CRLF + CRLF + Text013;
+
+      // Fin modif LAB du 12/02/2010
+
+          END;
+
+      // fin modif LAB du 16/12/2009
+
+      //Hyperlien vers la facture
+      //Ltxt_body += CRLF+CRLF;
+      //Ltxt_body += CONTEXTURL + '&target=Form 51'+'&position=Field1=0(2),Field3=0(' + Ptxt_Invoice + ')';
+
+      BSTRConverterBody.AppendNextStringPortion(Ltxt_body);
+
+      //Ltxt_entetebody :='';
+      //Ltxt_entetebody := ' ('+Text005+', '+Text006+', '+Text007+', '+Text008+')'+CRLF+CRLF;
+      //BSTRConverterBody.AppendNextStringPortion(Ltxt_entetebody);
+
+      // modif LAB du 16/12/2009
+      // Modification du corps de mail
+
+      //IF Prec_PurchLines.FIND('-') THEN
+      //REPEAT
+      //  Ltxt_LigneBody := Prec_PurchLines."No."+STRTAB+Prec_PurchLines.Description+STRTAB;
+      //  IF (Prec_PurchLines."No." <> '') THEN
+      //    Ltxt_LigneBody += FORMAT(Prec_PurchLines.Quantity)+' '+Prec_PurchLines."Unit of Measure";
+      //  BSTRConverterBody.AppendNextStringPortion(Ltxt_LigneBody+CRLF);
+      //UNTIL Prec_PurchLines.NEXT = 0;
+
+      // fin modif LAB du 16/12/2009
+
+      OSendMail.Body := BSTRConverterBody;
+
+      IF ISCLEAR(BSTRConverterAttachFileName) THEN
+        CREATE(BSTRConverterAttachFileName,FALSE,TRUE);
+
+      IF AttachFileName <> '' THEN BEGIN
+        BSTRConverterAttachFileName.ResetBSTR;
+        BSTRConverterAttachFileName.AppendNextStringPortion(AttachFileName);
+        OAttachments := OSendMail.Attachments;
+        OAttachment := OAttachments.Add(BSTRConverterAttachFileName);
+      END;
+
+      OSendMail.OpenDialog := OpenDialog;
+      MailSent := OSendMail.Send;
+      ErrorNo := OSendMail.ErrorStatus;
+      OApplication.Logoff;
+    END;
+
+    PROCEDURE NewMessageAvoir@1000000000(ToName@1000000000 : Text[80];CCName@1000000001 : Text[80];Subject@1000000002 : Text[260];Body@1000000003 : Text[260];AttachFileName@1000000004 : Text[260];OpenDialog@1000000005 : Boolean;LRecPurchaseHeader@1000000006 : Record 38;Ptxt_DocNumber@1000000007 : Text[30];LtxtUser@1000000008 : Text[30]) MailSent : Boolean;
+    VAR
+      Ltxt_body@1000000009 : Text[1024];
+      LtxtVendorname@1000000011 : Text[50];
+      LtxtAmount@1000000012 : Text[30];
+      LtxtCurrency@1000000013 : Text[30];
+      lLien@1000000014 : Text;
+    BEGIN
+      CLEAR(SMAIL);
+      LRecPurchaseHeader.CALCFIELDS(LRecPurchaseHeader."Lines Amount");
+      IF LRecPurchaseHeader."Currency Code" <> '' THEN
+        LtxtCurrency := LRecPurchaseHeader."Currency Code"
+      ELSE
+        LtxtCurrency := 'EUR';
+
+      LtxtVendorname := LRecPurchaseHeader."Buy-from Vendor Name";
+      LtxtAmount := FORMAT(LRecPurchaseHeader."Lines Amount");
+      Ltxt_body += Text002 + '<br><br>';
+      Ltxt_body += 'Merci de contr“ler puis envoyer en approbation <b>' + Text010  + ' ' + Ptxt_DocNumber + '</b>';
+      Ltxt_body += ' du fournisseur' + ' <b>' +  LtxtVendorname + '</b>';
+      Ltxt_body += ' pour un montant de <b>' + LtxtAmount + ' ' + LtxtCurrency + ' HT</b>';
+      Ltxt_body += ' sur la soci‚t‚ <b>' + COMPANYNAME + '</b>';
+      Ltxt_body += Text016 + '<b>' + LtxtUser + '</b>". <br><br>';
+
+      Ltxt_body += 'Cliquez sur le ';
+      Ltxt_body +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50005, LRecPurchaseHeader) + '">';
+      //Ltxt_body +='&position=Field1=0(3),Field3=0(' + Ptxt_DocNumber + ')">';
+      Ltxt_body +='<u>lien</u></a> puis appuyez sur le bouton <font color="blue">"Approbation d''avoir"</font><br><br>';
+
+      Ltxt_body += '<font color="red">' + Text017 + '</font>';
+      Ltxt_body += '<br><br>' + Text013;
+      //recherche du mail de l'utilisateur
+      IF Grec_UserSetup.GET(USERID) THEN
+        Gtext_Mail := Grec_UserSetup."E-Mail";
+
+      Gtext_MailUser := ToName;
+      Gtext_alias := '';
+      IF (COMPANYNAME = 'VFEC') OR (COMPANYNAME ='VFEC - RECETTE') THEN
+        Gtext_alias :=  'VSC GROUPE'
+      ELSE
+        Gtext_alias := COMPANYNAME;
+
+      //creation du mail
+      //[Syntax for the Createmessage function -
+      // Createmessage([sender's name] ,[sender's id],[recipient's id or ids],[subject] ,[body line],[html formatted or not]]
+      SMAIL.CreateMessage(Gtext_alias,Gtext_Mail,Gtext_MailUser,Subject,'',TRUE);
+      SMAIL.AppendBody(Ltxt_body);
+      InsertAvoir(Ptxt_DocNumber,SMAIL);
+      //Envoi du mail
+      IF CONFIRM('Confirmez-vous l''envoi de cet email ?') THEN
+      BEGIN
+        SMAIL.Send;
+        MESSAGE(Text018);
+      END;
+    END;
+
+    PROCEDURE AddBodyline@5(TextLine@1000000000 : Text[260]) : Boolean;
+    BEGIN
+      IF ISCLEAR(BSTRConverterBody) THEN
+        CREATE(BSTRConverterBody,FALSE,TRUE);
+      IF TextLine <>'' THEN
+        BSTRConverterBody.AppendNextStringPortion(TextLine);
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE Send@4() MailSent : Boolean;
+    BEGIN
+      IF NOT ISCLEAR(OSendMail) THEN BEGIN
+         MailSent := OSendMail.Send;
+         ErrorNo := OSendMail.ErrorStatus;
+      END;
+    END;
+
+    PROCEDURE GetErrorCode@6() : Integer;
+    BEGIN
+      IF NOT ISCLEAR(OSendMail) THEN
+        EXIT(OSendMail.ErrorStatus);
+    END;
+
+    PROCEDURE GetErrorDesc@7() : Text[260];
+    BEGIN
+      IF NOT ISCLEAR(OSendMail) THEN
+        EXIT(OSendMail.ErrorDescription);
+    END;
+
+    PROCEDURE SetDialogState@3(NewHideDialog@1000000000 : Boolean);
+    BEGIN
+      HideDialog := NewHideDialog;
+    END;
+
+    PROCEDURE CollectAddresses@9(ContactNo@1000000000 : Code[20];VAR ContactThrough@1000000001 : Record 5100;ShowAddresses@1000000002 : Boolean) : Text[260];
+    VAR
+      Contact@1000000003 : Record 5050;
+    BEGIN
+      ContactThrough.RESET;
+      ContactThrough.DELETEALL;
+      IF NOT Contact.GET(ContactNo) THEN
+        EXIT;
+
+      CollectContactAddresses(ContactThrough,ContactNo);
+
+      // Get linked Company Addresses
+      IF (Contact.Type = Contact.Type::Person) AND (Contact."Company No." <> '') THEN
+        CollectContactAddresses(ContactThrough,Contact."Company No.");
+
+      IF ShowAddresses THEN
+        IF ContactThrough.FIND('-') THEN BEGIN
+          IF PAGE.RUNMODAL(PAGE::"Contact Through",ContactThrough) = ACTION::LookupOK THEN
+            EXIT(ContactThrough."E-Mail");
+        END ELSE
+          ERROR(Text001,Contact.TABLECAPTION);
+    END;
+
+    LOCAL PROCEDURE TrimCode@8(Code@1000000000 : Code[20]) TrimString : Text[20];
+    BEGIN
+      TrimString := COPYSTR(Code,1,1) + LOWERCASE(COPYSTR(Code,2,STRLEN(Code) - 1))
+    END;
+
+    PROCEDURE MailContCustVendBank@10(TableNo@1000000000 : Integer;No@1000000001 : Code[20];Email@1000000002 : Text[80]);
+    VAR
+      InteractionTmplSetup@1000000003 : Record 5122;
+      ContBusRel@1000000004 : Record 5054;
+      Contact@1000000005 : Record 5050;
+      TempSegmentLine@1000000006 : TEMPORARY Record 5077;
+      Mail@1000000007 : Codeunit 397;
+    BEGIN
+      InteractionTmplSetup.GET;
+
+      IF InteractionTmplSetup."E-Mails" = '' THEN BEGIN
+        Mail.OpenNewMessage(Email);
+        EXIT;
+      END;
+
+      IF TableNo = DATABASE::Contact THEN
+        Contact.GET(No)
+      ELSE BEGIN
+        ContBusRel.RESET;
+        ContBusRel.SETCURRENTKEY("Link to Table","No.");
+        CASE TableNo OF
+          DATABASE::Customer:
+            ContBusRel.SETRANGE("Link to Table",ContBusRel."Link to Table"::Customer);
+          DATABASE::Vendor:
+            ContBusRel.SETRANGE("Link to Table",ContBusRel."Link to Table"::Vendor);
+          DATABASE::"Bank Account":
+            ContBusRel.SETRANGE("Link to Table",ContBusRel."Link to Table"::"Bank Account");
+        END;
+        ContBusRel.SETRANGE("No.",No);
+        IF ContBusRel.FIND('-') THEN
+          Contact.GET(ContBusRel."Contact No.")
+        ELSE BEGIN
+          Mail.OpenNewMessage(Email);
+          EXIT;
+        END;
+      END;
+
+      TempSegmentLine.CreateMailFromContact(Contact,Email);
+    END;
+
+    PROCEDURE ValidateEmail@12(VAR ContactThrough@1000000000 : Record 5100;EMail@1000000001 : Text[80]) EMailExists : Boolean;
+    BEGIN
+      WITH ContactThrough DO BEGIN
+        RESET;
+        IF FIND('-') THEN BEGIN
+          SETRANGE("E-Mail",EMail);
+          EMailExists := FIND('-');
+        END;
+      END;
+    END;
+
+    PROCEDURE GetMailGUIDValue@13() : GUID;
+    BEGIN
+      EXIT(MailGUIDValue);
+    END;
+
+    PROCEDURE GetMailGUIDFieldName@27() : Text[30];
+    BEGIN
+      EXIT('Mail GUID');
+    END;
+
+    LOCAL PROCEDURE CollectContactAddresses@14(VAR ContactThrough@1000000000 : Record 5100;ContactNo@1000000001 : Code[20]);
+    VAR
+      Contact@1000000002 : Record 5050;
+      ContAltAddr@1000000003 : Record 5051;
+      ContAltAddrDateRange@1000000004 : Record 5052;
+      KeyNo@1000000005 : Integer;
+    BEGIN
+      IF NOT Contact.GET(ContactNo) THEN
+        EXIT;
+      WITH ContactThrough DO BEGIN
+        IF FINDLAST THEN
+          KeyNo := Key + 1
+        ELSE
+          KeyNo := 1;
+
+        IF Contact."E-Mail" <> '' THEN BEGIN
+          Key := KeyNo;
+          "Contact No." := ContactNo;
+          Name := Contact.Name;
+          Description := Contact.FIELDCAPTION("E-Mail");
+          "E-Mail" := Contact."E-Mail";
+          Type := Contact.Type;
+          INSERT;
+          KeyNo := KeyNo + 1;
+        END;
+
+        // Alternative address
+        ContAltAddrDateRange.SETCURRENTKEY("Contact No.","Starting Date");
+        ContAltAddrDateRange.SETRANGE("Contact No.", ContactNo);
+        ContAltAddrDateRange.SETRANGE("Starting Date",0D,TODAY);
+        ContAltAddrDateRange.SETFILTER("Ending Date",'>=%1|%2',TODAY,0D);
+        IF ContAltAddrDateRange.FINDSET THEN
+          REPEAT
+            IF ContAltAddr.GET(Contact."No.",ContAltAddrDateRange."Contact Alt. Address Code") THEN
+              IF ContAltAddr."E-Mail" <> '' THEN BEGIN
+                Key := KeyNo;
+                Description := TrimCode(ContAltAddr.Code) + ' - ' + ContAltAddr.FIELDCAPTION("E-Mail");
+                "E-Mail" := ContAltAddr."E-Mail";
+                Type := Contact.Type;
+                INSERT;
+                KeyNo := KeyNo + 1;
+              END;
+          UNTIL ContAltAddrDateRange.NEXT = 0;
+      END;
+    END;
+
+    PROCEDURE FindMailGUID@23(VAR CDOQueueMessage@1000000000 : Automation "{3FA7DEA7-6438-101B-ACC1-00AA00423326} 1.33:{3FA7DEAA-6438-101B-ACC1-00AA00423326}:'Microsoft CDO 1.21 Library'.Message";VAR MailGUID@1000000001 : GUID);
+    VAR
+      CDOFields@1000000002 : Automation "{3FA7DEA7-6438-101B-ACC1-00AA00423326} 1.33:{000662A0-68DC-101B-ACC1-00AA00423326}:'Microsoft CDO 1.21 Library'.Fields";
+      CDOField@1000000003 : Automation "{3FA7DEA7-6438-101B-ACC1-00AA00423326} 1.33:{3FA7DEB0-6438-101B-ACC1-00AA00423326}:'Microsoft CDO 1.21 Library'.Field";
+      FieldCount@1000000004 : Integer;
+      FieldNumber@1000000005 : Integer;
+      FieldFound@1000000006 : Boolean;
+      FieldName@1000000007 : Text[30];
+    BEGIN
+      CDOFields := CDOQueueMessage.Fields;
+      EVALUATE(FieldCount,FORMAT(CDOFields.Count));
+      FieldName := GetMailGUIDFieldName;
+      WHILE NOT FieldFound AND (FieldNumber < FieldCount) DO BEGIN
+        FieldNumber := FieldNumber + 1;
+        CDOField := CDOFields.Item(FieldNumber);
+        IF FORMAT(CDOField.Name) = FieldName THEN BEGIN
+          MailGUID := FORMAT(CDOField.Value);
+          IF NOT ISNULLGUID(MailGUID) THEN
+            FieldFound := TRUE;
+        END;
+      END;
+    END;
+
+    PROCEDURE InsertAvoir@1000000009(pNumAvoir@1000000000 : Code[20];VAR pSMAIL@1000000001 : Codeunit 400) AttachFileName : Text[250];
+    BEGIN
+      PurchSetup.GET;
+      IF EXISTS(PurchSetup."Mail Invoice Path" + pNumAvoir + '.pdf') THEN
+        SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumAvoir + '.pdf','');
+    END;
+
+    BEGIN
+    {
+      ------------------------------------ V1.2 ------------------------------------
+
+      CREATION JX-XAD le 26/11/2009
+      Code Unit repris du cu 397
+
+      Objectif : adapter la fonction NewMessage() pour la tra‡abilit‚
+
+      // modif LAB du 16/12/2009
+      // Modification du corps de mail
+
+      //MODIF JX-XAD du 15/01/2010
+      On diff‚rencie le corps du mail avec les factures et les avoirs
+
+      // Modif LAB du 12/02/2010
+      // ajout de la soci‚t‚ dans le sujet du mail
+      // ajout dans les corps de mail de la soci‚t‚ et code utilisateur
+
+      // Modif AUD du 08/04/2011
+      // modification de la variable Text003:
+      //Merci de contr“ler puis valider %1 %2 du fournisseur %3 pour un montant de %4 %5 HT par
+      //Merci de contr“ler puis envoyer en approbation %1 %2 du fournisseur %3 pour un montant de %4 %5 HT
+
+      // Modif AUD du 25/08/2011
+      //modification du paramŠtre OSendMail.BodyFormat … 2 au lieu de 1
+
+      //Modif JX-AUD du 10/07/2013
+      //Ajout d'une piŠce jointe selon les soci‚t‚s pour les avoirs + nouvelle m‚thode d'envoi mail par smtp
+      //-->M‚thode NewMessageAvoir
+    }
+    END.
+  }
+}
+

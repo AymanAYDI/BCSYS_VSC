@@ -2,9 +2,10 @@ OBJECT Codeunit 10860 Payment Management
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVFR8.00.00.39368;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVFR8.00.00.39368,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -368,6 +369,10 @@ OBJECT Codeunit 10860 Payment Management
             PaymentLine."Entry No. Debit" := InvPostingBuffer[1]."GL Entry No."
           ELSE
             PaymentLine."Entry No. Credit" := InvPostingBuffer[1]."GL Entry No.";
+          // PBE  PREPAID 21/07/2016
+          InvPostingBuffer[1]."Document Type Prepaid" := PaymentLine."Pay Document Type";
+          InvPostingBuffer[1]."Document Prepaid" := PaymentLine."Pay Document No.";
+          //
         UNTIL StepLedger.NEXT = 0;
         NoSeriesMgt.SaveNoSeries;
       END;
@@ -436,6 +441,10 @@ OBJECT Codeunit 10860 Payment Management
             InvPostingBuffer[1]."Line No." := PaymentLine."Line No.";
             DimMgt.UpdateGlobalDimFromDimSetID(PaymentLine."Dimension Set ID",
               InvPostingBuffer[1]."Global Dimension 1 Code",InvPostingBuffer[1]."Global Dimension 2 Code");
+            // PBE  PREPAID 21/07/2016
+            InvPostingBuffer[1]."Document Type Prepaid" := PaymentLine."Pay Document Type";
+            InvPostingBuffer[1]."Document Prepaid" := PaymentLine."Pay Document No.";
+            //
           END;
         StepLedger."Accounting Type"::"Associated G/L Account":
           BEGIN
@@ -1051,6 +1060,11 @@ OBJECT Codeunit 10860 Payment Management
         "Shortcut Dimension 1 Code" := InvPostingBuffer[1]."Global Dimension 1 Code";
         "Shortcut Dimension 2 Code" := InvPostingBuffer[1]."Global Dimension 2 Code";
         "Dimension Set ID" := InvPostingBuffer[1]."Dimension Set ID";
+        // PBE PREPAID 21/07/2016
+        "Document Type Prepaid" := InvPostingBuffer[1]."Document Type Prepaid";
+        "Document Prepaid" := InvPostingBuffer[1]."Document Prepaid";
+        //
+
       END;
 
       GenJnlPostLine.RunWithCheck(GenJnlLine);

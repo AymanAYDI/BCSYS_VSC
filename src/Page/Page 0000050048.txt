@@ -1,0 +1,76 @@
+OBJECT Page 50048 VSC Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=22/07/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC3.0-PBD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=VSC Settings;
+               FRA=ParamŠtres VSC];
+    SourceTable=Table50014;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000004;1;Group  ;
+                Name=PDF BC Path;
+                CaptionML=[ENU=PDF Instance;
+                           FRA=Dossier PDF BC];
+                GroupType=Group }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="Use Temporary Path" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="BC Path" }
+
+    { 1000000007;1;Group  ;
+                Name=BC Test Mode;
+                CaptionML=[ENU=PDF Instance;
+                           FRA=BC en mode Test];
+                GroupType=Group }
+
+    { 1000000006;2;Field  ;
+                Name=BBC Test Mode>;
+                SourceExpr="BC Test Mode" }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="BC E-Mail Test" }
+
+    { 1000000001;1;Group  ;
+                Name=Draft Notice;
+                CaptionML=[ENU=PDF Instance;
+                           FRA=Avis de virement];
+                GroupType=Group }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Draft Account. Depart. Manager" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Draft Account. Depart. Phone" }
+
+    { 1000000011;1;Group  ;
+                Name=Get URL;
+                CaptionML=[ENU=PDF Instance;
+                           FRA=Get URL];
+                GroupType=Group }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="URL Type" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

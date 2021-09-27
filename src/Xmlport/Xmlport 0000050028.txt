@@ -1,0 +1,300 @@
+OBJECT XMLport 50028 Import Factures Ventes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/08/16;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    OnInitXMLport=BEGIN
+                    IF (COMPANYNAME = 'HEXATOURISME') OR (COMPANYNAME = 'HEXATOURISME - RECETTE') THEN
+                      ERROR('Ce d‚veloppement n''est pas destin‚ … la soci‚t‚ ' + COMPANYNAME);
+                    Gint_Compteur :=0;
+                    Gint_LineNo :=0;
+                  END;
+
+    OnPreXMLport=BEGIN
+                   //bloquer la table Sales Header
+                   Grec_SalesHeader.LOCKTABLE;
+
+                   //Mettre le nø souche des facture vente en manuel
+                   IF Grec_NoSeries.GET('VAP') THEN
+                   BEGIN
+                     IF NOT Grec_NoSeries."Manual Nos." THEN
+                     BEGIN
+                       Gbool_NoSoucheManuel := FALSE;
+                       Grec_NoSeries.VALIDATE(Grec_NoSeries."Manual Nos.",TRUE);
+                       Grec_NoSeries.MODIFY;
+                     END ELSE
+                     BEGIN
+                       Gbool_NoSoucheManuel := TRUE;
+                     END;
+                   END;
+
+                   //r‚cup‚ration des codes axe analytique
+                   IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                       Gcode_Axe[1] := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                       Gcode_Axe[2] := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";
+                       Gcode_Axe[3] := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";
+                       Gcode_Axe[4] := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";
+                       Gcode_Axe[5] := Grecord_GeneralLedgerSetup."Shortcut Dimension 7 Code";//inutile dans ce developpement
+                       Gcode_Axe[6] := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+                       Gcode_Axe[7] := Grecord_GeneralLedgerSetup."Shortcut Dimension 9 Code";
+                       Gcode_Axe[8] := Grecord_GeneralLedgerSetup."Shortcut Dimension 10 Code";
+                   END;
+
+                   Gtemporaire.DELETEALL;
+                 END;
+
+    OnPostXMLport=BEGIN
+                    //Enlever, le nø souche des factures de ventes en manuel
+                    IF Grec_NoSeries.GET('VAP') THEN
+                    BEGIN
+                      IF NOT Gbool_NoSoucheManuel THEN
+                      BEGIN
+                        Grec_NoSeries.VALIDATE(Grec_NoSeries."Manual Nos.",FALSE);
+                        Grec_NoSeries.MODIFY;
+                      END;
+                    END;
+
+                    MESSAGE(Text009);
+                  END;
+
+    Format=Variable Text;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;ImportFactureVente  ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Gint_Compteur += 1;//pour passer l'en tˆte du fichier
+                                                                                 IF Gint_Compteur = 1 THEN
+                                                                                 BEGIN
+                                                                                   currXMLport.SKIP;
+                                                                                 END;
+
+                                                                                 // Gtext_CHAMP1];     //Soci‚t‚
+                                                                                 // Gtext_CHAMP2];     //Nø client factur‚
+                                                                                 // Gtext_CHAMP3];     //D‚signation ligne facture
+                                                                                 // Gtext_CHAMP4];     //axe0
+                                                                                 // Gtext_CHAMP5];     //axe1
+                                                                                 // Gtext_CHAMP6];     //axe2
+                                                                                 // Gtext_CHAMP7];     //axe3
+                                                                                 // Gtext_CHAMP8];     //axe4
+                                                                                 // Gtext_CHAMP9];     //axe5
+                                                                                 // Gtext_CHAMP10];   //qt‚ ligne
+                                                                                 // Gtext_CHAMP11];   //Nø compte g‚n‚ral
+                                                                                 // Gtext_CHAMP12];   //Votre r‚f‚rence
+                                                                                 // Gtext_CHAMP13];   //Nø doc externe
+                                                                                 // Gtext_CHAMP14];   //Nø ligne
+
+                                                                                 //V‚rification si le Nø client factur‚ existe bien sinon on importe pas le fichier
+                                                                                 IF NOT Grec_Customer.GET(Gtext_Champ2) THEN
+                                                                                   ERROR(STRSUBSTNO(Text0001,Gtext_Champ2, Gint_Compteur));
+
+                                                                                 //v‚rification si le champ "Votre r‚f‚rence" d‚passe 30 caractŠres
+                                                                                 IF STRLEN(Gtext_Champ12) >30 THEN
+                                                                                   ERROR(STRSUBSTNO(Text0004, Gint_Compteur));
+
+                                                                                 //*****************************cr‚ation de l'entˆte de facture***********************************
+                                                                                 EVALUATE(Gint_NumLigne, COPYSTR(Gtext_Champ14, 1, (STRPOS(Gtext_Champ14, '_') -1)));
+                                                                                 Gtemporaire.RESET;
+                                                                                 Gtemporaire.SETFILTER(Gtemporaire.PiŠce, FORMAT(Gint_NumLigne));
+                                                                                 Gtemporaire.SETFILTER(Gtemporaire.Compte, '');
+
+                                                                                 IF NOT(Gtemporaire.FIND('-')) THEN //si la facture n'existe pas on la cr‚er
+                                                                                 BEGIN
+
+                                                                                   //traitement pour avoir le num‚ro de facture
+                                                                                   IF Grec_LastNoSeriesLine.GET('VAP',10000) THEN
+                                                                                   BEGIN
+                                                                                     Gcode_No := INCSTR(Grec_LastNoSeriesLine."Last No. Used");
+                                                                                     Grec_LastNoSeriesLine."Last No. Used" := Gcode_No;
+                                                                                   END;
+
+                                                                                   Grec_SalesHeader.INIT;
+                                                                                   Grec_SalesHeader.VALIDATE(Grec_SalesHeader."Document Type", Grec_SalesHeader."Document Type"::Invoice);
+                                                                                   Grec_SalesHeader.VALIDATE(Grec_SalesHeader."No.",Gcode_No);
+                                                                                   Grec_SalesHeader.INSERT(TRUE);
+
+                                                                                   Grec_SalesHeader.VALIDATE("Sell-to Customer No.", Gtext_Champ2);
+                                                                                   Grec_SalesHeader."External Document No." := Gtext_Champ13;
+                                                                                   Grec_SalesHeader.VALIDATE(Grec_SalesHeader."Document Date",TODAY);
+                                                                                   Grec_SalesHeader."No. Series" := 'VAP';
+                                                                                   Grec_SalesHeader."Your Reference" := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ12);
+                                                                                   Grec_SalesHeader.MODIFY;
+
+                                                                                   Grec_LastNoSeriesLine.MODIFY;
+
+                                                                                   Gtemporaire.INIT;
+                                                                                   Gtemporaire.PiŠce := Gint_NumLigne;
+                                                                                   Gtemporaire.Compte := Gcode_No;
+                                                                                   Gtemporaire.INSERT;
+
+                                                                                 END ELSE
+                                                                                   Gcode_No := Gtemporaire.Compte;
+
+                                                                                 //****************************insertion des lignes de la facture*********************************
+                                                                                 //pour les lignes article : travail sur le N_ligne_facture
+                                                                                 EVALUATE(Gint_LineNo,COPYSTR(Gtext_Champ14,(STRPOS(Gtext_Champ14, '_')+1)));
+                                                                                 Gint_LineNo := Gint_LineNo *10000;
+                                                                                 IF Gtext_Champ10 = '' THEN
+                                                                                    Gtext_Champ10 := '0';
+                                                                                 IF NOT EVALUATE(Gdecimal_Quantite,Gtext_Champ10) THEN
+                                                                                   ERROR(Text0002);
+
+                                                                                 //V‚rification du compte g‚n‚ral
+                                                                                 IF NOT Grec_GLAccount.GET(Gtext_Champ11) THEN
+                                                                                   ERROR(STRSUBSTNO(Text0003,Gtext_Champ11));
+
+                                                                                 Grec_SalesLines.INIT;
+                                                                                 Grec_SalesLines.VALIDATE(Grec_SalesLines."Line No.",Gint_LineNo);
+                                                                                 Grec_SalesLines."Document Type" := Grec_SalesLines."Document Type"::Invoice;
+                                                                                 Grec_SalesLines."Document No." := Gcode_No;
+                                                                                 Grec_SalesLines.VALIDATE(Grec_SalesLines.Type,Grec_SalesLines.Type::"G/L Account");
+                                                                                 Grec_SalesLines.VALIDATE(Grec_SalesLines."No.",Gtext_Champ11);
+                                                                                 Grec_SalesLines.Description := "Gcu_ANSI-ASCII".Ansi2Ascii(Gtext_Champ3);
+                                                                                 Grec_SalesLines.VALIDATE(Grec_SalesLines.Quantity,Gdecimal_Quantite);
+                                                                                 Grec_SalesLines."Unit Price" :=1;
+                                                                                 Grec_SalesLines.VALIDATE(Grec_SalesLines."Unit of Measure Code",'EUROS');
+                                                                                 Grec_SalesLines.INSERT;
+
+                                                                                 Ins‚rerAnalytique;
+                                                                               END;
+                                                                                }
+
+    { [{705E3C22-5192-484B-95C4-885DF7308394}];2 ;Gtext_Champ1        ;Element ;Text     }
+
+    { [{ADFD8EB3-3D39-4E37-B507-A9221D07F8C8}];2 ;Gtext_Champ2        ;Element ;Text     }
+
+    { [{F72712AD-F18B-4B31-90CC-2CF6CC596051}];2 ;Gtext_Champ3        ;Element ;Text     }
+
+    { [{39E5B98B-50B7-4525-95BB-1829916AD264}];2 ;Gtext_Champ4        ;Element ;Text     }
+
+    { [{8A9B9BAE-5697-44EC-9521-6179C05C6356}];2 ;Gtext_Champ5        ;Element ;Text     }
+
+    { [{CC6AA3E2-A1E0-4E86-ABAE-D20AA79398DA}];2 ;Gtext_Champ6        ;Element ;Text     }
+
+    { [{5D32829B-A412-475F-97DB-1A061A5FB675}];2 ;Gtext_Champ7        ;Element ;Text     }
+
+    { [{FEF19003-3608-4A2D-A642-1F7474BBB251}];2 ;Gtext_Champ8        ;Element ;Text     }
+
+    { [{035D3F73-645E-41D5-92CF-30879D9C3499}];2 ;Gtext_Champ9        ;Element ;Text     }
+
+    { [{3F7B4DD9-18ED-4470-BBE7-8978EAA53F79}];2 ;Gtext_Champ10       ;Element ;Text     }
+
+    { [{4721B5A5-C49D-47F2-9BEC-2B63EFF18E74}];2 ;Gtext_Champ11       ;Element ;Text     }
+
+    { [{B3CD50AE-73B8-47C2-B09A-4FD6E77F14AE}];2 ;Gtext_Champ12       ;Element ;Text     }
+
+    { [{7674990C-D17C-45BB-91D8-E3A014E851CD}];2 ;Gtext_Champ13       ;Element ;Text     }
+
+    { [{67802F19-87E1-433A-AA13-8EDC5E7BD8C6}];2 ;Gtext_Champ14       ;Element ;Text     }
+
+    { [{E0C2EF22-4B9B-4E3B-ABBC-51BC2C9FFFE5}];2 ;Gtext_Champ15       ;Element ;Text     }
+
+    { [{7DCB89E1-6187-497B-A6DB-1A9427A39A15}];2 ;Gtext_Champ16       ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gint_Compteur@1000000022 : Integer;
+      Grec_SalesHeader@1000000020 : Record 36;
+      Grec_SalesLines@1000000019 : Record 37;
+      Gint_LineNo@1000000018 : Integer;
+      Grec_NoSeries@1000000017 : Record 308;
+      Gbool_NoSoucheManuel@1000000016 : Boolean;
+      Grec_LastNoSeriesLine@1000000015 : Record 309;
+      Gcode_No@1000000014 : Code[20];
+      Gdecimal_Quantite@1000000013 : Decimal;
+      Grec_Dimension@1000000011 : Record 348;
+      Grecord_GeneralLedgerSetup@1000000010 : Record 98;
+      Gcode_Axe@1000000009 : ARRAY [50] OF Code[20];
+      Gcode_Section@1000000012 : ARRAY [50] OF Code[20];
+      i@1000000008 : Integer;
+      Grec_DefaultDimension@1000000007 : Record 352;
+      Gtext_Colonne@1000000006 : ARRAY [14] OF Text[30];
+      Grec_DimensionValue@1000000005 : Record 349;
+      Grec_Customer@1000000004 : Record 18;
+      Gtemporaire@1000000003 : TEMPORARY Record 50001;
+      Gint_NumLigne@1000000002 : Integer;
+      "Gcu_ANSI-ASCII"@1000000001 : Codeunit 50002;
+      Grec_GLAccount@1000000000 : Record 15;
+      Text0001@1000000027 : TextConst 'FRA=Le client "%1" n''existe pas ligne %2';
+      Text0002@1000000026 : TextConst 'FRA=Erreur sur la conversion de la quantit‚ en decimal';
+      Text0003@1000000025 : TextConst 'FRA=Le compte g‚n‚ral %1 n''existe pas';
+      Text0004@1000000024 : TextConst 'FRA=Le champ Votre r‚f‚rence d‚passe les 30 caractŠres autoris‚s ligne %1';
+      Text013@1000000023 : TextConst 'FRA=Erreur sur la ligne "%3" du fichier.\\Le code "%1" pour la section analytique "%2" n''existe pas.';
+      Text009@1000000021 : TextConst 'FRA=Le fichier a bien ‚t‚ import‚.';
+
+    PROCEDURE "Ins‚rerAnalytique"@1000000001();
+    VAR
+      Lcu_Dimension@1000000000 : Codeunit 408;
+    BEGIN
+      //Insertion des axes en rapport avec le fichier
+      CLEAR(Gcode_Section);
+      Gcode_Section[1] := Gtext_Champ4;
+      Gcode_Section[2] := Gtext_Champ5;
+      Gcode_Section[3] := Gtext_Champ6;
+      Gcode_Section[4] := Gtext_Champ7;
+      Gcode_Section[5] := Gtext_Champ8;
+      Gcode_Section[6] := Gtext_Champ9;
+      Gcode_Section[7] := Gtext_Champ15;
+      Gcode_Section[8] := Gtext_Champ16;
+
+      FOR i := 1 TO 8 DO BEGIN
+       //test si le code analytique existe
+       IF Gcode_Section[i] <> '' THEN
+        IF NOT Grec_DimensionValue.GET(Gcode_Axe[i],Gcode_Section[i]) THEN
+         ERROR(STRSUBSTNO(Text013,Gcode_Section[i],Gcode_Axe[i],Gint_Compteur));
+       //Correction aprŠs lecture du fichier Excel si des 0 sont manquants lors d'une mise … jour par l'utilisateur.
+       IF Gcode_Axe[i] = 'PERIODE' THEN
+         IF STRLEN(Gcode_Section[i]) = 3 THEN
+           Gcode_Section[i] := '0' + Gcode_Section[i]
+         ELSE IF STRLEN(Gcode_Section[i]) = 2 THEN
+           Gcode_Section[i] := '00' + Gcode_Section[i]
+         ELSE IF STRLEN(Gcode_Section[i]) = 1 THEN
+           Gcode_Section[i] := '000' + Gcode_Section[i];
+       //Fin correction
+      END;
+
+       // Ajout des sections et attribuation dimension set id
+      Grec_SalesLines."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(Grec_SalesLines."Dimension Set ID",Grec_SalesLines."Shortcut Dimension 1 Code",
+                                   Grec_SalesLines."Shortcut Dimension 2 Code",Gcode_Axe,Gcode_Section);
+      Grec_SalesLines.MODIFY;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD 29/10/13
+      //Import facture ventes
+    }
+    END.
+  }
+}
+

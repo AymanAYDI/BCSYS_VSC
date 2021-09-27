@@ -2,9 +2,10 @@ OBJECT Page 136 Posted Purchase Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=31/07/15;
+    Time=16:30:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -14,6 +15,13 @@ OBJECT Page 136 Posted Purchase Receipt
     SourceTable=Table120;
     PageType=Document;
     OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+
                  SetSecurityFilterOnRespCenter;
                END;
 
@@ -63,6 +71,15 @@ OBJECT Page 136 Posted Purchase Receipt
                                  PostedApprovalEntries.RUN;
                                END;
                                 }
+      { 1000000002;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      RunObject=Page 50019;
+                      RunPageLink=Order No.=FIELD(Order No.) }
+      { 78      ;1   ;ActionGroup;
+                      CaptionML=[ENU=&Line;
+                                 FRA=&Ligne] }
+      { 101     ;2   ;Separator  }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 47      ;1   ;Action    ;
@@ -124,12 +141,12 @@ OBJECT Page 136 Posted Purchase Receipt
                 SourceExpr="Buy-from Address 2";
                 Editable=FALSE }
 
-    { 56  ;2   ;Field     ;
-                SourceExpr="Buy-from City";
-                Editable=FALSE }
-
     { 6   ;2   ;Field     ;
                 SourceExpr="Buy-from Post Code";
+                Editable=FALSE }
+
+    { 56  ;2   ;Field     ;
+                SourceExpr="Buy-from City";
                 Editable=FALSE }
 
     { 58  ;2   ;Field     ;
@@ -138,6 +155,15 @@ OBJECT Page 136 Posted Purchase Receipt
 
     { 16  ;2   ;Field     ;
                 SourceExpr="No. Printed";
+                Editable=FALSE }
+
+    { 1000000000;2;Field  ;
+                CaptionML=FRA=Code utilisateur :;
+                SourceExpr="User ID";
+                Editable=FALSE }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Matricule No.";
                 Editable=FALSE }
 
     { 12  ;2   ;Field     ;
@@ -299,8 +325,26 @@ OBJECT Page 136 Posted Purchase Receipt
   {
     VAR
       PurchRcptHeader@1000 : Record 120;
+      UserMgt@1000000000 : Codeunit 5700;
+      Grec_PurchRcptLine@1000000002 : Record 121;
+      ModifierAxesReception@1000000001 : Report 50039;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+      Ajout du champ "Code utilisateur"
+
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 26/02/2010
+      Gestion des contrats : ajout du bouton "Contrat"
+
+      MODIF JX-XAD 04/05/2010
+      Ajout du bouton "Modifier axes analytiques"
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Matricule" et traitement de celui-ci
+    }
     END.
   }
 }

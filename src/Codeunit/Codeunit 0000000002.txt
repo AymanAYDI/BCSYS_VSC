@@ -2,8 +2,9 @@ OBJECT Codeunit 2 Company-Initialize
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
     Version List=NAVW18.00.00.39368;
   }
   PROPERTIES
@@ -636,7 +637,7 @@ OBJECT Codeunit 2 Company-Initialize
       SourceCode.INIT;
       SourceCode.Code := Code;
       SourceCode.Description := Description;
-      SourceCode.INSERT;
+      IF SourceCode.INSERT THEN;
     END;
 
     LOCAL PROCEDURE InsertStandardText@4(Code@1000 : Code[20];Description@1001 : Text[50]);

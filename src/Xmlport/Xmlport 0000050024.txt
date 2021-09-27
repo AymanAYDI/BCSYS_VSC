@@ -1,0 +1,185 @@
+OBJECT XMLport 50024 Yooz Purch. Inv.&CrM. Import
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/19;
+    Time=11:41:01;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD,JX-YOOZ2;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Yooz Purchase invoice import;
+               FRA=Yooz import facture achat];
+    Direction=Import;
+    OnPreXMLport=BEGIN
+                   CASE COMPANYNAME OF
+                    'VFEC':
+                      CompName := 'VSCG';
+                    'Agence':
+                      CompName := 'AGVSC';
+                    'VSC':
+                      CompName := 'VSC';
+                    'VSCT' :
+                      CompName := 'VSCT';
+                    //BCSYS 021019
+                    'SNCF-C25' :
+                      CompName :='SNCFC25';
+
+                   END;
+                 END;
+
+    OnPostXMLport=BEGIN
+                    IF NbOComp = 0 THEN
+                     MESSAGE(STRSUBSTNO(Text001,NbOk))
+                    ELSE
+                     MESSAGE(STRSUBSTNO(Text001,NbOk,NbOComp,OComp));
+                  END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;Yooz                ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Gint_Compteur :=  Gint_Compteur + 1;
+                                                                                 IF  (Gint_Compteur > 1) THEN BEGIN
+                                                                                  IF Gtext_Champ1 = CompName THEN BEGIN
+                                                                                   //On test si la facture Yooz aurait d‚j… ‚t‚ int‚gr‚e
+                                                                                   Grec_PurchaseHeader2.RESET;
+                                                                                   Grec_PurchaseHeader2.SETFILTER(Grec_PurchaseHeader2."Yooz No.", Gtext_Champ9);
+                                                                                   IF NOT Grec_PurchaseHeader2.FINDFIRST THEN BEGIN //Si la facture n'y est pas on l'intŠgre
+                                                                                     NbOk += 1;
+                                                                                     //Cr‚ation de l'entˆte de la facture achat
+                                                                                     CLEAR(Grec_PurchaseHeader);
+                                                                                     Grec_PurchaseHeader.INIT;
+                                                                                     // JX-YOOZ2 13/11/15 Ajout champ document type Facture ou Avoir
+                                                                                     IF UPPERCASE(Gtext_Champ12) = 'FACTURE' THEN BEGIN
+                                                                                      Grec_PurchaseHeader.VALIDATE("Document Type", Grec_PurchaseHeader."Document Type"::Invoice);
+                                                                                      Grec_PurchaseHeader."Vendor Invoice No." := Gtext_Champ6; //Nø facture fournisseur
+                                                                                     END ELSE BEGIN
+                                                                                      Grec_PurchaseHeader.VALIDATE("Document Type", Grec_PurchaseHeader."Document Type"::"Credit Memo");
+                                                                                      Grec_PurchaseHeader."Vendor Cr. Memo No." := Gtext_Champ6; //Nø avoir fournisseur
+                                                                                     END;
+                                                                                     //
+                                                                                     Grec_PurchaseHeader.VALIDATE("No.");
+                                                                                     Grec_PurchaseHeader.VALIDATE("Buy-from Vendor No.", Gtext_Champ2);  //entite facturante/cpte feur
+                                                                                     Grec_PurchaseHeader.INSERT(TRUE);
+
+                                                                                     EVALUATE(Grec_PostingDate,Gtext_Champ3); //Date comptable
+                                                                                     Grec_PurchaseHeader.VALIDATE("Posting Date", Grec_PostingDate);
+                                                                                     EVALUATE(Grec_DocumentDate,Gtext_Champ4); //Date document
+                                                                                     Grec_PurchaseHeader.VALIDATE("Document Date", Grec_DocumentDate);
+                                                                                     IF (STRPOS(Gtext_Champ5,'GROUPEVSC\') = 0) OR (STRPOS(Gtext_Champ5,'\') = 0) THEN
+                                                                                      Gtext_Champ5 := 'GROUPEVSC\' + Gtext_Champ5;
+                                                                                     Grec_PurchaseHeader.VALIDATE("Assigned User ID",Gtext_Champ5); //Code collaborateur affect‚
+                                                                                     EVALUATE(Gdec_AmoutExlVAT,Gtext_Champ7); //Montant HT
+                                                                                     Grec_PurchaseHeader."Register amount" := Gdec_AmoutExlVAT;
+                                                                                     Grec_PurchaseHeader."BC No." := Gtext_Champ8;  //Nø bon de commande
+                                                                                     Grec_PurchaseHeader."Yooz No." := Gtext_Champ9; //Nø Yooz
+                                                                                     Grec_PurchaseHeader."Yooz Token link" := Gtext_Champ10; //Lien Token Yooz
+                                                                                     EVALUATE(Grec_ReceiptInvoiceDate,Gtext_Champ11); //Daten de scan yooz
+                                                                                     Grec_PurchaseHeader."Invoice receipt date" := Grec_ReceiptInvoiceDate;
+                                                                                     Grec_PurchaseHeader.MODIFY(TRUE);
+                                                                                   END;
+                                                                                  END ELSE BEGIN
+                                                                                   NbOComp += 1;
+                                                                                   IF STRPOS(OComp,Gtext_Champ1) = 0 THEN
+                                                                                    IF OComp = '' THEN
+                                                                                     OComp := Gtext_Champ1
+                                                                                    ELSE
+                                                                                     OComp := OComp + '/' + Gtext_Champ1;
+                                                                                  END;
+                                                                                 END;
+                                                                               END;
+                                                                                }
+
+    { [{18A2A756-F084-4EBF-8689-60C1DC266417}];2 ;Gtext_Champ1        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ1 }
+
+    { [{8A165EA3-3DB4-4384-80C2-4455C4A92525}];2 ;Gtext_Champ2        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ2 }
+
+    { [{32051069-43DB-4B34-B734-A678408CD4C3}];2 ;Gtext_Champ3        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ3 }
+
+    { [{F93B0593-EC87-4B15-A86C-D69D61186955}];2 ;Gtext_Champ4        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ4 }
+
+    { [{51924B73-51B2-4917-B44E-FF680DE0393B}];2 ;Gtext_Champ5        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ5 }
+
+    { [{3BBB4ABD-3D5F-4094-A18A-6291E6F698A1}];2 ;Gtext_Champ6        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ6 }
+
+    { [{58D7B173-036C-4B0E-8D4C-D28472B1B349}];2 ;Gtext_Champ7        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ7 }
+
+    { [{1B1EFEFA-CD0C-4803-8C7E-ECB022243A2E}];2 ;Gtext_Champ8        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ8 }
+
+    { [{E7F11536-25A9-4369-90FA-FE33E50491C2}];2 ;Gtext_Champ9        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ9 }
+
+    { [{C387EFAA-E991-4730-BD05-6C463FE23B18}];2 ;Gtext_Champ10       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ10 }
+
+    { [{264FD376-92A9-4FD2-A9BD-0CE1C040B136}];2 ;Gtext_Champ11       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ11 }
+
+    { [{6A37D421-70C0-4877-B01D-7EFB22D79270}];2 ;Gtext_Champ12       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ12 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gint_Compteur@1000000006 : Integer;
+      Grec_PurchaseHeader@1000000005 : Record 38;
+      Grec_PurchaseHeader2@1000000004 : Record 38;
+      Grec_PostingDate@1000000003 : Date;
+      Grec_DocumentDate@1000000002 : Date;
+      Gdec_AmoutExlVAT@1000000001 : Decimal;
+      Grec_ReceiptInvoiceDate@1000000000 : Date;
+      Text001@1000000008 : TextConst 'ENU=Yooz Invoices are integrated;FRA=%1 facture(s) Yooz import‚e(s).';
+      NbOk@1000000007 : Integer;
+      NbOComp@1000000009 : Integer;
+      Text002@1000000010 : TextConst 'FRA=%1 facture(s) Yooz import‚e(s).\%2 facture(s) … importer dans les soci‚t‚s %3.';
+      OComp@1000000011 : Text;
+      CompName@1000000012 : Text;
+
+    BEGIN
+    {
+
+      //JX-VSC2.0-AUD
+      //Import Facture achat Yooz
+
+      // JX-YOOZ2 13/11/15 Ajout Gtext_Champ12 avec le type document
+      //BCSYS 021019 ajout soci‚t‚ C25
+    }
+    END.
+  }
+}
+

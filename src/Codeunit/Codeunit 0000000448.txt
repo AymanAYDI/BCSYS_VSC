@@ -285,7 +285,7 @@ OBJECT Codeunit 448 Job Queue Dispatcher
     BEGIN
       ActiveSession.SETRANGE("Server Instance ID",JobQueue."Server Instance ID");
       ActiveSession.SETRANGE("Session ID",JobQueueEntry."User Session ID");
-      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::Background);
+      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::"Arriäre-plan");
       EXIT(NOT ActiveSession.ISEMPTY);
     END;
 

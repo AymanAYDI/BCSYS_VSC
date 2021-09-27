@@ -2,9 +2,10 @@ OBJECT Table 36 Sales Header
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=18/05/16;
+    Time=10:35:06;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-VSC2.0-LAB-AUD;
   }
   PROPERTIES
   {
@@ -681,7 +682,10 @@ OBJECT Table 36 Sales Header
                                                                 END;
                                                                 IF xRec."Payment Terms Code" = "Prepmt. Payment Terms Code" THEN BEGIN
                                                                   IF xRec."Prepayment Due Date" = 0D THEN
-                                                                    "Prepayment Due Date" := CALCDATE(PaymentTerms."Due Date Calculation","Document Date");
+                                                                    IF Gbool_ImportGroupInvoice THEN   //JX-AUD du 06/05/14
+                                                                      "Prepayment Due Date" := CALCDATE(PaymentTerms."Due Date Calculation",TODAY)  //JX-AUD du 06/05/14
+                                                                    ELSE //JX-AUD du 06/05/14
+                                                                      "Prepayment Due Date" := CALCDATE(PaymentTerms."Due Date Calculation","Document Date");
                                                                   VALIDATE("Prepmt. Payment Terms Code","Payment Terms Code");
                                                                 END;
                                                               END;
@@ -2211,6 +2215,11 @@ OBJECT Table 36 Sales Header
 
                                                    CaptionML=[ENU=Assigned User ID;
                                                               FRA=Code utilisateur affect‚] }
+    { 50000;  ;Agent               ;Code20        ;TableRelation=Customer.No.;
+                                                   CaptionML=[ENU=Agent;
+                                                              FRA=Mandataire] }
+    { 50001;  ;Paying agent        ;Boolean       ;CaptionML=[ENU=Paying agent;
+                                                              FRA=Mandataire payeur] }
   }
   KEYS
   {
@@ -2340,6 +2349,7 @@ OBJECT Table 36 Sales Header
       Text072@1013 : TextConst 'ENU=There are unpaid prepayment invoices related to the document of type %1 with the number %2.;FRA=Il existe des factures d''acompte impay‚es li‚es au document de type %1 portant le num‚ro %2.';
       SynchronizingMsg@1026 : TextConst 'ENU=Synchronizing ...\ from: Sales Header with %1\ to: Assembly Header with %2.;FRA=Synchronisation ...\ deÿ: En-tˆte vente avec %1\ versÿ: En-tˆte assemblage avec %2.';
       ShippingAdviceErr@1029 : TextConst 'ENU=This order must be a complete shipment.;FRA=Cet ordre doit ˆtre une exp‚dition trait‚e.';
+      Gbool_ImportGroupInvoice@1000000000 : Boolean;
 
     LOCAL PROCEDURE InitInsert@61();
     BEGIN
@@ -3898,7 +3908,64 @@ OBJECT Table 36 Sales Header
       EXIT(NOT SalesLine.ISEMPTY);
     END;
 
+    PROCEDURE SetCompany@1000000000(NameSociety@1000000000 : Text[30]);
     BEGIN
+      //MODIF JX-AUD du 12/05/14
+      SalesSetup.CHANGECOMPANY(NameSociety);
+      GLSetup.CHANGECOMPANY(NameSociety);
+      GLAcc.CHANGECOMPANY(NameSociety);
+      SalesHeader.CHANGECOMPANY(NameSociety);
+      SalesLine.CHANGECOMPANY(NameSociety);
+      CustLedgEntry.CHANGECOMPANY(NameSociety);
+      Cust.CHANGECOMPANY(NameSociety);
+      PaymentTerms.CHANGECOMPANY(NameSociety);
+      PaymentMethod.CHANGECOMPANY(NameSociety);
+      CurrExchRate.CHANGECOMPANY(NameSociety);
+      SalesCommentLine.CHANGECOMPANY(NameSociety);
+      ShipToAddr.CHANGECOMPANY(NameSociety);
+      PostCode.CHANGECOMPANY(NameSociety);
+      BankAcc.CHANGECOMPANY(NameSociety);
+      SalesShptHeader.CHANGECOMPANY(NameSociety);
+      SalesInvHeader.CHANGECOMPANY(NameSociety);
+      SalesCrMemoHeader.CHANGECOMPANY(NameSociety);
+      ReturnRcptHeader.CHANGECOMPANY(NameSociety);
+      SalesInvHeaderPrepmt.CHANGECOMPANY(NameSociety);
+      SalesCrMemoHeaderPrepmt.CHANGECOMPANY(NameSociety);
+      GenBusPostingGrp.CHANGECOMPANY(NameSociety);
+      GenJnILine.CHANGECOMPANY(NameSociety);
+      RespCenter.CHANGECOMPANY(NameSociety);
+      InvtSetup.CHANGECOMPANY(NameSociety);
+      Location.CHANGECOMPANY(NameSociety);
+      WhseRequest.CHANGECOMPANY(NameSociety);
+      ShippingAgentService.CHANGECOMPANY(NameSociety);
+      //TempReqLine.CHANGECOMPANY(NameSociety);
+      ReservEntry.CHANGECOMPANY(NameSociety);
+      //TempReservEntry.CHANGECOMPANY(NameSociety);
+      CompanyInfo.CHANGECOMPANY(NameSociety);
+      Gbool_ImportGroupInvoice := TRUE;
+      //FIN MODIF JX-AUD du 12/05/14
+    END;
+
+    PROCEDURE LookupShortcutDimCode@1000000002(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
+    BEGIN
+      DimMgt.LookupDimValueCode(FieldNumber,ShortcutDimCode);
+      ValidateShortcutDimCode(FieldNumber,ShortcutDimCode);
+    END;
+
+    PROCEDURE ShowShortcutDimCode@1000000001(VAR ShortcutDimCode@1000 : ARRAY [10] OF Code[20]);
+    BEGIN
+      DimMgt.GetShortcutDimensions("Dimension Set ID",ShortcutDimCode);
+    END;
+
+    BEGIN
+    {
+
+      // ajout LAB du 25/08/2010
+      // ajout des champs 50000 et 50001
+
+      //MODIF JX-AUD du 12/05/14
+      //Ajout de la fonction SetCompany
+    }
     END.
   }
 }

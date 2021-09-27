@@ -2,9 +2,10 @@ OBJECT Table 91 User Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00,NAVFR7.00;
+    Date=10/06/15;
+    Time=19:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00,NAVFR7.00,JX-VSC1.0-XAD;
   }
   PROPERTIES
   {
@@ -142,6 +143,17 @@ OBJECT Table 91 User Setup
     { 5900;   ;Service Resp. Ctr. Filter;Code10   ;TableRelation="Responsibility Center";
                                                    CaptionML=[ENU=Service Resp. Ctr. Filter;
                                                               FRA=Filtre centre gestion service] }
+    { 50000;  ;Droits accŠs doc. achat;Option     ;OptionCaptionML=[ENU=User,Deputy head,Responsible,Admin;
+                                                                    FRA=Utilisateur,Sous-Responsable,Responsable,Admin];
+                                                   OptionString=Utilisateur,Sous-Responsable,Responsable,Admin }
+    { 50001;  ;Service             ;Code10         }
+    { 50002;  ;Picture             ;BLOB          ;CaptionML=FRA=Signature;
+                                                   SubType=Bitmap }
+    { 50003;  ;Fonction            ;Text50         }
+    { 50004;  ;Nom                 ;Text50         }
+    { 50010;  ;Approbateur         ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("User Setup" WHERE (Approver ID=FIELD(User ID)));
+                                                   Editable=No }
   }
   KEYS
   {
@@ -161,6 +173,22 @@ OBJECT Table 91 User Setup
       GLSetup@1120000 : Record 98;
 
     BEGIN
+    {
+
+      Modif JX-XAD du 13/06/2008
+
+      Ajout de deux champs :
+
+      - "Droits accŠs doc. achat" : champ option (Utilisateur,Responsable,Sous-Responsable,Admin).
+        L'option "Utilisateur" permet … l'utilisateur courant de n'acc‚der qu'… ses propres documents d'achat
+        (factures,commandes,avoirs,devis,retours), tandis que l'option "Sous-Responsable" permet
+        d'acc‚der … tous les documents li‚s au service de l'utilisateur.
+        L'option "Responsable" permet d'acc‚der aux documents concernant un ensemble de service. Cet ensemble est d‚termin‚ par les
+        3 premiŠres lettres de ce service. L'option "Admin" permet l'accŠs … tous les documents d'achats.
+
+      - Service : ce champ permet de connaŒtre le service dans lequel se trouve l'utilisateur. Il est trŠs important de le renseigner
+      ‚tant donn‚ que les responsables ont accŠs … leur service.
+    }
     END.
   }
 }

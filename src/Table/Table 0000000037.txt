@@ -2,9 +2,10 @@ OBJECT Table 37 Sales Line
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368, JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -1678,8 +1679,7 @@ OBJECT Table 37 Sales Line
                                                             END;
 
                                                    CaptionML=[ENU=Dimension Set ID;
-                                                              FRA=ID ensemble de dimensions];
-                                                   Editable=No }
+                                                              FRA=ID ensemble de dimensions] }
     { 900 ;   ;Qty. to Assemble to Order;Decimal  ;OnValidate=VAR
                                                                 SalesLineReserve@1000 : Codeunit 99000832;
                                                               BEGIN
@@ -2656,6 +2656,7 @@ OBJECT Table 37 Sales Line
       Text060@1041 : TextConst 'ENU=The quantity that you are trying to invoice is greater than the quantity in return receipt %1.;FRA=La quantit‚ que vous tentez de facturer est sup‚rieure … la quantit‚ de la r‚ception retour %1.';
       SalesLineCompletelyShippedErr@1053 : TextConst 'ENU=You cannot change the purchasing code for a sales line that has been completely shipped.;FRA=Vous ne pouvez pas modifier le code achat d''une ligne vente qui a ‚t‚ entiŠrement exp‚di‚e.';
       SalesSetupRead@1067 : Boolean;
+      Gbool_ImportGroupInvoice@1000000000 : Boolean;
 
     PROCEDURE InitOutstanding@16();
     BEGIN
@@ -3355,7 +3356,7 @@ OBJECT Table 37 Sales Line
       ValidateShortcutDimCode(FieldNumber,ShortcutDimCode);
     END;
 
-    PROCEDURE ShowShortcutDimCode@27(VAR ShortcutDimCode@1000 : ARRAY [8] OF Code[20]);
+    PROCEDURE ShowShortcutDimCode@27(VAR ShortcutDimCode@1000 : ARRAY [10] OF Code[20]);
     BEGIN
       DimMgt.GetShortcutDimensions("Dimension Set ID",ShortcutDimCode);
     END;
@@ -5057,7 +5058,50 @@ OBJECT Table 37 Sales Line
       END;
     END;
 
+    PROCEDURE SetCompany@1000000000(NameSociety@1000000000 : Text[30]);
     BEGIN
+      //MODIF JX-AUD du 12/05/14
+      CurrExchRate.CHANGECOMPANY(NameSociety);
+      SalesHeader.CHANGECOMPANY(NameSociety);
+      SalesLine2.CHANGECOMPANY(NameSociety);
+      TempSalesLine.CHANGECOMPANY(NameSociety);
+      GLAcc.CHANGECOMPANY(NameSociety);
+      Item.CHANGECOMPANY(NameSociety);
+      Resource.CHANGECOMPANY(NameSociety);
+      Currency.CHANGECOMPANY(NameSociety);
+      ItemTranslation.CHANGECOMPANY(NameSociety);
+      Res.CHANGECOMPANY(NameSociety);
+      ResCost.CHANGECOMPANY(NameSociety);
+      WorkType.CHANGECOMPANY(NameSociety);
+      VATPostingSetup.CHANGECOMPANY(NameSociety);
+      StdTxt.CHANGECOMPANY(NameSociety);
+      GenBusPostingGrp.CHANGECOMPANY(NameSociety);
+      GenProdPostingGrp.CHANGECOMPANY(NameSociety);
+      ReservEntry.CHANGECOMPANY(NameSociety);
+      UnitOfMeasure.CHANGECOMPANY(NameSociety);
+      FA.CHANGECOMPANY(NameSociety);
+      ShippingAgentServices.CHANGECOMPANY(NameSociety);
+      NonstockItem.CHANGECOMPANY(NameSociety);
+      PurchasingCode.CHANGECOMPANY(NameSociety);
+      SKU.CHANGECOMPANY(NameSociety);
+      ItemCharge.CHANGECOMPANY(NameSociety);
+      ItemChargeAssgntSales.CHANGECOMPANY(NameSociety);
+      InvtSetup.CHANGECOMPANY(NameSociety);
+      Location.CHANGECOMPANY(NameSociety);
+      ReturnReason.CHANGECOMPANY(NameSociety);
+      //TempKitSalesLine.CHANGECOMPANY(NameSociety);
+      ItemCategory.CHANGECOMPANY(NameSociety);
+      CalChange.CHANGECOMPANY(NameSociety);
+      Gbool_ImportGroupInvoice := TRUE;
+      //FIN MODIF JX-AUD du 12/05/14
+    END;
+
+    BEGIN
+    {
+
+      //MODIF JX-AUD du 12/05/14
+      //Ajout de la fonction SetCompany
+    }
     END.
   }
 }

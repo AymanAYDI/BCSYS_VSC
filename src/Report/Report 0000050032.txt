@@ -1,0 +1,2037 @@
+OBJECT Report 50032 Approvals invoices report
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-LAB-XAD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Approval invoice report;
+               FRA=Etat des approbations de factures];
+  }
+  DATASET
+  {
+    { 4458;    ;DataItem;                    ;
+               DataItemTable=Table38;
+               DataItemTableView=SORTING(Document Type,No.)
+                                 ORDER(Ascending)
+                                 WHERE(Document Type=CONST(Invoice));
+               OnPreDataItem=BEGIN
+                               CompanyInfo.GET;
+                               CompanyInfo.CALCFIELDS(CompanyInfo.Picture);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  //DEBUT AJOUT JX-XAD du 30/11/2009
+
+                                  //Recherche de la date de mise … disposition
+                                  gRec_Historic.SETRANGE(gRec_Historic.Type,gRec_Historic.Type::Invoice);
+                                  gRec_Historic.SETRANGE(gRec_Historic."No.","Purchase Header"."No.");
+                                  gdate_available := 0D;
+                                  IF gRec_Historic.FIND('+') THEN
+                                    gdate_available := DT2DATE(gRec_Historic."Date time");
+
+                                  //Initialisation compteur de jours
+                                  IF (gdate_available <> 0D) AND ("Purchase Header"."Invoice receipt date" <> 0D) THEN
+                                  BEGIN
+                                    gInt_NbDays := gdate_available - "Purchase Header"."Invoice receipt date";
+                                    gInt_NbTotalDays := gInt_NbDays;
+                                  END ELSE
+                                  BEGIN
+                                    gInt_NbTotalDays := 0;
+                                    gInt_NbDays := 0;
+                                  END;
+
+                                  //R‚cup‚ration du nø de commande (celui n'‚tant pas indiqu‚ car les facture sont cr‚‚es avec les r‚ceptions
+                                  //                                et non cr‚‚es depuis les commandes)
+                                  gRecPurchaseline.SETRANGE("Document Type","Purchase Header"."Document Type");
+                                  gRecPurchaseline.SETRANGE("Document No.","Purchase Header"."No.");
+
+                                  gtextOrderNo := '';
+                                  IF gRecPurchaseline.FIND('-') THEN
+                                  REPEAT
+                                    BEGIN
+                                      gInt_PosTextCommande := STRPOS(gRecPurchaseline.Description, Text1000000005);
+                                      IF (gInt_PosTextCommande <> 0) THEN
+                                      BEGIN
+                                        gInt_PosTextCommande += STRLEN(Text1000000005);
+                                        REPEAT
+                                          gInt_PosTextCommande += 1;
+                                          IF (COPYSTR(gRecPurchaseline.Description,gInt_PosTextCommande,1) <> ' ') THEN
+                                            gtextOrderNo += COPYSTR(gRecPurchaseline.Description,gInt_PosTextCommande,1);
+                                        UNTIL (COPYSTR(gRecPurchaseline.Description,gInt_PosTextCommande,1) = ' ') OR
+                                              (COPYSTR(gRecPurchaseline.Description,gInt_PosTextCommande,1) = '');
+                                      END;
+                                    END;
+                                  UNTIL (gRecPurchaseline.NEXT = 0) OR (gtextOrderNo <> '');
+
+                                  //gtextOrderNo := gRecPurchaseline.Description - padstr(gRecPurchaseline.Description,5);
+
+                                  //FIN AJOUT JX-XAD du 30/11/2009
+                                END;
+
+               ReqFilterFields=Buy-from Vendor No.,No. }
+
+    { 1000000026;1;Column;STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO__;
+               SourceExpr=STRSUBSTNO(Text1000000001,FORMAT(CurrReport.PAGENO)) }
+
+    { 1000000008;1;Column;CompanyInfo_Picture;
+               SourceExpr=CompanyInfo.Picture }
+
+    { 1000000000;1;Column;Purchase_Header__No__;
+               SourceExpr="No." }
+
+    { 1000000011;1;Column;Purchase_Header__Buy_from_Vendor_No__;
+               SourceExpr="Buy-from Vendor No." }
+
+    { 1000000017;1;Column;Purchase_Header__Lines_Amount_;
+               SourceExpr="Lines Amount" }
+
+    { 1000000019;1;Column;Purchase_Header__Vendor_Invoice_No__;
+               SourceExpr="Vendor Invoice No." }
+
+    { 1000000021;1;Column;gtextOrderNo       ;
+               SourceExpr=gtextOrderNo }
+
+    { 1000000023;1;Column;Purchase_Header__Document_Date_;
+               SourceExpr="Document Date" }
+
+    { 1000000027;1;Column;Purchase_Header__Due_Date_;
+               SourceExpr="Due Date" }
+
+    { 1000000076;1;Column;Purchase_Header__Buy_from_Vendor_Name_;
+               SourceExpr="Buy-from Vendor Name" }
+
+    { 1000000043;1;Column;Purchase_Header__Invoice_receipt_date_;
+               SourceExpr="Invoice receipt date" }
+
+    { 1000000044;1;Column;Purchase_Header__Creation_date_;
+               SourceExpr="Creation date" }
+
+    { 1000000051;1;Column;gInt_NbDays        ;
+               SourceExpr=gInt_NbDays }
+
+    { 1000000016;1;Column;Purchase_Header__Purchase_Header___Original_user_;
+               SourceExpr="Purchase Header"."Original user" }
+
+    { 1000000082;1;Column;gdate_available    ;
+               SourceExpr=gdate_available }
+
+    { 1000000068;1;Column;gInt_NbTotalDays   ;
+               SourceExpr=gInt_NbTotalDays }
+
+    { 1000000009;1;Column;Current_approvals_invoices_reportCaption;
+               SourceExpr=Current_approvals_invoices_reportCaptionLbl }
+
+    { 1000000001;1;Column;Purchase_Header__No__Caption;
+               SourceExpr=FIELDCAPTION("No.") }
+
+    { 1000000007;1;Column;Approval_Entry__Approver_ID_Caption;
+               SourceExpr="Approval Entry".FIELDCAPTION("Approver ID") }
+
+    { 1000000005;1;Column;Last_date_modifiedCaption;
+               SourceExpr=Last_date_modifiedCaptionLbl }
+
+    { 1000000012;1;Column;Purchase_Header__Buy_from_Vendor_No__Caption;
+               SourceExpr=FIELDCAPTION("Buy-from Vendor No.") }
+
+    { 1000000018;1;Column;Amount_without_VATCaption;
+               SourceExpr=Amount_without_VATCaptionLbl }
+
+    { 1000000020;1;Column;Purchase_Header__Vendor_Invoice_No__Caption;
+               SourceExpr=FIELDCAPTION("Vendor Invoice No.") }
+
+    { 1000000022;1;Column;Order_No_Caption   ;
+               SourceExpr=Order_No_CaptionLbl }
+
+    { 1000000024;1;Column;Purchase_Header__Document_Date_Caption;
+               SourceExpr=FIELDCAPTION("Document Date") }
+
+    { 1000000028;1;Column;Purchase_Header__Due_Date_Caption;
+               SourceExpr=FIELDCAPTION("Due Date") }
+
+    { 1000000003;1;Column;Approval_Entry_StatusCaption;
+               SourceExpr="Approval Entry".FIELDCAPTION(Status) }
+
+    { 1000000077;1;Column;Purchase_Header__Buy_from_Vendor_Name_Caption;
+               SourceExpr=FIELDCAPTION("Buy-from Vendor Name") }
+
+    { 1000000013;1;Column;PayrollCaption     ;
+               SourceExpr=PayrollCaptionLbl }
+
+    { 1000000040;1;Column;Invoice_receipt__dateCaption;
+               SourceExpr=Invoice_receipt__dateCaptionLbl }
+
+    { 1000000042;1;Column;Creation_dateCaption;
+               SourceExpr=Creation_dateCaptionLbl }
+
+    { 1000000050;1;Column;Nb_of_daysCaption  ;
+               SourceExpr=Nb_of_daysCaptionLbl }
+
+    { 1000000063;1;Column;Total_daysCaption  ;
+               SourceExpr=Total_daysCaptionLbl }
+
+    { 1000000081;1;Column;date_of_availabilityCaption;
+               SourceExpr=date_of_availabilityCaptionLbl }
+
+    { 1000000014;1;Column;NoCaption          ;
+               SourceExpr=NoCaptionLbl }
+
+    { 3139;1   ;Column  ;Purchase_Header_Document_Type;
+               SourceExpr="Document Type" }
+
+    { 1171;1   ;DataItem;                    ;
+               DataItemTable=Table454;
+               DataItemTableView=SORTING(Table ID,Document Type,Document No.,Sequence No.)
+                                 ORDER(Ascending);
+               OnPreDataItem=BEGIN
+                               gBool_Debut := TRUE;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  //DEBUT AJOUT JX-XAD du 30/11/2009 (compteur de jours)
+
+                                    IF (gBool_Debut) THEN
+                                    BEGIN
+                                      IF (gdate_available <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Approval Entry"."Last Date-Time Modified")-gdate_available;
+                                      END ELSE IF ("Purchase Header"."Document Date" <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Approval Entry"."Last Date-Time Modified")-"Purchase Header"."Document Date";
+                                      END ELSE BEGIN
+                                        gInt_NbDays := 0;
+                                        gDate_Precedente := 0D;
+                                      END;
+                                      gDate_Precedente := DT2DATE("Approval Entry"."Last Date-Time Modified");
+                                      gBool_Debut := FALSE;
+                                    END ELSE BEGIN
+                                      IF (gDate_Precedente <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Approval Entry"."Last Date-Time Modified")-gDate_Precedente;
+                                        gDate_Precedente := DT2DATE("Approval Entry"."Last Date-Time Modified");
+                                      END;
+                                    END;
+
+                                  gInt_NbTotalDays += gInt_NbDays;
+
+                                  //FIN AJOUT JX-XAD du 30/11/2009 (compteur de jours)
+                                END;
+
+               DataItemLink=Document Type=FIELD(Document Type),
+                            Document No.=FIELD(No.) }
+
+    { 1000000006;2;Column;Approval_Entry__Approver_ID_;
+               SourceExpr="Approver ID" }
+
+    { 1000000004;2;Column;Approval_Entry__Last_Date_Time_Modified_;
+               SourceExpr="Last Date-Time Modified" }
+
+    { 1000000002;2;Column;Approval_Entry_Status;
+               SourceExpr=Status }
+
+    { 1000000034;2;Column;Approval_Entry__Document_No__;
+               SourceExpr="Document No." }
+
+    { 1000000052;2;Column;gInt_NbDays_Control1000000052;
+               SourceExpr=gInt_NbDays }
+
+    { 1000000074;2;Column;gInt_NbTotalDays_Control1000000074;
+               SourceExpr=gInt_NbTotalDays }
+
+    { 3233;2   ;Column  ;Approval_Entry_Table_ID;
+               SourceExpr="Table ID" }
+
+    { 2294;2   ;Column  ;Approval_Entry_Document_Type;
+               SourceExpr="Document Type" }
+
+    { 4975;2   ;Column  ;Approval_Entry_Sequence_No_;
+               SourceExpr="Sequence No." }
+
+    { 1196;    ;DataItem;Saut de page        ;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number)
+                                 WHERE(Number=CONST(1));
+               OnAfterGetRecord=BEGIN
+                                  CurrReport.NEWPAGE();
+                                END;
+                                 }
+
+    { 3733;    ;DataItem;                    ;
+               DataItemTable=Table122;
+               OnAfterGetRecord=BEGIN
+                                  //DEBUT AJOUT JX-XAD du 30/11/2009
+
+                                  gtxt_Document := '';
+
+                                  //Recherche de la date de mise … disposition
+                                  gRec_Historic.SETRANGE(gRec_Historic.Type,gRec_Historic.Type::Invoice);
+                                  gRec_Historic.SETRANGE(gRec_Historic."No.","Purch. Inv. Header"."No.");
+                                  gdate_available := 0D;
+                                  IF gRec_Historic.FIND('+') THEN
+                                    gdate_available := DT2DATE(gRec_Historic."Date time");
+
+                                  //Initialisation compteur de jours
+                                  IF (gdate_available <> 0D) AND ("Purch. Inv. Header"."Invoice receipt date" <> 0D) THEN
+                                  BEGIN
+                                    gInt_NbDays := gdate_available - "Purch. Inv. Header"."Invoice receipt date";
+                                    gInt_NbTotalDays := gInt_NbDays;
+                                  END ELSE
+                                  BEGIN
+                                    gInt_NbTotalDays := 0;
+                                    gInt_NbDays := 0;
+                                  END;
+
+                                  //R‚cup‚ration du nø de commande (celui n'‚tant pas indiqu‚ car les facture sont cr‚‚es avec les r‚ceptions
+                                  //                                et non cr‚‚es depuis les commandes)
+                                  gRecPurchaselinearchive.SETRANGE("Document No.","Purch. Inv. Header"."No.");
+
+                                  gtextOrderNo := '';
+                                  IF gRecPurchaselinearchive.FIND('-') THEN
+                                  REPEAT
+                                    BEGIN
+                                      gInt_PosTextCommande := STRPOS(gRecPurchaselinearchive.Description, Text1000000005);
+                                      IF (gInt_PosTextCommande <> 0) THEN
+                                      BEGIN
+                                        gInt_PosTextCommande += STRLEN(Text1000000005);
+                                        REPEAT
+                                          gInt_PosTextCommande += 1;
+                                          IF (COPYSTR(gRecPurchaselinearchive.Description,gInt_PosTextCommande,1) <> ' ') THEN
+                                            gtextOrderNo += COPYSTR(gRecPurchaselinearchive.Description,gInt_PosTextCommande,1);
+                                        UNTIL (COPYSTR(gRecPurchaselinearchive.Description,gInt_PosTextCommande,1) = ' ') OR
+                                              (COPYSTR(gRecPurchaselinearchive.Description,gInt_PosTextCommande,1) = '');
+                                      END;
+                                    END;
+                                  UNTIL (gRecPurchaselinearchive.NEXT = 0) OR (gtextOrderNo <> '');
+
+                                  //gtextOrderNo := gRecPurchaseline.Description - padstr(gRecPurchaseline.Description,5);
+
+                                  //FIN AJOUT JX-XAD du 30/11/2009
+                                END;
+
+               ReqFilterFields=Buy-from Vendor No.,No. }
+
+    { 1000000030;1;Column;STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO___Control1000000030;
+               SourceExpr=STRSUBSTNO(Text1000000001,FORMAT(CurrReport.PAGENO)) }
+
+    { 1000000031;1;Column;CompanyInfo_Picture_Control1000000031;
+               SourceExpr=CompanyInfo.Picture }
+
+    { 1000000032;1;Column;Purch__Inv__Header_Amount;
+               SourceExpr=Amount }
+
+    { 1000000054;1;Column;Purch__Inv__Header__No__;
+               SourceExpr="No." }
+
+    { 1000000056;1;Column;Purch__Inv__Header__Buy_from_Vendor_No__;
+               SourceExpr="Buy-from Vendor No." }
+
+    { 1000000058;1;Column;Purch__Inv__Header__Buy_from_Vendor_Name_;
+               SourceExpr="Buy-from Vendor Name" }
+
+    { 1000000062;1;Column;gtextOrderNo_Control1000000062;
+               SourceExpr=gtextOrderNo }
+
+    { 1000000064;1;Column;Purch__Inv__Header__Document_Date_;
+               SourceExpr="Document Date" }
+
+    { 1000000066;1;Column;Purch__Inv__Header__Due_Date_;
+               SourceExpr="Due Date" }
+
+    { 1000000037;1;Column;Purch__Inv__Header__Vendor_Invoice_No__;
+               SourceExpr="Vendor Invoice No." }
+
+    { 1000000048;1;Column;Purch__Inv__Header__Invoice_receipt_date_;
+               SourceExpr="Invoice receipt date" }
+
+    { 1000000049;1;Column;Purch__Inv__Header__Creation_date_;
+               SourceExpr="Creation date" }
+
+    { 1000000060;1;Column;gInt_NbDays_Control1000000060;
+               SourceExpr=gInt_NbDays }
+
+    { 1000000080;1;Column;Purch__Inv__Header__Purch__Inv__Header___Original_user_;
+               SourceExpr="Purch. Inv. Header"."Original user" }
+
+    { 1000000084;1;Column;gdate_available_Control1000000084;
+               SourceExpr=gdate_available }
+
+    { 1000000079;1;Column;gInt_NbTotalDays_Control1000000079;
+               SourceExpr=gInt_NbTotalDays }
+
+    { 1000000010;1;Column;Posted_approvals_invoices_reportCaption;
+               SourceExpr=Posted_approvals_invoices_reportCaptionLbl }
+
+    { 1000000041;1;Column;Last_date_modifiedCaption_Control1000000041;
+               SourceExpr=Last_date_modifiedCaption_Control1000000041Lbl }
+
+    { 1000000045;1;Column;Amount_without_VATCaption_Control1000000045;
+               SourceExpr=Amount_without_VATCaption_Control1000000045Lbl }
+
+    { 1000000055;1;Column;Purch__Inv__Header__No__Caption;
+               SourceExpr=FIELDCAPTION("No.") }
+
+    { 1000000057;1;Column;Purch__Inv__Header__Buy_from_Vendor_No__Caption;
+               SourceExpr=FIELDCAPTION("Buy-from Vendor No.") }
+
+    { 1000000059;1;Column;Purch__Inv__Header__Buy_from_Vendor_Name_Caption;
+               SourceExpr=FIELDCAPTION("Buy-from Vendor Name") }
+
+    { 1000000065;1;Column;Purch__Inv__Header__Document_Date_Caption;
+               SourceExpr=FIELDCAPTION("Document Date") }
+
+    { 1000000067;1;Column;Purch__Inv__Header__Due_Date_Caption;
+               SourceExpr=FIELDCAPTION("Due Date") }
+
+    { 1000000069;1;Column;Transfer_No_Caption;
+               SourceExpr=Transfer_No_CaptionLbl }
+
+    { 1000000071;1;Column;Posted_Approval_Entry__Approver_ID_Caption;
+               SourceExpr="Posted Approval Entry".FIELDCAPTION("Approver ID") }
+
+    { 1000000073;1;Column;Posted_Approval_Entry_StatusCaption;
+               SourceExpr="Posted Approval Entry".FIELDCAPTION(Status) }
+
+    { 1000000025;1;Column;PayrollCaption_Control1000000025;
+               SourceExpr=PayrollCaption_Control1000000025Lbl }
+
+    { 1000000029;1;Column;Order_No_Caption_Control1000000029;
+               SourceExpr=Order_No_Caption_Control1000000029Lbl }
+
+    { 1000000038;1;Column;Purch__Inv__Header__Vendor_Invoice_No__Caption;
+               SourceExpr=FIELDCAPTION("Vendor Invoice No.") }
+
+    { 1000000046;1;Column;Invoice_receipt__dateCaption_Control1000000046;
+               SourceExpr=Invoice_receipt__dateCaption_Control1000000046Lbl }
+
+    { 1000000047;1;Column;Creation_dateCaption_Control1000000047;
+               SourceExpr=Creation_dateCaption_Control1000000047Lbl }
+
+    { 1000000053;1;Column;Nb_of_daysCaption_Control1000000053;
+               SourceExpr=Nb_of_daysCaption_Control1000000053Lbl }
+
+    { 1000000075;1;Column;Total_daysCaption_Control1000000075;
+               SourceExpr=Total_daysCaption_Control1000000075Lbl }
+
+    { 1000000083;1;Column;date_of_availabilityCaption_Control1000000083;
+               SourceExpr=date_of_availabilityCaption_Control1000000083Lbl }
+
+    { 2158;1   ;DataItem;                    ;
+               DataItemTable=Table456;
+               DataItemTableView=SORTING(Table ID,Document No.,Sequence No.)
+                                 ORDER(Ascending);
+               OnPreDataItem=BEGIN
+                               gBool_Debut := TRUE;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  //DEBUT AJOUT JX-XAD du 30/11/2009
+
+                                    IF (gBool_Debut) THEN
+                                    BEGIN
+                                      IF (gdate_available <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Posted Approval Entry"."Last Date-Time Modified")-gdate_available;
+                                      END ELSE IF ("Purch. Inv. Header"."Document Date" <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Posted Approval Entry"."Last Date-Time Modified")-"Purch. Inv. Header"."Document Date";
+                                      END ELSE BEGIN
+                                        gInt_NbDays := 0;
+                                        gDate_Precedente := 0D;
+                                      END;
+                                      gDate_Precedente := DT2DATE("Posted Approval Entry"."Last Date-Time Modified");
+                                      gBool_Debut := FALSE;
+                                    END ELSE BEGIN
+                                      IF (gDate_Precedente <> 0D) THEN BEGIN
+                                        gInt_NbDays := DT2DATE("Posted Approval Entry"."Last Date-Time Modified")-gDate_Precedente;
+                                        gDate_Precedente := DT2DATE("Posted Approval Entry"."Last Date-Time Modified");
+                                      END;
+                                    END;
+
+                                  gInt_NbTotalDays += gInt_NbDays;
+
+                                  //FIN AJOUT JX-XAD du 30/11/2009
+                                END;
+
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 1000000039;2;Column;Posted_Approval_Entry__Last_Date_Time_Modified_;
+               SourceExpr="Last Date-Time Modified" }
+
+    { 1000000070;2;Column;Posted_Approval_Entry__Approver_ID_;
+               SourceExpr="Approver ID" }
+
+    { 1000000072;2;Column;Posted_Approval_Entry_Status;
+               SourceExpr=Status }
+
+    { 1000000035;2;Column;Posted_Approval_Entry__Document_No__;
+               SourceExpr="Document No." }
+
+    { 1000000061;2;Column;gInt_NbDays_Control1000000061;
+               SourceExpr=gInt_NbDays }
+
+    { 1000000078;2;Column;gInt_NbTotalDays_Control1000000078;
+               SourceExpr=gInt_NbTotalDays }
+
+    { 9380;2   ;Column  ;Posted_Approval_Entry_Table_ID;
+               SourceExpr="Table ID" }
+
+    { 6774;2   ;Column  ;Posted_Approval_Entry_Sequence_No_;
+               SourceExpr="Sequence No." }
+
+    { 4114;1   ;DataItem;                    ;
+               DataItemTable=Table25;
+               DataItemTableView=SORTING(Entry No.)
+                                 ORDER(Ascending);
+               OnAfterGetRecord=BEGIN
+                                  gtxt_Document := '';
+                                  gInt_NbDaysPayment := 0;
+                                  gInt_NbDays := 0;
+                                  gdate_CreationDatePayment := 0D;
+                                  gdate_PostingDate := 0D;
+
+                                  "Vendor Ledger Entry".CALCFIELDS("Vendor Ledger Entry"."Remaining Amount");
+
+                                  IF
+                                    "Vendor Ledger Entry"."Remaining Amount" <> 0
+                                  THEN
+                                    gtextPayroll := Text1000000003
+                                  ELSE BEGIN
+                                    gtextPayroll := Text1000000004;
+                                    IF "Vendor Ledger Entry"."Closed by Entry No." <> 0 THEN BEGIN
+                                      IF gRec_VendorLedgerEntry.GET("Vendor Ledger Entry"."Closed by Entry No.") THEN
+                                      BEGIN
+                                        IF gRec_VendorLedgerEntry."Document Type"=gRec_VendorLedgerEntry."Document Type"::Payment THEN
+                                        BEGIN
+                                          gdate_CreationDatePayment := gRec_VendorLedgerEntry."Document Date";
+                                          gdate_PostingDate := gRec_VendorLedgerEntry."Posting Date";
+                                          gtxt_Document := gRec_VendorLedgerEntry."Document No.";
+                                          IF (gDate_Precedente <> 0D) THEN BEGIN
+                                            gInt_NbDays := gdate_CreationDatePayment-gDate_Precedente;
+                                            gInt_NbDaysPayment := gdate_PostingDate-gdate_CreationDatePayment;
+                                          END;
+                                        END;
+                                      END;
+                                    END;
+                                  END;
+
+                                  gInt_NbTotalDays += gInt_NbDays;
+                                  gInt_NbTotalDaysPayment := gInt_NbTotalDays + gInt_NbDaysPayment;
+                                END;
+
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 1000000087;2;Column;gInt_NbDaysPayment ;
+               SourceExpr=gInt_NbDaysPayment }
+
+    { 1000000088;2;Column;gInt_NbTotalDaysPayment;
+               SourceExpr=gInt_NbTotalDaysPayment }
+
+    { 1000000090;2;Column;gtextPayroll       ;
+               SourceExpr=gtextPayroll }
+
+    { 1000000091;2;Column;gtxt_Document      ;
+               SourceExpr=gtxt_Document }
+
+    { 1000000093;2;Column;gdate_PostingDate  ;
+               SourceExpr=gdate_PostingDate }
+
+    { 1000000015;2;Column;gdate_CreationDatePayment;
+               SourceExpr=gdate_CreationDatePayment }
+
+    { 1000000085;2;Column;gInt_NbDays_Control1000000085;
+               SourceExpr=gInt_NbDays }
+
+    { 1000000086;2;Column;gInt_NbTotalDays_Control1000000086;
+               SourceExpr=gInt_NbTotalDays }
+
+    { 1000000089;2;Column;Payment_preparationCaption;
+               SourceExpr=Payment_preparationCaptionLbl }
+
+    { 1000000036;2;Column;Validation_PaymentCaption;
+               SourceExpr=Validation_PaymentCaptionLbl }
+
+    { 5217;2   ;Column  ;Vendor_Ledger_Entry_Entry_No_;
+               SourceExpr="Entry No." }
+
+    { 8998;2   ;Column  ;Vendor_Ledger_Entry_Document_No_;
+               SourceExpr="Document No." }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      CompanyInfo@1000000000 : Record 79;
+      Text1000000001@1000000001 : TextConst 'ENU=Page %1;FRA=Page %1';
+      gtextPayroll@1000000002 : Text[3];
+      Text1000000003@1000000003 : TextConst 'ENU=No;FRA=Non';
+      Text1000000004@1000000004 : TextConst 'ENU=Yes;FRA=Oui';
+      gtextOrderNo@1000000005 : Text[10];
+      gRecPurchaseline@1000000006 : Record 39;
+      gRecPurchaselinearchive@1000000007 : Record 123;
+      gInt_NbDays@1000000008 : Integer;
+      gInt_NbDaysPayment@1000000009 : Integer;
+      gDate_Precedente@1000000010 : Date;
+      gBool_Debut@1000000011 : Boolean;
+      gInt_NbTotalDays@1000000012 : Integer;
+      gInt_NbTotalDaysPayment@1000000013 : Integer;
+      gInt_PosTextCommande@1000000014 : Integer;
+      gtxt_Commande@1000000015 : Text[30];
+      gdate_available@1000000016 : Date;
+      gRec_Historic@1000000017 : Record 50004;
+      Text1000000005@1000000018 : TextConst 'ENU=order;FRA=Commande';
+      gRec_VendorLedgerEntry@1000000019 : Record 25;
+      gtxt_Document@1000000020 : Text[30];
+      gdate_PostingDate@1000000021 : Date;
+      grec_PaymentHeader@1000000022 : Record 10865;
+      grec_PaymentHeaderArchive@1000000023 : Record 10867;
+      gdate_CreationDatePayment@1000000024 : Date;
+      Current_approvals_invoices_reportCaptionLbl@1000005491 : TextConst 'ENU=Current approvals invoices report;FRA=Etat des approbations de factures en cours';
+      Last_date_modifiedCaptionLbl@1000408958 : TextConst 'ENU=Last date modified;FRA=DerniŠre modification';
+      Amount_without_VATCaptionLbl@1000811521 : TextConst 'ENU=Amount without VAT;FRA=Montant HT';
+      Order_No_CaptionLbl@1000825510 : TextConst 'ENU=Order No.;FRA=Nø commande';
+      PayrollCaptionLbl@1000458310 : TextConst 'ENU=Payroll;FRA=Pay‚';
+      Invoice_receipt__dateCaptionLbl@1000755314 : TextConst 'ENU=Invoice receipt. date;FRA=Date r‚cept. facture';
+      Creation_dateCaptionLbl@1000483409 : TextConst 'ENU=Creation date;FRA=Date de cr‚ation';
+      Nb_of_daysCaptionLbl@1000382148 : TextConst 'ENU=Nb of days;FRA=Nb de jours';
+      Total_daysCaptionLbl@1000578964 : TextConst 'ENU=Total days;FRA=Total jours';
+      date_of_availabilityCaptionLbl@1000455321 : TextConst 'ENU=date of availability;FRA=Date de mise … disposition';
+      NoCaptionLbl@1000916784 : TextConst 'ENU=No;FRA=Non';
+      Posted_approvals_invoices_reportCaptionLbl@1000103429 : TextConst 'ENU=Posted approvals invoices report;FRA=Etat des approbations de factures enregistr‚es';
+      Last_date_modifiedCaption_Control1000000041Lbl@1000406182 : TextConst 'ENU=Last date modified;FRA=DerniŠre modification';
+      Amount_without_VATCaption_Control1000000045Lbl@1000234581 : TextConst 'ENU=Amount without VAT;FRA=Montant HT';
+      Transfer_No_CaptionLbl@1000675542 : TextConst 'ENU=Transfer No.;FRA=Nø virement';
+      PayrollCaption_Control1000000025Lbl@1000934589 : TextConst 'ENU=Payroll;FRA=Pay‚';
+      Order_No_Caption_Control1000000029Lbl@1000137912 : TextConst 'ENU=Order No.;FRA=Nø commande';
+      Invoice_receipt__dateCaption_Control1000000046Lbl@1000893913 : TextConst 'ENU=Invoice receipt. date;FRA=Date r‚cept. facture';
+      Creation_dateCaption_Control1000000047Lbl@1000331052 : TextConst 'ENU=Creation date;FRA=Date de cr‚ation';
+      Nb_of_daysCaption_Control1000000053Lbl@1000638771 : TextConst 'ENU=Nb of days;FRA=Nb de jours';
+      Total_daysCaption_Control1000000075Lbl@1000459368 : TextConst 'ENU=Total days;FRA=Total jours';
+      date_of_availabilityCaption_Control1000000083Lbl@1000812827 : TextConst 'ENU=date of availability;FRA=Date de mise … disposition';
+      Payment_preparationCaptionLbl@1000364743 : TextConst 'ENU=Payment preparation;FRA=Pr‚pa RGLT';
+      Validation_PaymentCaptionLbl@1000825677 : TextConst 'ENU=Validation Payment;FRA=Validation RGLT';
+
+    BEGIN
+    {
+      // Cr‚ation JALIX - LAB du 23/10/2009
+      // Etat de contr“le des factures et approbations
+
+      MODIF JX-XAD du 30/11/2009
+      Compteur de jours
+      R‚cup‚ration du nø commande
+      Ajout des colonnes Creation date et Reception Invoice date
+      Approbateur ID
+      Date de mise … disposition
+      R‚cup‚ration du nø virement quand facture pay‚e + ajout de deux lignes : Pr‚pa RGLT et Validation RGLT
+
+      //JX-AUD du 13/05/2013
+      //Agrandissement logo
+    }
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>635f4e67-4f7a-477c-8e94-7a9ce724983b</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO__">
+          <DataField>STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO__</DataField>
+        </Field>
+        <Field Name="CompanyInfo_Picture">
+          <DataField>CompanyInfo_Picture</DataField>
+        </Field>
+        <Field Name="Purchase_Header__No__">
+          <DataField>Purchase_Header__No__</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Buy_from_Vendor_No__">
+          <DataField>Purchase_Header__Buy_from_Vendor_No__</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Lines_Amount_">
+          <DataField>Purchase_Header__Lines_Amount_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Lines_Amount_Format">
+          <DataField>Purchase_Header__Lines_Amount_Format</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Vendor_Invoice_No__">
+          <DataField>Purchase_Header__Vendor_Invoice_No__</DataField>
+        </Field>
+        <Field Name="gtextOrderNo">
+          <DataField>gtextOrderNo</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Document_Date_">
+          <DataField>Purchase_Header__Document_Date_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Due_Date_">
+          <DataField>Purchase_Header__Due_Date_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Buy_from_Vendor_Name_">
+          <DataField>Purchase_Header__Buy_from_Vendor_Name_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Invoice_receipt_date_">
+          <DataField>Purchase_Header__Invoice_receipt_date_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Creation_date_">
+          <DataField>Purchase_Header__Creation_date_</DataField>
+        </Field>
+        <Field Name="gInt_NbDays">
+          <DataField>gInt_NbDays</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Purchase_Header___Original_user_">
+          <DataField>Purchase_Header__Purchase_Header___Original_user_</DataField>
+        </Field>
+        <Field Name="gdate_available">
+          <DataField>gdate_available</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDays">
+          <DataField>gInt_NbTotalDays</DataField>
+        </Field>
+        <Field Name="Current_approvals_invoices_reportCaption">
+          <DataField>Current_approvals_invoices_reportCaption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__No__Caption">
+          <DataField>Purchase_Header__No__Caption</DataField>
+        </Field>
+        <Field Name="Approval_Entry__Approver_ID_Caption">
+          <DataField>Approval_Entry__Approver_ID_Caption</DataField>
+        </Field>
+        <Field Name="Last_date_modifiedCaption">
+          <DataField>Last_date_modifiedCaption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Buy_from_Vendor_No__Caption">
+          <DataField>Purchase_Header__Buy_from_Vendor_No__Caption</DataField>
+        </Field>
+        <Field Name="Amount_without_VATCaption">
+          <DataField>Amount_without_VATCaption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Vendor_Invoice_No__Caption">
+          <DataField>Purchase_Header__Vendor_Invoice_No__Caption</DataField>
+        </Field>
+        <Field Name="Order_No_Caption">
+          <DataField>Order_No_Caption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Document_Date_Caption">
+          <DataField>Purchase_Header__Document_Date_Caption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Due_Date_Caption">
+          <DataField>Purchase_Header__Due_Date_Caption</DataField>
+        </Field>
+        <Field Name="Approval_Entry_StatusCaption">
+          <DataField>Approval_Entry_StatusCaption</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Buy_from_Vendor_Name_Caption">
+          <DataField>Purchase_Header__Buy_from_Vendor_Name_Caption</DataField>
+        </Field>
+        <Field Name="PayrollCaption">
+          <DataField>PayrollCaption</DataField>
+        </Field>
+        <Field Name="Invoice_receipt__dateCaption">
+          <DataField>Invoice_receipt__dateCaption</DataField>
+        </Field>
+        <Field Name="Creation_dateCaption">
+          <DataField>Creation_dateCaption</DataField>
+        </Field>
+        <Field Name="Nb_of_daysCaption">
+          <DataField>Nb_of_daysCaption</DataField>
+        </Field>
+        <Field Name="Total_daysCaption">
+          <DataField>Total_daysCaption</DataField>
+        </Field>
+        <Field Name="date_of_availabilityCaption">
+          <DataField>date_of_availabilityCaption</DataField>
+        </Field>
+        <Field Name="NoCaption">
+          <DataField>NoCaption</DataField>
+        </Field>
+        <Field Name="Purchase_Header_Document_Type">
+          <DataField>Purchase_Header_Document_Type</DataField>
+        </Field>
+        <Field Name="Approval_Entry__Approver_ID_">
+          <DataField>Approval_Entry__Approver_ID_</DataField>
+        </Field>
+        <Field Name="Approval_Entry__Last_Date_Time_Modified_">
+          <DataField>Approval_Entry__Last_Date_Time_Modified_</DataField>
+        </Field>
+        <Field Name="Approval_Entry_Status">
+          <DataField>Approval_Entry_Status</DataField>
+        </Field>
+        <Field Name="Approval_Entry__Document_No__">
+          <DataField>Approval_Entry__Document_No__</DataField>
+        </Field>
+        <Field Name="gInt_NbDays_Control1000000052">
+          <DataField>gInt_NbDays_Control1000000052</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDays_Control1000000074">
+          <DataField>gInt_NbTotalDays_Control1000000074</DataField>
+        </Field>
+        <Field Name="Approval_Entry_Table_ID">
+          <DataField>Approval_Entry_Table_ID</DataField>
+        </Field>
+        <Field Name="Approval_Entry_Document_Type">
+          <DataField>Approval_Entry_Document_Type</DataField>
+        </Field>
+        <Field Name="Approval_Entry_Sequence_No_">
+          <DataField>Approval_Entry_Sequence_No_</DataField>
+        </Field>
+        <Field Name="STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO___Control1000000030">
+          <DataField>STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO___Control1000000030</DataField>
+        </Field>
+        <Field Name="CompanyInfo_Picture_Control1000000031">
+          <DataField>CompanyInfo_Picture_Control1000000031</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header_Amount">
+          <DataField>Purch__Inv__Header_Amount</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header_AmountFormat">
+          <DataField>Purch__Inv__Header_AmountFormat</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__No__">
+          <DataField>Purch__Inv__Header__No__</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Buy_from_Vendor_No__">
+          <DataField>Purch__Inv__Header__Buy_from_Vendor_No__</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Buy_from_Vendor_Name_">
+          <DataField>Purch__Inv__Header__Buy_from_Vendor_Name_</DataField>
+        </Field>
+        <Field Name="gtextOrderNo_Control1000000062">
+          <DataField>gtextOrderNo_Control1000000062</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Document_Date_">
+          <DataField>Purch__Inv__Header__Document_Date_</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Due_Date_">
+          <DataField>Purch__Inv__Header__Due_Date_</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Vendor_Invoice_No__">
+          <DataField>Purch__Inv__Header__Vendor_Invoice_No__</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Invoice_receipt_date_">
+          <DataField>Purch__Inv__Header__Invoice_receipt_date_</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Creation_date_">
+          <DataField>Purch__Inv__Header__Creation_date_</DataField>
+        </Field>
+        <Field Name="gInt_NbDays_Control1000000060">
+          <DataField>gInt_NbDays_Control1000000060</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Purch__Inv__Header___Original_user_">
+          <DataField>Purch__Inv__Header__Purch__Inv__Header___Original_user_</DataField>
+        </Field>
+        <Field Name="gdate_available_Control1000000084">
+          <DataField>gdate_available_Control1000000084</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDays_Control1000000079">
+          <DataField>gInt_NbTotalDays_Control1000000079</DataField>
+        </Field>
+        <Field Name="Posted_approvals_invoices_reportCaption">
+          <DataField>Posted_approvals_invoices_reportCaption</DataField>
+        </Field>
+        <Field Name="Last_date_modifiedCaption_Control1000000041">
+          <DataField>Last_date_modifiedCaption_Control1000000041</DataField>
+        </Field>
+        <Field Name="Amount_without_VATCaption_Control1000000045">
+          <DataField>Amount_without_VATCaption_Control1000000045</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__No__Caption">
+          <DataField>Purch__Inv__Header__No__Caption</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Buy_from_Vendor_No__Caption">
+          <DataField>Purch__Inv__Header__Buy_from_Vendor_No__Caption</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Buy_from_Vendor_Name_Caption">
+          <DataField>Purch__Inv__Header__Buy_from_Vendor_Name_Caption</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Document_Date_Caption">
+          <DataField>Purch__Inv__Header__Document_Date_Caption</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Due_Date_Caption">
+          <DataField>Purch__Inv__Header__Due_Date_Caption</DataField>
+        </Field>
+        <Field Name="Transfer_No_Caption">
+          <DataField>Transfer_No_Caption</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry__Approver_ID_Caption">
+          <DataField>Posted_Approval_Entry__Approver_ID_Caption</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry_StatusCaption">
+          <DataField>Posted_Approval_Entry_StatusCaption</DataField>
+        </Field>
+        <Field Name="PayrollCaption_Control1000000025">
+          <DataField>PayrollCaption_Control1000000025</DataField>
+        </Field>
+        <Field Name="Order_No_Caption_Control1000000029">
+          <DataField>Order_No_Caption_Control1000000029</DataField>
+        </Field>
+        <Field Name="Purch__Inv__Header__Vendor_Invoice_No__Caption">
+          <DataField>Purch__Inv__Header__Vendor_Invoice_No__Caption</DataField>
+        </Field>
+        <Field Name="Invoice_receipt__dateCaption_Control1000000046">
+          <DataField>Invoice_receipt__dateCaption_Control1000000046</DataField>
+        </Field>
+        <Field Name="Creation_dateCaption_Control1000000047">
+          <DataField>Creation_dateCaption_Control1000000047</DataField>
+        </Field>
+        <Field Name="Nb_of_daysCaption_Control1000000053">
+          <DataField>Nb_of_daysCaption_Control1000000053</DataField>
+        </Field>
+        <Field Name="Total_daysCaption_Control1000000075">
+          <DataField>Total_daysCaption_Control1000000075</DataField>
+        </Field>
+        <Field Name="date_of_availabilityCaption_Control1000000083">
+          <DataField>date_of_availabilityCaption_Control1000000083</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry__Last_Date_Time_Modified_">
+          <DataField>Posted_Approval_Entry__Last_Date_Time_Modified_</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry__Approver_ID_">
+          <DataField>Posted_Approval_Entry__Approver_ID_</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry_Status">
+          <DataField>Posted_Approval_Entry_Status</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry__Document_No__">
+          <DataField>Posted_Approval_Entry__Document_No__</DataField>
+        </Field>
+        <Field Name="gInt_NbDays_Control1000000061">
+          <DataField>gInt_NbDays_Control1000000061</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDays_Control1000000078">
+          <DataField>gInt_NbTotalDays_Control1000000078</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry_Table_ID">
+          <DataField>Posted_Approval_Entry_Table_ID</DataField>
+        </Field>
+        <Field Name="Posted_Approval_Entry_Sequence_No_">
+          <DataField>Posted_Approval_Entry_Sequence_No_</DataField>
+        </Field>
+        <Field Name="gInt_NbDaysPayment">
+          <DataField>gInt_NbDaysPayment</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDaysPayment">
+          <DataField>gInt_NbTotalDaysPayment</DataField>
+        </Field>
+        <Field Name="gtextPayroll">
+          <DataField>gtextPayroll</DataField>
+        </Field>
+        <Field Name="gtxt_Document">
+          <DataField>gtxt_Document</DataField>
+        </Field>
+        <Field Name="gdate_PostingDate">
+          <DataField>gdate_PostingDate</DataField>
+        </Field>
+        <Field Name="gdate_CreationDatePayment">
+          <DataField>gdate_CreationDatePayment</DataField>
+        </Field>
+        <Field Name="gInt_NbDays_Control1000000085">
+          <DataField>gInt_NbDays_Control1000000085</DataField>
+        </Field>
+        <Field Name="gInt_NbTotalDays_Control1000000086">
+          <DataField>gInt_NbTotalDays_Control1000000086</DataField>
+        </Field>
+        <Field Name="Payment_preparationCaption">
+          <DataField>Payment_preparationCaption</DataField>
+        </Field>
+        <Field Name="Validation_PaymentCaption">
+          <DataField>Validation_PaymentCaption</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Entry_No_">
+          <DataField>Vendor_Ledger_Entry_Entry_No_</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Document_No_">
+          <DataField>Vendor_Ledger_Entry_Document_No_</DataField>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>DataSet</rd:DataSetName>
+        <rd:SchemaPath>Report.xsd</rd:SchemaPath>
+        <rd:TableName>Result</rd:TableName>
+      </rd:DataSetInfo>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Textbox Name="STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO__">
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!STRSUBSTNO_Text1000000001_FORMAT_CurrReport_PAGENO__.Value)</Value>
+                    <Style>
+                      <FontSize>9pt</FontSize>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Right</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Left>26.7cm</Left>
+            <Height>0.423cm</Height>
+            <Width>1.68cm</Width>
+            <ZIndex>2</ZIndex>
+            <Style>
+              <VerticalAlign>Middle</VerticalAlign>
+            </Style>
+          </Textbox>
+          <Image Name="CompanyInfo_Picture">
+            <Source>Database</Source>
+            <Value>=First(Fields!CompanyInfo_Picture.Value)</Value>
+            <MIMEType>image/bmp</MIMEType>
+            <Height>3.5cm</Height>
+            <Width>6cm</Width>
+            <ZIndex>1</ZIndex>
+            <Style />
+          </Image>
+          <Tablix Name="Table1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>1.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>17.7cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.69537cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.51746cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.8cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.19101cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.79947cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.50847cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.64074cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.49511cm</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.63492cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="textbox15">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Current_approvals_invoices_reportCaption.Value)</Value>
+                                  <Style>
+                                    <FontSize>12pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <ZIndex>3</ZIndex>
+                          <Style>
+                            <BackgroundColor>SkyBlue</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>10</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.846cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__No__Caption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Purch__Inv__Header__No__Caption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Vendor_Invoice_No__Caption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Purch__Inv__Header__Vendor_Invoice_No__Caption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Due_Date_Caption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Purch__Inv__Header__Due_Date_Caption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Right</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Posted_Approval_Entry_StatusCaption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Posted_Approval_Entry_StatusCaption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Last_date_modifiedCaption_Control1000000041">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Last_date_modifiedCaption_Control1000000041.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Nb_of_daysCaption_Control1000000053">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Nb_of_daysCaption_Control1000000053.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Total_daysCaption_Control1000000075">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Total_daysCaption_Control1000000075.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="PayrollCaption_Control1000000025">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!PayrollCaption_Control1000000025.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Transfer_No_Caption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Transfer_No_Caption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Buy_from_Vendor_No__Caption">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=First(Fields!Purch__Inv__Header__Buy_from_Vendor_No__Caption.Value)</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Bottom</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.423cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__No__">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__No__.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Buy_from_Vendor_No__">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Buy_from_Vendor_No__.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Buy_from_Vendor_Name_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Buy_from_Vendor_Name_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Vendor_Invoice_No__">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Vendor_Invoice_No__.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="gtextOrderNo_Control1000000062">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!gtextOrderNo_Control1000000062.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Document_Date_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Document_Date_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>d</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header_Amount">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header_Amount.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>=Fields!Purch__Inv__Header_AmountFormat.Value</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Invoice_receipt_date_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Invoice_receipt_date_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>d</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Creation_date_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Creation_date_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>d</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Purch__Inv__Header__Due_Date_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Purch__Inv__Header__Due_Date_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>d</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.423cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Posted_Approval_Entry__Document_No__">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Posted_Approval_Entry__Document_No__.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox1">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Posted_Approval_Entry__Approver_ID_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Posted_Approval_Entry__Approver_ID_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Posted_Approval_Entry_Status">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Posted_Approval_Entry_Status.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Posted_Approval_Entry__Last_Date_Time_Modified_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Posted_Approval_Entry__Last_Date_Time_Modified_.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                    <Format>g</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="gInt_NbDays_Control1000000061">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!gInt_NbDays_Control1000000061.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="gInt_NbTotalDays_Control1000000078">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!gInt_NbTotalDays_Control1000000078.Value</Value>
+                                  <Style>
+                                    <FontSize>7pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>0.075cm</PaddingLeft>
+                            <PaddingRight>0.075cm</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox11">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox12">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TextBox13">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value />
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                  <RepeatOnNewPage>true</RepeatOnNewPage>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                  <RepeatOnNewPage>true</RepeatOnNewPage>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <Group Name="Table1_Group">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!Purch__Inv__Header__No__.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <TablixMembers>
+                    <TablixMember>
+                      <KeepWithGroup>After</KeepWithGroup>
+                      <KeepTogether>true</KeepTogether>
+                    </TablixMember>
+                    <TablixMember>
+                      <Group Name="Table1_Details_Group">
+                        <DataElementName>Detail</DataElementName>
+                      </Group>
+                      <TablixMembers>
+                        <TablixMember />
+                      </TablixMembers>
+                      <DataElementName>Detail_Collection</DataElementName>
+                      <DataElementOutput>Output</DataElementOutput>
+                      <KeepTogether>true</KeepTogether>
+                    </TablixMember>
+                  </TablixMembers>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>DataSet_Result</DataSetName>
+            <Top>3.5cm</Top>
+          </Tablix>
+        </ReportItems>
+        <Height>5.82692cm</Height>
+      </Body>
+      <Width>32.84762cm</Width>
+      <Page>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>30.5cm</PageWidth>
+        <LeftMargin>0.5cm</LeftMargin>
+        <RightMargin>0.5cm</RightMargin>
+        <TopMargin>0.5cm</TopMargin>
+        <BottomMargin>0.5cm</BottomMargin>
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Invalid</rd:ReportUnitType>
+  <rd:ReportID>33869341-e223-42a4-92c0-6ead8f58fb5d</rd:ReportID>
+</Report>
+    END_OF_RDLDATA
+  }
+}
+

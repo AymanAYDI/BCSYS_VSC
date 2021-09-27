@@ -1,0 +1,93 @@
+OBJECT XMLport 50029 VTime
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26/05/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    Format=Variable Text;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;VTime               ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 IF Champ1 = 'P' THEN
+                                                                                   IF Grec_Matricule.GET(Champ2) THEN
+                                                                                   BEGIN
+                                                                                    Grec_Matricule."Provider name" := "Gcu_ANSI-ASCII".Ansi2Ascii(Champ4);
+                                                                                    Grec_Matricule."Provider first name" := "Gcu_ANSI-ASCII".Ansi2Ascii(Champ5);
+                                                                                    Grec_Matricule."Society code" := Champ3;
+                                                                                    Grec_Matricule.MODIFY;
+                                                                                   END ELSE
+                                                                                   BEGIN
+                                                                                     Grec_Matricule.INIT;
+                                                                                     Grec_Matricule."Matricule No." := Champ2;
+                                                                                     Grec_Matricule."Provider name" := "Gcu_ANSI-ASCII".Ansi2Ascii(Champ4);
+                                                                                     Grec_Matricule."Provider first name" := "Gcu_ANSI-ASCII".Ansi2Ascii(Champ5);
+                                                                                     Grec_Matricule."Society code" := Champ3;
+                                                                                     Grec_Matricule.INSERT;
+                                                                                   END;
+                                                                               END;
+                                                                                }
+
+    { [{705E3C22-5192-484B-95C4-885DF7308394}];2 ;Champ1              ;Element ;Text    ;
+                                                  VariableName=Champ1 }
+
+    { [{ADFD8EB3-3D39-4E37-B507-A9221D07F8C8}];2 ;Champ2              ;Element ;Text    ;
+                                                  VariableName=Champ2 }
+
+    { [{F72712AD-F18B-4B31-90CC-2CF6CC596051}];2 ;Champ3              ;Element ;Text    ;
+                                                  VariableName=Champ3 }
+
+    { [{39E5B98B-50B7-4525-95BB-1829916AD264}];2 ;Champ4              ;Element ;Text    ;
+                                                  VariableName=Champ4 }
+
+    { [{8A9B9BAE-5697-44EC-9521-6179C05C6356}];2 ;Champ5              ;Element ;Text    ;
+                                                  VariableName=Champ5 }
+
+    { [{CC6AA3E2-A1E0-4E86-ABAE-D20AA79398DA}];2 ;Champ6              ;Element ;Text    ;
+                                                  VariableName=Champ6 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Grec_Matricule@1000000002 : Record 50010;
+      Champ@1000000001 : ARRAY [6] OF Text[200];
+      "Gcu_ANSI-ASCII"@1000000000 : Codeunit 50002;
+
+    BEGIN
+    {
+      //JX-AUD du 25/03/14
+      //CREATION DU DATAPORT
+    }
+    END.
+  }
+}
+

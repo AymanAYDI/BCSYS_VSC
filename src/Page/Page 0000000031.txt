@@ -2,9 +2,10 @@ OBJECT Page 31 Item List
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368;
+    Date=13/02/19;
+    Time=09:35:15;
+    Modified=Yes;
+    Version List=NAVW16.00.01,KITNA6.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -14,9 +15,86 @@ OBJECT Page 31 Item List
     SourceTable=Table27;
     PageType=List;
     CardPageID=Item Card;
-    OnAfterGetRecord=BEGIN
-                       SetSocialListeningFactboxVisibility
+    OnOpenPage=BEGIN
+                 //Modif JX-AUD du 08/01/2013
+                 IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                   Gcode_Axe1 := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                   Gcode_Axe2 := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";
+                   Gcode_Axe3 := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";
+                   Gcode_Axe4 := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";
+                   Gcode_Axe5 := Grecord_GeneralLedgerSetup."Shortcut Dimension 7 Code";
+                   Gcode_Axe6 := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+                 END;
+                 //Fin Modif JX-AUD du 08/01/2013
+
+                 //MODIF JX-AUD du 23/05/2014
+                 //IF (COMPANYNAME <> 'VSCT')  THEN
+                 //  IF (COMPANYNAME <> 'VSCT - RECETTE') THEN
+                   IF ((COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE')) THEN
+                     IF Grec_UserSetup.GET(USERID) THEN
+                     BEGIN
+                       IF Grec_UserSetup.Service <> '' THEN
+                       BEGIN
+                         Gcode_Service := COPYSTR(Grec_UserSetup.Service, 1, 2);
+                         SETFILTER("Product Group Code",FORMAT(Gcode_Service)+'*');
+                       END;
                      END;
+                 //FIN MODIF JX-AUD du 23/05/2014
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       //Modif JX-AUD du 08/01/2013
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe1)
+                       THEN BEGIN
+                         ShortcutDimCode[3] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[3] := '';
+                       END;
+
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe2)
+                       THEN BEGIN
+                         ShortcutDimCode[4] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[4] := '';
+                       END;
+
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe3)
+                       THEN BEGIN
+                         ShortcutDimCode[5] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[5] := '';
+                       END;
+
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe4)
+                       THEN BEGIN
+                         ShortcutDimCode[6] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[6] := '';
+                       END;
+
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe5)
+                       THEN BEGIN
+                         ShortcutDimCode[7] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[7] := '';
+                       END;
+
+                       IF Grecord_LedgerDefaultDimension.GET(27,"No.",Gcode_Axe6)
+                       THEN BEGIN
+                         ShortcutDimCode[8] := Grecord_LedgerDefaultDimension."Dimension Value Code";
+                       END ELSE BEGIN
+                         ShortcutDimCode[8] := '';
+                       END;
+                       //Fin modif JX-AUD du 08/01/2013
+
+                       SetSocialListeningFactboxVisibility;
+                     END;
+
+    OnNewRecord=BEGIN
+                  //Modif JX-AUD du 08/01/2013
+                  CLEAR(ShortcutDimCode);
+                  //Fin modif JX-AUD du 08/01/2013
+                END;
 
     OnAfterGetCurrRecord=BEGIN
                            SetSocialListeningFactboxVisibility
@@ -929,6 +1007,9 @@ OBJECT Page 31 Item List
     { 4   ;2   ;Field     ;
                 SourceExpr=Description }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="Product Group Code" }
+
     { 95  ;2   ;Field     ;
                 SourceExpr="Created From Nonstock Item";
                 Visible=FALSE }
@@ -1023,11 +1104,36 @@ OBJECT Page 31 Item List
                 SourceExpr="Indirect Cost %";
                 Visible=FALSE }
 
+    { 1000000006;2;Field  ;
+                SourceExpr=ShortcutDimCode[3];
+                CaptionClass='1,2,3' }
+
+    { 1000000010;2;Field  ;
+                SourceExpr=ShortcutDimCode[4];
+                CaptionClass='1,2,4' }
+
+    { 1000000012;2;Field  ;
+                SourceExpr=ShortcutDimCode[5];
+                CaptionClass='1,2,5' }
+
+    { 1000000014;2;Field  ;
+                SourceExpr=ShortcutDimCode[6];
+                CaptionClass='1,2,6' }
+
+    { 1000000016;2;Field  ;
+                SourceExpr=ShortcutDimCode[7];
+                CaptionClass='1,2,7' }
+
+    { 1000000018;2;Field  ;
+                SourceExpr=ShortcutDimCode[8];
+                CaptionClass='1,2,8' }
+
     { 1102601000;2;Field  ;
                 SourceExpr="Item Category Code";
                 Visible=FALSE }
 
     { 1102601002;2;Field  ;
+                Name=Product Group Code2;
                 SourceExpr="Product Group Code";
                 Visible=FALSE }
 
@@ -1165,6 +1271,17 @@ OBJECT Page 31 Item List
     VAR
       SkilledResourceList@1001 : Page 6023;
       CalculateStdCost@1005 : Codeunit 5812;
+      Grecord_GeneralLedgerSetup@1000000001 : Record 98;
+      Grecord_LedgerDefaultDimension@1000000008 : Record 352;
+      Gcode_Axe1@1000000002 : Code[20];
+      Gcode_Axe2@1000000013 : Code[20];
+      Gcode_Axe3@1000000012 : Code[20];
+      Gcode_Axe4@1000000011 : Code[20];
+      Gcode_Axe5@1000000010 : Code[20];
+      Gcode_Axe6@1000000009 : Code[20];
+      ShortcutDimCode@1000000015 : ARRAY [8] OF Code[20];
+      Gcode_Service@1000000000 : Code[2];
+      Grec_UserSetup@1000000003 : Record 91;
       ItemAvailFormsMgt@1000 : Codeunit 353;
       SocialListeningSetupVisible@1003 : Boolean INDATASET;
       SocialListeningVisible@1002 : Boolean INDATASET;
@@ -1191,6 +1308,13 @@ OBJECT Page 31 Item List
     END;
 
     BEGIN
+    {
+      //Modif JX-AUD du 08/01/2013
+      //Ajout colonnes axes analytiques
+
+      //MODIF JX-AUD du 23/05/2014
+      //Ajout du traitement sur le filtre article en fonction du service de l'utilisateur
+    }
     END.
   }
 }

@@ -2,8 +2,9 @@ OBJECT Table 9053 Sales Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=24/06/16;
+    Time=16:30:22;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -92,6 +93,12 @@ OBJECT Table 9053 Sales Cue
     { 22  ;   ;Responsibility Center Filter;Code10;FieldClass=FlowFilter;
                                                    CaptionML=[ENU=Responsibility Center Filter;
                                                               FRA=Filtre centre de gestion];
+                                                   Editable=No }
+    { 50000;  ;Sales Orders        ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Sales Header" WHERE (Document Type=FILTER(Order)));
+                                                   AccessByPermission=TableData 110=R;
+                                                   CaptionML=[ENU=Sales Orders;
+                                                              FRA=Commandes vente];
                                                    Editable=No }
   }
   KEYS

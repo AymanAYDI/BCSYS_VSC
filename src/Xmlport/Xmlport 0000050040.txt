@@ -1,0 +1,65 @@
+OBJECT XMLport 50040 2000000053
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+  }
+  ELEMENTS
+  {
+    { [{1BFAA1BC-D086-4FA8-B5C4-55AAC211A99E}];  ;Root                ;Element ;Text     }
+
+    { [{0AD0FE42-3498-44FA-8217-3B8D12DDB278}];1 ;Access              ;Element ;Table   ;
+                                                  SourceTable=Table2000000053;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 User.RESET;
+                                                                                 User.SETRANGE("Windows Security ID",LoginSID);
+                                                                                 User.FINDFIRST;
+                                                                                 "Access Control"."User Security ID" := User."User Security ID";
+                                                                                 IF UserSet.GET(User."User Security ID","Access Control"."Role ID") THEN
+                                                                                  currXMLport.SKIP;
+                                                                               END;
+                                                                                }
+
+    { [{6E00FF29-CFB4-440B-8FB1-6B3BC83D9C85}];2 ;LoginSID            ;Element ;Text     }
+
+    { [{4E1201DD-95C0-4EC9-AB8C-FB0BB3F01632}];2 ;Role                ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Access Control::Role ID }
+
+    { [{A134284D-2898-413F-98DD-2A4C12AEC1F1}];2 ;Company             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Access Control::Company Name }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      User@1000000000 : Record 2000000120;
+      UserSet@1000000001 : Record 2000000053;
+
+    BEGIN
+    END.
+  }
+}
+

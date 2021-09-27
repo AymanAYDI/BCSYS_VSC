@@ -1,0 +1,45 @@
+OBJECT Table 50014 VSC Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=22/07/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC3.0-PBD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=VSC Settings;
+               FRA=ParamŠtres VSC];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[ENU=Primary Key;
+                                                              FRA=Cl‚ primaire] }
+    { 2   ;   ;On Client           ;Boolean       ;CaptionML=FRA=Instance Client }
+    { 3   ;   ;New Server          ;Boolean       ;CaptionML=FRA=R‚utilisation Instance }
+    { 10  ;   ;BC Path             ;Text250       ;CaptionML=FRA=Dossier Fichier PDF BC }
+    { 11  ;   ;BC Test Mode        ;Boolean       ;CaptionML=FRA=Mode Test BC }
+    { 12  ;   ;BC E-Mail Test      ;Text100       ;CaptionML=FRA=E-mail Test BC }
+    { 13  ;   ;Use Temporary Path  ;Boolean       ;CaptionML=FRA=Utiliser r‚pertoire temporaire }
+    { 20  ;   ;Draft Account. Depart. Manager;Text100;
+                                                   CaptionML=FRA=Avis Virement : Nom du responsable }
+    { 21  ;   ;Draft Account. Depart. Phone;Code20;CaptionML=FRA=Avis Virement : T‚l‚phone }
+    { 30  ;   ;URL Type            ;Option        ;CaptionML=FRA=Type URL;
+                                                   OptionString=Windows,Web }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

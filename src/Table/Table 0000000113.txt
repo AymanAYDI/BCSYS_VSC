@@ -2,8 +2,9 @@ OBJECT Table 113 Sales Invoice Line
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=28/05/15;
+    Time=16:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -363,8 +364,19 @@ OBJECT Table 113 Sales Invoice Line
     END;
 
     PROCEDURE ShowDimensions@25();
+    VAR
+      lNewDimSet@1000000000 : Integer;
+      lUpdateDim@1000000001 : Report 50061;
     BEGIN
-      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Ligne standard Nav
+      //DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      // Migration Nav 2015 => Modification imputation analytique
+      lNewDimSet := DimMgt.EditDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+      IF "Dimension Set ID" <> lNewDimSet THEN BEGIN
+       CLEAR(lUpdateDim);
+       lUpdateDim.SetPostedInvoice(Rec,lNewDimSet);
+       lUpdateDim.RUN;
+      END;
     END;
 
     PROCEDURE ShowItemTrackingLines@3();

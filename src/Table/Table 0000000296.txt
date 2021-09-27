@@ -2,19 +2,36 @@ OBJECT Table 296 Reminder Line
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-VSC2.0-XAD;
   }
   PROPERTIES
   {
     OnInsert=BEGIN
                ReminderHeader.GET("Reminder No.");
                "Attached to Line No." := 0;
+
+               //DEBUT JX-XAD 03/09/2010
+               IF Grec_SalesInvoiceHeader.GET("Document No.") THEN
+               BEGIN
+                 Agent := Grec_SalesInvoiceHeader.Agent;
+                 "Paying agent" := Grec_SalesInvoiceHeader."Paying agent";
+               END;
+               //FIN JX-XAD 03/09/2010
              END;
 
     OnModify=BEGIN
                TESTFIELD("System-Created Entry",FALSE);
+
+               //DEBUT JX-XAD 03/09/2010
+               IF Grec_SalesInvoiceHeader.GET("Document No.") THEN
+               BEGIN
+                 Agent := Grec_SalesInvoiceHeader.Agent;
+                 "Paying agent" := Grec_SalesInvoiceHeader."Paying agent";
+               END;
+               //FIN JX-XAD 03/09/2010
              END;
 
     OnDelete=BEGIN
@@ -77,6 +94,15 @@ OBJECT Table 296 Reminder Line
                                                                 "Due Date" := CustLedgEntry."Due Date";
                                                                 "Document Type" := CustLedgEntry."Document Type";
                                                                 "Document No." := CustLedgEntry."Document No.";
+
+                                                                //DEBUT JX-XAD 03/09/2010
+                                                                IF Grec_SalesInvoiceHeader.GET("Document No.") THEN
+                                                                BEGIN
+                                                                  Agent := Grec_SalesInvoiceHeader.Agent;
+                                                                  "Paying agent" := Grec_SalesInvoiceHeader."Paying agent";
+                                                                END;
+                                                                //FIN JX-XAD 03/09/2010
+
                                                                 Description := CustLedgEntry.Description;
                                                                 CustLedgEntry.CALCFIELDS(Amount,"Remaining Amount");
                                                                 "Original Amount" := CustLedgEntry.Amount;
@@ -420,6 +446,10 @@ OBJECT Table 296 Reminder Line
     { 101 ;   ;System-Created Entry;Boolean       ;CaptionML=[ENU=System-Created Entry;
                                                               FRA=êcriture systäme];
                                                    Editable=No }
+    { 50000;  ;Agent               ;Code20        ;CaptionML=[ENU=Agent;
+                                                              FRA=Mandataire] }
+    { 50001;  ;Paying agent        ;Boolean       ;CaptionML=[ENU=Paying agent;
+                                                              FRA=Mandataire payeur] }
   }
   KEYS
   {
@@ -459,6 +489,7 @@ OBJECT Table 296 Reminder Line
       EntryNotOverdueErr@1020 : TextConst '@@@="%1 = Document Type, %2 = Document No., %3 = Table name";ENU=%1 %2 in %3 is not overdue.;FRA=%1 %2 dans %3 n''est pas Çchu.';
       LineFeeAlreadyIssuedErr@1021 : TextConst '@@@="%1 = Document TYpe, %2 = Document No, %3 = Level number";ENU=The Line Fee for %1 %2 on reminder level %3 has already been issued.;FRA=Les frais ligne pour %1 %2 sur le niveau relance %3 ont dÇjÖ ÇtÇ Çmis.';
       MustBePositiveErr@1022 : TextConst 'ENU=%1 must be positive.;FRA=%1 doit àtre positif/ve.';
+      Grec_SalesInvoiceHeader@1000000000 : Record 112;
 
     LOCAL PROCEDURE CalcFinChrg@6();
     VAR
@@ -668,6 +699,11 @@ OBJECT Table 296 Reminder Line
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 03/09/2010
+      Ajout des champs 50000 (Agent) et 50001 (Paying agent)
+    }
     END.
   }
 }

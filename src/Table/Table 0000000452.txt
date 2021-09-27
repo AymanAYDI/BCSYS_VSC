@@ -2,9 +2,10 @@ OBJECT Table 452 Approval Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00,JX-VSC1.1-LAB;
   }
   PROPERTIES
   {
@@ -45,6 +46,74 @@ OBJECT Table 452 Approval Setup
     { 13  ;   ;Approval Template   ;BLOB          ;CaptionML=[ENU=Approval Template;
                                                               FRA=ModŠle approbation];
                                                    SubType=User-Defined }
+    { 50000;  ;Approved            ;Boolean       ;CaptionML=[ENU=Approved;
+                                                              FRA=Approuv‚s] }
+    { 50001;  ;Approved Template   ;BLOB          ;CaptionML=[ENU=Approved Template;
+                                                              FRA=ModŠle approuv‚];
+                                                   SubType=User-Defined }
+    { 50002;  ;Sales Quote         ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Quote;
+                                                              FRA=Devis ventes] }
+    { 50003;  ;Sales Order         ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Order;
+                                                              FRA=Commande ventes] }
+    { 50004;  ;Sales Invoice       ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Invoice;
+                                                              FRA=Facture ventes] }
+    { 50005;  ;Sales Credit Memo   ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Credit Memo;
+                                                              FRA=Avoir ventes] }
+    { 50006;  ;Sales Blanket Order ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Blanket Order;
+                                                              FRA=Commande ouverte ventes] }
+    { 50007;  ;Sales Return Order  ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Sales Return Order;
+                                                              FRA=Retour ventes] }
+    { 50008;  ;Purchases Quote     ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Quote;
+                                                              FRA=Devis achats] }
+    { 50009;  ;Purchases Order     ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Order;
+                                                              FRA=Commande achats] }
+    { 50010;  ;Purchases Invoice   ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Invoice;
+                                                              FRA=Facture achats] }
+    { 50011;  ;Purchases Credit Memo;Integer      ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Credit Memo;
+                                                              FRA=Avoir achats] }
+    { 50012;  ;Purchases Blanket Order;Integer    ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Blanket Order;
+                                                              FRA=Commande ouverte achats] }
+    { 50013;  ;Purchases Return Order;Integer     ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Purchases Return Order;
+                                                              FRA=Retour achats] }
+    { 50014;  ;Sales Quote Yes/No  ;Boolean       ;CaptionML=[ENU=Sales Quote Y/N;
+                                                              FRA=Devis ventes O/N] }
+    { 50015;  ;Sales Order Yes/No  ;Boolean       ;CaptionML=[ENU=Sales Order Y/N;
+                                                              FRA=Commande ventes O/N] }
+    { 50016;  ;Sales Invoice Yes/No;Boolean       ;CaptionML=[ENU=Sales Invoice Y/N;
+                                                              FRA=Facture ventes O/N] }
+    { 50017;  ;Sales Credit Memo Yes/No;Boolean   ;CaptionML=[ENU=Sales Credit Memo Y/N;
+                                                              FRA=Avoir ventes O/N] }
+    { 50018;  ;Sales Blanket Order Yes/No;Boolean ;CaptionML=[ENU=Sales Blanket Order Y/N;
+                                                              FRA=Commande ouverte ventes O/N] }
+    { 50019;  ;Sales Return Order Yes/No;Boolean  ;CaptionML=[ENU=Sales Return Order Y/N;
+                                                              FRA=Retour ventes O/N] }
+    { 50020;  ;Purchases Quote Yes/No;Boolean     ;CaptionML=[ENU=Purchases Quote Y/N;
+                                                              FRA=Devis achats O/N] }
+    { 50021;  ;Purchases Order Yes/No;Boolean     ;CaptionML=[ENU=Purchases Order Y/N;
+                                                              FRA=Commande achats O/N] }
+    { 50022;  ;Purchases Invoice Yes/No;Boolean   ;CaptionML=[ENU=Purchases Invoice Y/N;
+                                                              FRA=Facture achats O/N] }
+    { 50023;  ;Purchases Credit Memo Yes/No;Boolean;
+                                                   CaptionML=[ENU=Purchases Credit Memo Y/N;
+                                                              FRA=Avoir achats O/N] }
+    { 50024;  ;Purchases Blanket Order Yes/No;Boolean;
+                                                   CaptionML=[ENU=Purchases Blanket Order Y/N;
+                                                              FRA=Commande ouverte achats O/N] }
+    { 50025;  ;Purchases Return Order Yes/No;Boolean;
+                                                   CaptionML=[ENU=Purchases Return Order Y/N;
+                                                              FRA=Retour achats O/N] }
   }
   KEYS
   {
@@ -59,6 +128,11 @@ OBJECT Table 452 Approval Setup
       Text001@1005 : TextConst 'ENU=You cannot have negative values in %1.;FRA=Vous ne pouvez pas avoir de valeurs n‚gatives dans %1.';
 
     BEGIN
+    {
+
+      // Modif JX-LAB du 21/04/09
+      // ajout des champs 50000 et 50001 pour la gestions des mails descendants
+    }
     END.
   }
 }

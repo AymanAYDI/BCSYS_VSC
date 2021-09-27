@@ -1,0 +1,48 @@
+OBJECT Page 50026 FAP Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=FAP Status;
+               FRA=Statuts FAP];
+    SourceTable=Table50011;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                CaptionML=FRA=Code Statut;
+                SourceExpr="Status No." }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Description qualification;
+                           FRA=Libell‚ statut];
+                SourceExpr="Description status" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr=Bloked }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //Creation JX-AUD du 23/04/2013
+    }
+    END.
+  }
+}
+

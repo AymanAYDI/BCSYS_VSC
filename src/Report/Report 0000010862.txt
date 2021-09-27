@@ -2,9 +2,10 @@ OBJECT Report 10862 Suggest Vendor Payments FR
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVFR8.00;
+    Date=03/08/16;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=NAVFR8.00,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -217,6 +218,7 @@ OBJECT Report 10862 Suggest Vendor Payments FR
       MessageText@1120047 : Text;
       GenPayLineInserted@1120048 : Boolean;
       CurrencyFilter@1120052 : Code[10];
+      Grec_PurchaseInvoiceHeader@1000000000 : Record 122;
 
     PROCEDURE SetGenPayLine@1120005(NewGenPayLine@1120000 : Record 10865);
     BEGIN
@@ -245,7 +247,17 @@ OBJECT Report 10862 Suggest Vendor Payments FR
       VendLedgEntry.SETRANGE("On Hold",'');
       IF VendLedgEntry.FIND('-') THEN
         REPEAT
-          SaveAmount;
+          //JX-AUD du 01/07/2013
+          IF VendLedgEntry."Document Type" = VendLedgEntry."Document Type"::Invoice THEN BEGIN
+           IF Grec_PurchaseInvoiceHeader.GET(VendLedgEntry."Document No.") THEN //JX-AUD du 01/07/2013
+            BEGIN//JX-AUD du 01/07/2013
+             IF NOT Grec_PurchaseInvoiceHeader.Litige THEN //JX-AUD du 01/07/2013
+              BEGIN //JX-AUD du 01/07/2013
+               SaveAmount;
+            END;//JX-AUD du 01/07/2013
+           END;//JX-AUD du 01/07/2013
+          END ELSE
+           SaveAmount;
         UNTIL VendLedgEntry.NEXT = 0;
     END;
 
@@ -487,6 +499,10 @@ OBJECT Report 10862 Suggest Vendor Payments FR
     END;
 
     BEGIN
+    {
+      //JX-AUD du 01/07/2013
+      //Traitement des factures en litige
+    }
     END.
   }
   RDLDATA

@@ -1,0 +1,1048 @@
+OBJECT XMLport 50001 IRIS Finance - Ecr. comptables
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Direction=Export;
+    OnPreXMLport=BEGIN
+                   //DEBUT MODIF JX-XAD 21/11/2008 : FLAG IRIS
+                   //L'enregistrement 0 est utilis‚ pour savoir quel est le bouton du dataport qui a ‚t‚ appuy‚ (Annuler ou OK)
+                   //Ce trigger n'est ex‚cut‚ que si le bouton OK a ‚t‚ cliqu‚
+                   IF NOT Grec_EcritureIRIS.GET(0) THEN
+                   BEGIN
+                     Grec_EcritureIRIS.INIT;
+                     Grec_EcritureIRIS."Entry No." := 0;
+                     Grec_EcritureIRIS."Date Ecriture IRIS" := CURRENTDATETIME;
+                     Grec_EcritureIRIS.INSERT;
+                   END ELSE
+                   BEGIN
+                     Grec_EcritureIRIS."Date Ecriture IRIS" := CURRENTDATETIME;
+                     Grec_EcritureIRIS.MODIFY;
+                   END;
+                   COMMIT;
+                   //FIN MODIF JX-XAD 21/11/2008 : FLAG IRIS
+                 END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+  }
+  ELEMENTS
+  {
+    { [{E9D0E366-A67E-450D-8A2D-775516276FFA}];  ;Root                ;Element ;Text     }
+
+    { [{DF46CA66-27E7-4E5C-B586-58A9280B6BFF}];1 ;IRISEntete          ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             EGtext_Champ[1]:='FILL0;CSTE;CORI;NCPT;DNOR;NPIE;AXE0;LECR;MREG;DTEC;SENS;DTCT;CPTC;CRAP;CLET;QTES;FILL2';
+                                                                             EGtext_Champ[2]:='ETAB;SPEC;DTLT;RAPL;RUBR;AXE1;AXE2;AXE3;AXE4;CUOE;CTVA;RTVA;BTVA;NTVA;TYPP;TOPT;CPTR;TOPR;CDEV;MTDV;TDEV';
+                                                                             EGtext_Champ[3]:='DTCV;DTPC;DTVL;CONT;ZLIB;DTMJ;UTIL;FILL3;TYMJ;OTEC;DTDE;SVAC;FILL5;TECA;CONS;MTLD;FILL6;OBSV;CENR;TCLO';
+                                                                             EGtext_Champ[4]:='FILL7;FILL8;FILL9;REFC;NOFT;TIRG;NFTR;ZP061;ZP062;ZP151;ZP152;DANA;NDOS;NDEF;TYTR;CDTR;NREL;NLET';
+                                                                             EGtext_Champ[5]:='CIRL;UREL;DREL;NBRL;FILL10;CBAP;CBLC;CGES;CSER;NLIT;DBLC;DBAP;CDST;METR;CPTB;NEFF;AXT0;AXT1;AXT2;AXT3;AXT4';
+                                                                             EGtext_Champ[6]:='LOTT;DTLO;CPTS;RAPS;TBAP;NURE;CTGE;IDEX;TOP1;TOP2;TOP3;ZLI1;ZLI2;ZLI3;CNAT;EXOR;CTVD;CLEC;CMOA;CMOG';
+                                                                             EGtext_Champ[7]:='MON1;MON2;MON3;MLT1;MLT2;DTLE;DTSP;SPT1;SPT2;SPT3;TOS1;TOS2;TOS3;SPE1;SPE2;SPE3;SPE4;SPA1;SPA2';
+                                                                             EGtext_Champ[8]:='TOT1;TOT2;TOT3;DTST;DTSA;QT01;QT02;QT03;QT04;QT05;ZA061;ZA062;ZA101;ZA102;ZA151;LOTM;AXE5;AXE6;AXE7;AXE8;AXE9';
+                                                                             EGtext_Champ[9]:='CLCR;CLIA;DTEI;MRGI';
+                                                                           END;
+                                                                            }
+
+    { [{A72C089D-F970-40A1-9927-77EF871C3CD6}];2 ;EGtext_Champ1       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[1] }
+
+    { [{3708DF2E-3CC0-4614-B1BC-869F05719B58}];2 ;EGtext_Champ2       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[2] }
+
+    { [{B769D9C4-EB81-43A8-A23E-986A8D821119}];2 ;EGtext_Champ3       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[3] }
+
+    { [{FE257609-EA46-4CB9-B673-44E8B0ECA922}];2 ;EGtext_Champ4       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[4] }
+
+    { [{81CF7ACD-9509-41EE-A18A-8D02CEC6FF43}];2 ;EGtext_Champ5       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[5] }
+
+    { [{1D3BCCFC-D2F7-4CC0-9CFD-C76ADB4DBAFB}];2 ;EGtext_Champ6       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[6] }
+
+    { [{DC0302A7-45B5-440A-A478-4C1D8702395F}];2 ;EGtext_Champ7       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[7] }
+
+    { [{B3B57B96-2C5D-4AF0-8ECB-9062105B1797}];2 ;EGtext_Champ8       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[8] }
+
+    { [{E769B771-C130-4E5E-B61B-C60B1D0D77D7}];2 ;EGtext_Champ9       ;Element ;Text    ;
+                                                  VariableName=EGtext_Champ[9] }
+
+    { [{001C90F5-0468-45BC-9425-2506AC5F44C5}];1 ;IRISLigne           ;Element ;Table   ;
+                                                  SourceTable=Table17;
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         RAZ_Champs();
+                                                                         Lint_Compteur := 0;
+                                                                         Gint_TransactionPrecedente := '0';
+
+                                                                         Grec_CompanyInfo.GET;
+
+                                                                         //DEBUT MODIF JX-XAD 29/10/2008 : FLAG IRIS
+                                                                         //SETFILTER("G/L Entry"."Date Ecriture IRIS",'=%1',0DT);
+                                                                         //FIN MODIF JX-XAD 29/10/2008 : FLAG IRIS
+                                                                       END;
+
+                                                  Export::OnAfterGetRecord=VAR
+                                                                             Lrec_EcritureFournisseur@1000000009 : Record 25;
+                                                                             Lrec_EcritureClient@1000000008 : Record 21;
+                                                                             Lrec_Fournisseur@1000000007 : Record 23;
+                                                                             Lrec_Client@1000000006 : Record 18;
+                                                                             Lbool_ParamIRIS@1000000004 : Boolean;
+                                                                             "Lrec_En-tˆteFactureAchat"@1000000003 : Record 122;
+                                                                             "Lrec_En-tˆteAvoirAchat"@1000000002 : Record 124;
+                                                                             Lrec_PaymentHeaderArchive@1000000001 : Record 10867;
+                                                                             Lrec_PaymentHeader@1000000000 : Record 10865;
+                                                                             Lrec_DimSetEntry@1000000005 : Record 480;
+                                                                           BEGIN
+                                                                             //DEBUT MODIF JX-XAD 21/11/2008 : FLAG IRIS
+                                                                             WITH "G/L Entry" DO BEGIN
+                                                                               IF NOT Grec_EcritureIRIS.GET("Entry No.") THEN BEGIN
+
+                                                                                 IF Grec_PlanComptable.GET("G/L Entry"."G/L Account No.") THEN
+                                                                                   Lbool_ParamIRIS := TRUE
+                                                                                 ELSE
+                                                                                   Lbool_ParamIRIS := FALSE;
+
+                                                                                 FILL0:='A';
+                                                                                 CSTE:=PADSTR(Grec_CompanyInfo."IC Partner Code",3);
+                                                                                 IF ("G/L Entry"."No. Series" = 'NDF') THEN
+                                                                                   CORI := '1NDF'
+
+                                                                                 //modif LAB du 04/11/08 et 18/11/08
+                                                                                 //Ajout codes souche virement VIRIMFR et VIRNMFR et RGL
+
+                                                                                 ELSE IF ("G/L Entry"."No. Series" = 'VIR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRN')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRI')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRIMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRNMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'CHQFOU')
+                                                                                      OR ("G/L Entry"."No. Series" = 'RGL')
+
+                                                                                 //fin modif LAB du 04/11/08
+
+                                                                                 THEN
+                                                                                   CORI := '1BJ'
+                                                                                 ELSE IF "G/L Entry"."Source Code" = 'CPTADCLTVA' THEN
+                                                                                   CORI := '1ODTVA'
+                                                                                 ELSE IF ("G/L Entry"."Source Code" = 'IMMOOD') OR ("G/L Entry"."Source Code" = 'IMMOASSUR')
+                                                                                         OR ("G/L Entry"."Source Code" = 'IMMOCOMPR') OR ("G/L Entry"."Source Code" = 'IMMOECO')
+                                                                                         OR ("G/L Entry"."No. Series" = 'FA') OR ("G/L Entry"."No. Series" = 'FAJNL-GEN')
+                                                                                         OR ("G/L Entry"."No. Series" = 'GJFA') OR ("G/L Entry"."No. Series" = 'RFAJNL-GEN') THEN
+                                                                                   CORI := '1IMO'
+                                                                                 ELSE IF ("G/L Entry"."No. Series" = 'FNP') OR ("G/L Entry"."No. Series" = 'EXTFNP') OR
+                                                                                         ("G/L Entry"."No. Series" = 'FNP-SA') OR ("G/L Entry"."No. Series" = 'EXTFNP-SA') THEN
+                                                                                   CORI := '1FNP'
+                                                                                 ELSE IF ("G/L Entry"."Document Type" = "G/L Entry"."Document Type"::Invoice) OR
+                                                                                    ("G/L Entry"."Document Type" = "G/L Entry"."Document Type"::"Credit Memo") THEN
+                                                                                   BEGIN
+                                                                                     IF ("G/L Entry"."Source Type" = "G/L Entry"."Source Type"::Vendor)
+                                                                                        OR ("G/L Entry"."Source Type" = "G/L Entry"."Source Type"::"Fixed Asset") THEN
+                                                                                       CORI := '1AA'
+                                                                                     ELSE IF "G/L Entry"."Source Type" = "G/L Entry"."Source Type"::Customer THEN
+                                                                                       CORI := '1VA'
+                                                                                     ELSE
+                                                                                       CORI := '1OD';
+                                                                                   END ELSE IF ("G/L Entry"."Document Type" = "G/L Entry"."Document Type"::Payment) THEN
+                                                                                       CORI := '1BJ'
+                                                                                   ELSE
+                                                                                       CORI := '1OD';
+
+                                                                                 //*******************************************************************************
+                                                                                 // D‚but de renseignement de zones de tiers : NCPT , DTEC , MREG, REFC, TIRG
+                                                                                 //*******************************************************************************
+                                                                                     NCPT := '';
+                                                                                     TIRG := '';
+                                                                                     DTEC:='0';
+                                                                                     MREG := '';
+                                                                                     REFC := '';
+
+                                                                                 //******************** Comptes 401 et 409 ********************************************************
+                                                                                 IF (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '401') OR
+                                                                                    (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '409') THEN
+                                                                                 BEGIN
+                                                                                   IF Lrec_PaymentHeader.GET("G/L Entry"."Document No.") THEN
+                                                                                   BEGIN
+                                                                                     NCPT := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+                                                                                     TIRG := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+                                                                                     REFC := DELCHR(PADSTR("G/L Entry"."External Document No.",20),'=',' ');
+                                                                                     DTEC := FormatDate(Lrec_PaymentHeader."Posting Date");
+                                                                                     //MREG := 'V';
+                                                                                   END ELSE IF Lrec_PaymentHeaderArchive.GET("G/L Entry"."Document No.") THEN
+                                                                                   BEGIN
+                                                                                     NCPT := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+                                                                                     TIRG := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+                                                                                     REFC := DELCHR(PADSTR("G/L Entry"."External Document No.",20),'=',' ');
+                                                                                     DTEC := FormatDate(Lrec_PaymentHeaderArchive."Posting Date");
+                                                                                     //MREG := 'V';
+                                                                                   END ELSE
+                                                                                   BEGIN
+                                                                                     Grec_EcritureComptable.RESET;
+                                                                                     Grec_EcritureComptable.SETFILTER(Grec_EcritureComptable."Document No.",'%1',"G/L Entry"."Document No.");
+                                                                                     IF Grec_EcritureComptable.FIND('-') THEN
+                                                                                     REPEAT
+                                                                                       IF Lrec_EcritureFournisseur.GET(Grec_EcritureComptable."Entry No.") THEN
+                                                                                       BEGIN
+                                                                                         IF Lrec_EcritureFournisseur."Buy-from Vendor No." <> '' THEN
+                                                                                           NCPT := DELCHR(PADSTR(Lrec_EcritureFournisseur."Buy-from Vendor No.",10),'=',' ')
+                                                                                         ELSE
+                                                                                           NCPT := DELCHR(PADSTR(Lrec_EcritureFournisseur."Vendor No.",10),'=',' ');
+                                                                                         TIRG := DELCHR(PADSTR(Lrec_EcritureFournisseur."Vendor No.",10),'=',' ');
+                                                                                         DTEC := FormatDate(Lrec_EcritureFournisseur."Due Date");
+                                                                                         REFC := DELCHR(PADSTR(Lrec_EcritureFournisseur."External Document No.",20),'=',' ');
+                                                                                         IF Lrec_Fournisseur.GET(Lrec_EcritureFournisseur."Vendor No.") THEN
+                                                                                         BEGIN
+                                                                                           CASE Lrec_Fournisseur."Payment Method Code" OF
+                                                                                             'VIREMENT' : MREG := 'V';
+                                                                                             'PRELEV' : MREG := 'P';
+                                                                                             'CHEQUE' : MREG := 'C';
+                                                                                             ELSE MREG := 'M';
+                                                                                           END;
+                                                                                         END;
+                                                                                       END;
+                                                                                     UNTIL Grec_EcritureComptable.NEXT = 0;
+                                                                                   END;
+
+                                                                                   IF "Lrec_En-tˆteFactureAchat".GET("G/L Entry"."Document No.") THEN
+                                                                                   BEGIN
+                                                                                         CASE "Lrec_En-tˆteFactureAchat"."Payment Method Code" OF
+                                                                                           'VIREMENT' : MREG := 'V';
+                                                                                           'PRELEV' : MREG := 'P';
+                                                                                           'CHEQUE' : MREG := 'C';
+                                                                                           ELSE MREG := 'M';
+                                                                                         END;
+                                                                                   END ELSE
+                                                                                   BEGIN
+                                                                                   IF "Lrec_En-tˆteAvoirAchat".GET("G/L Entry"."Document No.") THEN
+                                                                                         CASE "Lrec_En-tˆteAvoirAchat"."Payment Method Code" OF
+                                                                                           'VIREMENT' : MREG := 'V';
+                                                                                           'PRELEV' : MREG := 'P';
+                                                                                           'CHEQUE' : MREG := 'C';
+                                                                                           ELSE MREG := 'M';
+                                                                                         END;
+                                                                                   END;
+                                                                                   IF NCPT = '' THEN
+                                                                                     NCPT := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+
+                                                                                 //******************** Comptes 408 ********************************************************
+                                                                                 END ELSE IF (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '408') THEN
+                                                                                 BEGIN
+                                                                                   IF "G/L Entry"."Vendor No." <> '' THEN
+                                                                                     NCPT := DELCHR(PADSTR("G/L Entry"."Vendor No.",10),'=',' ')
+                                                                                   ELSE
+                                                                                     NCPT := DELCHR(PADSTR("G/L Entry"."Source No.",10),'=',' ');
+                                                                                   IF Grec_FactureAchatEnreg.GET("G/L Entry"."Document No.") THEN
+                                                                                   BEGIN
+                                                                                     TIRG := DELCHR(PADSTR(Grec_FactureAchatEnreg."Buy-from Vendor No.",10),'=',' ');
+                                                                                     DTEC := FormatDate(Grec_FactureAchatEnreg."Due Date");
+                                                                                     REFC := DELCHR(PADSTR(Grec_FactureAchatEnreg."Vendor Invoice No.",20),'=',' ');
+                                                                                     CASE Grec_FactureAchatEnreg."Payment Method Code" OF
+                                                                                       'VIREMENT' : MREG := 'V';
+                                                                                       'PRELEV' : MREG := 'P';
+                                                                                       'CHEQUE' : MREG := 'C';
+                                                                                       ELSE MREG := 'M';
+                                                                                     END;
+                                                                                   END ELSE
+                                                                                   IF Grec_R‚ceptionAchat.GET("G/L Entry"."Document No.") THEN
+                                                                                   BEGIN
+                                                                                     TIRG := DELCHR(PADSTR(Grec_R‚ceptionAchat."Buy-from Vendor No.",10),'=',' ');
+                                                                                     DTEC := FormatDate(Grec_R‚ceptionAchat."Due Date");
+                                                                                     REFC := DELCHR(PADSTR(Grec_R‚ceptionAchat."Your Reference",20),'=',' ');
+                                                                                     CASE Grec_R‚ceptionAchat."Payment Method Code" OF
+                                                                                       'VIREMENT' : MREG := 'V';
+                                                                                       'PRELEV' : MREG := 'P';
+                                                                                       'CHEQUE' : MREG := 'C';
+                                                                                       ELSE MREG := 'M';
+                                                                                     END;
+                                                                                   END ELSE BEGIN
+                                                                                     TIRG := '';
+                                                                                     DTEC := FormatDate("G/L Entry"."Posting Date");
+                                                                                     MREG := 'Y';
+                                                                                     REFC := '';
+                                                                                   END;
+
+                                                                                 //******************** Autres comptes ********************************************************
+                                                                                 END ELSE
+                                                                                 BEGIN
+                                                                                   NCPT:=DELCHR(PADSTR("G/L Entry"."G/L Account No.",10),'=',' ');
+                                                                                 END;
+
+                                                                                 IF (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '401') OR
+                                                                                    (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '409') OR
+                                                                                    (COPYSTR("G/L Entry"."G/L Account No.",1,3) = '408') THEN
+                                                                                 BEGIN
+                                                                                   MREG := 'Y';
+                                                                                 {
+                                                                                 // Dans le cas d'une ligne de rŠglement, on teste le nø document pour connaŒtre le mode de rŠglement
+                                                                                 IF COPYSTR("G/L Entry"."Document No.",1,3) = 'VIR' THEN
+                                                                                   MREG := 'M'
+                                                                                 ELSE IF COPYSTR("G/L Entry"."Document No.",1,2) = 'VI' THEN
+                                                                                   MREG := 'V'
+                                                                                 ELSE IF COPYSTR("G/L Entry"."Document No.",1,2) = 'VN' THEN
+                                                                                   MREG := 'V'
+                                                                                 ELSE IF COPYSTR("G/L Entry"."Document No.",1,2) = 'VM' THEN
+                                                                                   MREG := 'M'
+                                                                                 ELSE IF COPYSTR("G/L Entry"."Document No.",1,3) = 'CHQ' THEN
+                                                                                   MREG := 'C';
+                                                                                 }
+                                                                                 END;
+
+                                                                                 //*******************************************************************************
+                                                                                 // Fin de renseignement de zones de tiers : NCPT , DTEC , MREG , REFC, TIRG
+                                                                                 //*******************************************************************************
+
+
+                                                                                 // D‚but renseignement NPIE et DNOR
+                                                                                 NPIE:=FORMAT("G/L Entry"."Transaction No.");
+                                                                                 Gint_TransactionCourante := NPIE;
+                                                                                 IF Gint_TransactionPrecedente <> Gint_TransactionCourante THEN
+                                                                                   Lint_Compteur := 1
+                                                                                 ELSE
+                                                                                   Lint_Compteur += 1;
+                                                                                 DNOR:=FORMAT(Lint_Compteur);
+                                                                                 Gint_TransactionPrecedente := Gint_TransactionCourante;
+                                                                                 // Fin renseignement NPIE et DNOR
+
+                                                                                 //D‚but modif JX-XAD 22/09/2009
+                                                                                 //LECR:=PADSTR("G/L Entry".Description,23);
+                                                                                 LECR:=Gcu_Converter.Ascii2Ansi(PADSTR("G/L Entry".Description,23));
+                                                                                 //D‚but modif JX-XAD 22/09/2009
+
+                                                                                 IF ("G/L Entry".Amount) > 0 THEN
+                                                                                   SENS:='D'
+                                                                                 ELSE
+                                                                                   SENS:='C';
+
+                                                                                 DTCT := FormatDate("G/L Entry"."Posting Date");
+                                                                                 CPTC := DELCHR(PADSTR("G/L Entry"."G/L Account No.",10),'=',' ');
+
+                                                                                 CRAP:=DELCHR(PADSTR("G/L Entry"."External Document No.",10),'=',' ');
+                                                                                 IF CRAP = '' THEN
+                                                                                   CRAP:=DELCHR(PADSTR("G/L Entry"."Document No.",10),'=',' ');
+
+                                                                                 CLET:='';
+                                                                                 QTES:='0';
+                                                                                 FILL2:='';
+                                                                                 ETAB:='';
+                                                                                 SPEC:='';
+                                                                                 DTLT:='0';
+
+                                                                                 RAPL:='';
+
+                                                                                 //D‚but Axes analytiques (… renseigner si type de compte = 2, 5 ou 6)
+                                                                                 AXE0:='';
+                                                                                 AXE1:='';
+                                                                                 AXE2:='';
+                                                                                 AXE3:='';
+                                                                                 AXE4:='';
+                                                                                 AXE5:='';
+                                                                                 AXE6:='';
+                                                                                 AXE7:='';
+                                                                                 AXE8:='';
+                                                                                 AXE9:='';
+                                                                                 //RUBR:='';
+                                                                                 //IF (Lbool_ParamIRIS) AND ((Grec_PlanComptable."Type compte IRIS" = '2') OR (Grec_PlanComptable."Type compte IRIS" = '5')
+                                                                                 //   OR (Grec_PlanComptable."Type compte IRIS" = '6')) THEN
+                                                                                 IF (COPYSTR("G/L Entry"."G/L Account No.",1,1) = '6') OR (COPYSTR("G/L Entry"."G/L Account No.",1,1) = '7') THEN
+                                                                                 BEGIN
+                                                                                   IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'PERIODE') THEN
+                                                                                     AXE0 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                   IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'INTRAGROUPE') THEN
+                                                                                     AXE9 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                 //  IF LREC_dimsetentry.GET("G/L Entry"."dimension set id",'RUBRIQUE') THEN
+                                                                                 //    RUBR := LREC_dimsetentry."Dimension Value Code";
+                                                                                   CASE COMPANYNAME OF
+                                                                                     'VSCT','VSCT Test' : BEGIN
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'ORGANISATION') THEN
+                                                                                         AXE1 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'CLIENT') THEN
+                                                                                         AXE2 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'PRODUIT') THEN
+                                                                                         AXE3 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'PROJET') THEN
+                                                                                         AXE4 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                     END;
+                                                                                     'VSC','VSC Test' : BEGIN
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'TYPE') THEN
+                                                                                         AXE1 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'BU-PROJET') THEN
+                                                                                         AXE2 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'DEPARTEMENT') THEN
+                                                                                         AXE3 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                     END;
+                                                                                     'Agence','Agence Test' : BEGIN
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'TYPE') THEN
+                                                                                         AXE1 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'PRODUITS') THEN
+                                                                                         AXE2 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                       IF Lrec_DimSetEntry.GET("G/L Entry"."Dimension Set ID",'DEPARTEMENT') THEN
+                                                                                         AXE3 := Lrec_DimSetEntry."Dimension Value Code";
+                                                                                     END;
+                                                                                     ELSE ;
+                                                                                   END;
+                                                                                 END ELSE
+                                                                                 BEGIN
+                                                                                 END;
+                                                                                 //Fin Axes analytiques
+
+                                                                                 CUOE:='';
+
+
+                                                                                 //D‚but paramŠtres TVA + Rubrique
+                                                                                 CTVA := '';
+                                                                                 RTVA := '';
+                                                                                 BTVA := '';
+                                                                                 NTVA := '';
+                                                                                 IF Lbool_ParamIRIS
+                                                                                    AND ((COPYSTR("G/L Entry"."G/L Account No.",1,1) = '6') OR (COPYSTR("G/L Entry"."G/L Account No.",1,1) = '7')) THEN
+                                                                                   RUBR := Grec_PlanComptable.Rubrique
+                                                                                 ELSE
+                                                                                   RUBR := '';
+                                                                                 { // MODIF JX-XAD 22/09/2008 : Annulation traitement des donn‚es TVA
+                                                                                 IF Lbool_ParamIRIS THEN
+                                                                                 BEGIN
+                                                                                   RUBR := Grec_PlanComptable.Rubrique;
+                                                                                   CTVA := Grec_PlanComptable."Taux TVA IRIS";
+                                                                                   RTVA := Grec_PlanComptable."R‚gime TVA IRIS";
+                                                                                   BTVA := Grec_PlanComptable."Base TVA IRIS";
+                                                                                   NTVA := Grec_PlanComptable."Nature TVA IRIS";
+                                                                                 END ELSE
+                                                                                   BEGIN
+                                                                                   RUBR := '';
+                                                                                   CTVA := '';
+                                                                                   RTVA := '';
+                                                                                   BTVA := '';
+                                                                                   NTVA := '';
+                                                                                 END;
+                                                                                 IF (RTVA = '') AND (Lint_Compteur > 1) THEN          // RTVA doit ˆtre le mˆme sur toutes les lignes d'une piŠce
+                                                                                   RTVA := Gtxt_RTVA_piece;
+                                                                                 Gtxt_RTVA_piece := RTVA;
+                                                                                 }
+                                                                                 //Fin paramŠtres TVA + Rubrique
+
+                                                                                 // D‚but TYPP (type de piŠce F=Facture, A=Avoir, D=D‚pense, R=Recette, N=Neutre)
+                                                                                 IF "G/L Entry"."Document Type" = "G/L Entry"."Document Type"::Invoice THEN
+                                                                                   TYPP:='N'
+                                                                                 //  TYPP:='F'
+                                                                                 ELSE IF "G/L Entry"."Document Type" = "G/L Entry"."Document Type"::"Credit Memo" THEN
+                                                                                   TYPP:='N'
+                                                                                 //  TYPP:='A'
+                                                                                 ELSE IF  "G/L Entry"."Document Type" = "G/L Entry"."Document Type"::Payment THEN
+                                                                                 BEGIN
+                                                                                   IF ("G/L Entry"."Source Type" = "G/L Entry"."Source Type"::Vendor) THEN
+                                                                                     TYPP := 'D'
+                                                                                   ELSE IF("G/L Entry"."Source Type" = "G/L Entry"."Source Type"::Customer) THEN
+                                                                                     TYPP := 'R'
+                                                                                 //D‚but JX-XAD Modif 04/12/2008
+                                                                                     ELSE IF ("G/L Entry"."No. Series" = 'VIR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRN')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRI')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRIMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRNMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'CHQFOU')
+                                                                                      OR ("G/L Entry"."No. Series" = 'RGL') THEN
+                                                                                       TYPP := 'D'
+                                                                                 //Fin JX-XAD Modif 04/12/2008
+                                                                                   ELSE
+                                                                                     TYPP:='N';
+                                                                                 END ELSE
+                                                                                      IF ("G/L Entry"."No. Series" = 'VIR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRN')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRI')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRIMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'VIRNMFR')
+                                                                                      OR ("G/L Entry"."No. Series" = 'CHQFOU')
+                                                                                      OR ("G/L Entry"."No. Series" = 'RGL') THEN
+                                                                                       TYPP := 'D'
+                                                                                 ELSE
+                                                                                   TYPP:='N';
+                                                                                 // Fin TYPP (type de piŠce F=Facture, A=Avoir, D=D‚pense, R=Recette, N=Neutre)
+
+                                                                                 TOPT:='';
+                                                                                 CPTR:='';
+                                                                                 TOPR:='';
+                                                                                 CDEV:='';
+                                                                                 MTDV:='0';
+                                                                                 TDEV:='0';
+                                                                                 DTCV:='0';
+                                                                                 IF ("G/L Entry"."No. Series" = 'FNP') OR ("G/L Entry"."No. Series" = 'EXTFNP') OR
+                                                                                    ("G/L Entry"."No. Series" = 'FNP-SA') OR ("G/L Entry"."No. Series" = 'EXTFNP-SA') THEN
+                                                                                   DTPC:=FormatDate("G/L Entry"."Posting Date")
+                                                                                 ELSE
+                                                                                   DTPC:=FormatDate("G/L Entry"."Document Date");
+                                                                                 DTVL:='0';
+                                                                                 CONT:='';
+                                                                                 ZLIB:='';
+                                                                                 DTMJ:='0';
+                                                                                 UTIL:=DELCHR(PADSTR("G/L Entry"."User ID",8),'=',' ');
+                                                                                 FILL3:='';
+                                                                                 TYMJ:='';
+                                                                                 OTEC:='';
+                                                                                 DTDE:='0';
+                                                                                 SVAC:='';
+                                                                                 FILL5:='';
+                                                                                 TECA:='';
+                                                                                 CONS:='';
+                                                                                 MTLD:='0';
+                                                                                 FILL6:='';
+                                                                                 OBSV:='';
+                                                                                 CENR:='0';
+                                                                                 TCLO:='';
+                                                                                 FILL7:='0';
+                                                                                 FILL8:='0';
+                                                                                 FILL9:='';
+                                                                                 NOFT:='';
+                                                                                 NFTR:='';
+                                                                                 ZP061:='';
+                                                                                 ZP062:='';
+                                                                                 ZP151:='';
+                                                                                 ZP152:='';
+                                                                                 DANA:='';
+                                                                                 NDOS:='';
+                                                                                 NDEF:='';
+                                                                                 TYTR:='';
+                                                                                 CDTR:='';
+                                                                                 NREL:='';
+                                                                                 NLET:='';
+                                                                                 CIRL:='';
+                                                                                 UREL:='';
+                                                                                 DREL:='0';
+                                                                                 NBRL:='0';
+                                                                                 FILL10:='';
+                                                                                 CBAP:='';
+                                                                                 CBLC:='';
+                                                                                 CGES:='';
+                                                                                 CSER:='';
+                                                                                 NLIT:='0';
+                                                                                 DBLC:='0';
+                                                                                 DBAP:='0';
+                                                                                 CDST:='';
+                                                                                 METR:='';
+                                                                                 CPTB:='';
+                                                                                 NEFF:='0';
+                                                                                 AXT0:='';
+                                                                                 AXT1:='';
+                                                                                 AXT2:='';
+                                                                                 AXT3:='';
+                                                                                 AXT4:='';
+                                                                                 LOTT:='';
+                                                                                 DTLO:='';
+                                                                                 CPTS:='';
+                                                                                 RAPS:='';
+                                                                                 TBAP:='';
+                                                                                 NURE:='';
+                                                                                 CTGE:='';
+                                                                                 IDEX:='';
+                                                                                 TOP1:='';
+                                                                                 TOP2:='';
+                                                                                 TOP3:='';
+                                                                                 ZLI1:='';
+                                                                                 ZLI2:='';
+                                                                                 ZLI3:='';
+                                                                                 CNAT:='';
+                                                                                 EXOR:='';
+                                                                                 CTVD:='';
+                                                                                 CLEC:='';
+                                                                                 CMOA:='';
+                                                                                 CMOG:='';
+                                                                                 MON1:=DELCHR(FormatAmount(ABS("G/L Entry".Amount),13),'=',' ');
+                                                                                 MON2:='0';
+                                                                                 MON3:='0';
+                                                                                 MLT1:='0';
+                                                                                 MLT2:='0';
+                                                                                 DTLE:='0';
+                                                                                 DTSP:='0';
+                                                                                 SPT1:='';
+                                                                                 SPT2:='';
+                                                                                 SPT3:='';
+                                                                                 TOS1:='';
+                                                                                 TOS2:='';
+                                                                                 TOS3:='';
+                                                                                 SPE1:='';
+                                                                                 SPE2:='';
+                                                                                 SPE3:='';
+                                                                                 SPE4:='';
+                                                                                 SPA1:='';
+                                                                                 SPA2:='';
+                                                                                 TOT1:='';
+                                                                                 TOT2:='';
+                                                                                 TOT3:='';
+                                                                                 DTST:='0';
+                                                                                 DTSA:='0';
+                                                                                 QT01:='0';
+                                                                                 QT02:='0';
+                                                                                 QT03:='0';
+                                                                                 QT04:='0';
+                                                                                 QT05:='0';
+                                                                                 ZA061:='';
+                                                                                 ZA062:='';
+                                                                                 ZA101:='';
+                                                                                 ZA102:='';
+                                                                                 ZA151:='';
+                                                                                 LOTM:='';
+                                                                                 CLCR:='';
+                                                                                 CLIA:='';
+                                                                                 DTEI:='0';
+                                                                                 MRGI:='';
+                                                                               END;
+                                                                             END;
+                                                                           END;
+                                                                            }
+
+    { [{5F47C872-F3B0-4C00-9CB7-65C4111E4B71}];2 ;FILL0               ;Element ;Text    ;
+                                                  VariableName=FILL0 }
+
+    { [{EBF406B4-0F68-4A1D-A926-B34B8F545CDA}];2 ;CSTE                ;Element ;Text    ;
+                                                  VariableName=CSTE }
+
+    { [{4655D13F-E2E6-4470-ADE2-FBA8176A7192}];2 ;CORI                ;Element ;Text     }
+
+    { [{C403C07F-2493-47F6-B1DB-30799A678561}];2 ;NCPT                ;Element ;Text     }
+
+    { [{2D322AA7-5C28-4D22-BA5B-A83E76A9CA3F}];2 ;DNOR                ;Element ;Text     }
+
+    { [{FA931A40-6EBC-4BFE-B223-62335289D442}];2 ;NPIE                ;Element ;Text     }
+
+    { [{EF796F5B-C9BF-4B50-8876-64915D46354E}];2 ;AXE0                ;Element ;Text     }
+
+    { [{F028329B-9826-436F-9DBE-41C761D8665B}];2 ;LECR                ;Element ;Text     }
+
+    { [{2E98E06D-6D5D-456E-91D2-E674BD97407D}];2 ;MREG                ;Element ;Text     }
+
+    { [{D43B828E-1D76-453C-A17C-BE9AB68EA0C0}];2 ;DTEC                ;Element ;Text     }
+
+    { [{64584649-72B4-49BD-8131-5BD1939A218E}];2 ;SENS                ;Element ;Text     }
+
+    { [{D1104101-3000-4FCB-967F-39A21BCBA175}];2 ;DTCT                ;Element ;Text     }
+
+    { [{9EA5B0E7-AD09-497D-B94F-42DFD23A6981}];2 ;CPTC                ;Element ;Text     }
+
+    { [{F9073D38-9530-468B-B5EF-35E114347A6B}];2 ;CRAP                ;Element ;Text     }
+
+    { [{D9784721-F44D-4386-BC48-B03DB7E6B38A}];2 ;CLET                ;Element ;Text     }
+
+    { [{E3471D66-340C-4C76-9510-1DA19C3E868C}];2 ;QTES                ;Element ;Text     }
+
+    { [{CC248931-F336-45FF-845D-BC36317FA181}];2 ;FILL2               ;Element ;Text     }
+
+    { [{9509FC0E-6F5D-4CA5-8887-3D2BD3E68192}];2 ;ETAB                ;Element ;Text     }
+
+    { [{08C49DEB-1E3F-4A5A-874E-621B3E03013A}];2 ;SPEC                ;Element ;Text     }
+
+    { [{86B93770-431F-4DE6-9969-66A569F10079}];2 ;DTLT                ;Element ;Text     }
+
+    { [{445DB3D6-6EB3-4A69-AF55-113E12691D0F}];2 ;RAPL                ;Element ;Text     }
+
+    { [{4E9914FE-D54C-4F67-81DD-20355D5EFF47}];2 ;RUBR                ;Element ;Text     }
+
+    { [{2BDBF24E-54BE-48E5-8B1F-D41BAEFCADCA}];2 ;AXE1                ;Element ;Text     }
+
+    { [{324635F5-9BCC-4D49-AC82-C369E35B7357}];2 ;AXE2                ;Element ;Text     }
+
+    { [{16439C87-3472-49F9-8907-5A26109984C9}];2 ;AXE3                ;Element ;Text     }
+
+    { [{D49C2513-3725-4E24-8F60-E5FDCCD94B85}];2 ;AXE4                ;Element ;Text     }
+
+    { [{C1EF547A-D6DF-46D5-A67B-68485A613180}];2 ;CUOE                ;Element ;Text     }
+
+    { [{FE8A649A-59AF-4D90-B07C-89816C847392}];2 ;CTVA                ;Element ;Text     }
+
+    { [{967CF2B0-CA59-4E13-86C3-0B169727A0D3}];2 ;RTVA                ;Element ;Text     }
+
+    { [{EF24CDC3-0391-4D2E-8B11-1368CC4E9DBA}];2 ;BTVA                ;Element ;Text     }
+
+    { [{D0007EB7-70FD-44F0-8280-AC6E1F2D38DF}];2 ;NTVA                ;Element ;Text     }
+
+    { [{4909AFC5-0D00-4FFA-B703-251CB79E480F}];2 ;TYPP                ;Element ;Text     }
+
+    { [{F4167932-C3F7-402B-9633-1EE3EC3B6D28}];2 ;TOPT                ;Element ;Text     }
+
+    { [{D9E9DC5A-C085-4D1E-B014-00D929427570}];2 ;CPTR                ;Element ;Text     }
+
+    { [{13A7149E-0DC8-49B2-8945-AA70A932CBE3}];2 ;TOPR                ;Element ;Text     }
+
+    { [{7E0B4433-29AD-42E4-86EE-A0AAC953B6B5}];2 ;CDEV                ;Element ;Text     }
+
+    { [{EB3350B3-852D-4B97-9F27-6519FC5BDF62}];2 ;MTDV                ;Element ;Text     }
+
+    { [{C37EAD17-6D09-4FC2-BA07-0670F0B121CA}];2 ;TDEV                ;Element ;Text     }
+
+    { [{50AED33C-3812-43D0-9E3F-049E6FE0AE9F}];2 ;DTCV                ;Element ;Text     }
+
+    { [{1810BAE6-DA61-4C76-AA36-CE36A1FFA47C}];2 ;DTPC                ;Element ;Text     }
+
+    { [{0267823E-534E-4C3E-98FA-CB3180AFE386}];2 ;DTVL                ;Element ;Text     }
+
+    { [{23655281-594A-41E3-A4C2-48B21D256835}];2 ;CONT                ;Element ;Text     }
+
+    { [{CFE4C776-4273-45C4-B5AE-C06C8C9F9783}];2 ;ZLIB                ;Element ;Text     }
+
+    { [{D45DB97E-2FE7-453F-B788-6AEEA2A80421}];2 ;DTMJ                ;Element ;Text     }
+
+    { [{63513D2C-A548-48C0-B14A-694417FEDAE2}];2 ;UTIL                ;Element ;Text     }
+
+    { [{C69C065B-A31C-489D-BB66-EC6F619409F3}];2 ;FILL3               ;Element ;Text     }
+
+    { [{1163E981-1986-4C70-A96B-150492DE069F}];2 ;TYMJ                ;Element ;Text     }
+
+    { [{8E210B08-DC52-4E3F-8E25-3FCB55BCDED4}];2 ;OTEC                ;Element ;Text     }
+
+    { [{82FDDA5F-BCCC-4E56-B5AC-24411B4784BD}];2 ;DTDE                ;Element ;Text     }
+
+    { [{C036C218-F003-4965-8DC5-427A406F71C3}];2 ;SVAC                ;Element ;Text     }
+
+    { [{EDED49F1-9669-441B-A52D-244867333A97}];2 ;FILL5               ;Element ;Text     }
+
+    { [{B368095F-B43D-4E50-87C3-27578944DC08}];2 ;TECA                ;Element ;Text     }
+
+    { [{3CBDF8DF-19BB-4D5F-B8B9-0E340415AF75}];2 ;CONS                ;Element ;Text     }
+
+    { [{4C2FDBAB-573C-4476-9FE8-E4D734B2D40F}];2 ;MTLD                ;Element ;Text     }
+
+    { [{24256E42-65DC-492F-9F5F-F6E79F031F13}];2 ;FILL6               ;Element ;Text     }
+
+    { [{4BDC787E-202C-4800-A4AE-E1FCAE99DF2C}];2 ;OBSV                ;Element ;Text     }
+
+    { [{87E2B5A1-0333-41FF-9923-58B10B26AFD6}];2 ;CENR                ;Element ;Text     }
+
+    { [{901438F9-11B8-4559-94EE-CE7C6DCD1548}];2 ;TCLO                ;Element ;Text     }
+
+    { [{F1238D7D-B9D0-4B78-B996-778239D6636E}];2 ;FILL7               ;Element ;Text     }
+
+    { [{8F2E5AB6-49F6-43E5-8CDF-735DB5BDD661}];2 ;FILL8               ;Element ;Text     }
+
+    { [{2D553A7A-B70A-4B8A-8CE1-23A126E02172}];2 ;FILL9               ;Element ;Text     }
+
+    { [{80BB910B-96FE-49F3-BD85-11BEF09FB588}];2 ;REFC                ;Element ;Text     }
+
+    { [{B11A670A-40CB-4106-80FB-3D29E64005B4}];2 ;NOFT                ;Element ;Text     }
+
+    { [{64DBA83C-4E13-47C9-A2DD-8D7954A70223}];2 ;TIRG                ;Element ;Text     }
+
+    { [{65A52F2C-DF95-46F3-AD4F-AA78BEBBE174}];2 ;NFTR                ;Element ;Text     }
+
+    { [{854C3376-2D87-41C5-A250-D04F7F1D1007}];2 ;ZP061               ;Element ;Text     }
+
+    { [{D0E3C37A-84D9-4571-B67C-7C5A9340FCFA}];2 ;ZP062               ;Element ;Text     }
+
+    { [{5191A369-C743-48E9-B49D-EAF8A5CB9FF5}];2 ;ZP151               ;Element ;Text     }
+
+    { [{19751929-C4B7-4B7F-972F-FFE6AE97A304}];2 ;ZP152               ;Element ;Text     }
+
+    { [{9CB61177-06ED-4A53-8B88-9B1B20D0454B}];2 ;DANA                ;Element ;Text     }
+
+    { [{47A68B94-6CBD-44E2-BDAA-0ACEC7149E11}];2 ;NDOS                ;Element ;Text     }
+
+    { [{63827DE0-E9C4-444F-A16E-CDF9EED77704}];2 ;NDEF                ;Element ;Text     }
+
+    { [{A2045DA7-1101-472E-A437-9E9CF119B0A1}];2 ;TYTR                ;Element ;Text     }
+
+    { [{CA218F80-A8FD-48AD-B6CA-9177D481D0E5}];2 ;CDTR                ;Element ;Text     }
+
+    { [{A469DCA0-4A13-49B4-9BC3-FE191CF11B3C}];2 ;NREL                ;Element ;Text     }
+
+    { [{8F37505D-E30B-418B-BC1C-F15A97C7A48D}];2 ;NLET                ;Element ;Text     }
+
+    { [{94F888C8-AAE2-4D3C-AE08-291C4D227C58}];2 ;CIRL                ;Element ;Text     }
+
+    { [{D7E78B1E-C27B-4B06-82B6-137EEC6471DE}];2 ;UREL                ;Element ;Text     }
+
+    { [{F2866839-BF30-46BE-A9E9-3C91627154BD}];2 ;DREL                ;Element ;Text     }
+
+    { [{5BF60C4B-38B6-40CE-8FC0-AA2F3D689014}];2 ;NBRL                ;Element ;Text     }
+
+    { [{5397E8DF-F200-4310-B027-0CA4B00FDEF7}];2 ;FILL10              ;Element ;Text     }
+
+    { [{A0C228BF-7886-4A7C-AC13-562A8E4DEAD4}];2 ;CBAP                ;Element ;Text     }
+
+    { [{8AC76728-D6C3-4A95-8EDD-EFBCBBE3EC06}];2 ;CBLC                ;Element ;Text     }
+
+    { [{FF9CF0CB-F800-47EE-B4A4-3F9591CC08D1}];2 ;CGES                ;Element ;Text     }
+
+    { [{E3885522-AB58-404B-B977-5F9D3AFE6F1D}];2 ;CSER                ;Element ;Text     }
+
+    { [{BEF3F88D-02C5-4A75-A1E1-09CA9A185063}];2 ;NLIT                ;Element ;Text     }
+
+    { [{09D82F5C-0031-44B5-A81C-521830D453B7}];2 ;DBLC                ;Element ;Text     }
+
+    { [{A6991B35-166D-43E4-BE61-BE8113CF0606}];2 ;DBAP                ;Element ;Text     }
+
+    { [{258094C9-E464-4217-AA59-6D1A4908CDC9}];2 ;CDST                ;Element ;Text     }
+
+    { [{D402F907-A7F3-4CBB-B0F3-3C9201B9858D}];2 ;METR                ;Element ;Text     }
+
+    { [{19AE9471-2928-416F-A571-0DFB4767AB2B}];2 ;CPTB                ;Element ;Text     }
+
+    { [{94538A16-3484-4EAB-8ACA-E8BB067248FC}];2 ;NEFF                ;Element ;Text     }
+
+    { [{D1EEE853-4D88-440F-ADC4-0DC0CCE8DBC2}];2 ;AXT0                ;Element ;Text     }
+
+    { [{30D3EA79-B98F-4BC2-BF9F-21562FBCA348}];2 ;AXT1                ;Element ;Text     }
+
+    { [{A86573C6-CABC-472F-A83C-7757DDB11709}];2 ;AXT2                ;Element ;Text     }
+
+    { [{825BA754-6E90-4A4C-AA65-F2999EA94586}];2 ;AXT3                ;Element ;Text     }
+
+    { [{65E8A3CE-9194-4EB2-8FD1-5EA178D4B60E}];2 ;AXT4                ;Element ;Text     }
+
+    { [{BB2E13DC-DC84-4A54-A716-182FA454953F}];2 ;LOTT                ;Element ;Text     }
+
+    { [{0CAC062F-9E99-4AED-9D07-E3121B157D51}];2 ;DTLO                ;Element ;Text     }
+
+    { [{A8C8C392-B220-4B6D-82F9-1CA5D0ED90C2}];2 ;CPTS                ;Element ;Text     }
+
+    { [{204AF549-70F7-4DC4-9D92-7BE540BAC585}];2 ;RAPS                ;Element ;Text     }
+
+    { [{2FCF55B1-D070-48D6-90D4-DA8CE2044CF9}];2 ;TBAP                ;Element ;Text     }
+
+    { [{1DFCC947-BDB3-4E54-923E-3C2BB5FC0853}];2 ;NURE                ;Element ;Text     }
+
+    { [{C28433D6-D8F1-4A78-98AB-21D4B387314B}];2 ;CTGE                ;Element ;Text     }
+
+    { [{B34B9061-8ADE-4299-B2AE-C5F016AC0765}];2 ;IDEX                ;Element ;Text     }
+
+    { [{FAD8F8A6-B565-4666-A3B0-D477EDD0CC23}];2 ;TOP1                ;Element ;Text     }
+
+    { [{CB33A4F2-F5FF-4B52-854A-C2560330FFCD}];2 ;TOP2                ;Element ;Text     }
+
+    { [{15575209-98F4-49AA-AC31-061508AE7CAA}];2 ;TOP3                ;Element ;Text     }
+
+    { [{046C56D5-A8BA-4A24-963D-8FFB5C77B0F0}];2 ;ZLI1                ;Element ;Text     }
+
+    { [{96927779-9EA9-42FC-8530-60BEB684D863}];2 ;ZLI2                ;Element ;Text     }
+
+    { [{7A442C34-0817-49C8-AF29-0BB844AD4E7D}];2 ;ZLI3                ;Element ;Text     }
+
+    { [{06C711F5-B14F-48AC-833B-0B0B00B30C7A}];2 ;CNAT                ;Element ;Text     }
+
+    { [{4BDD6755-F76C-41A0-9FC1-8DD5B61436E0}];2 ;EXOR                ;Element ;Text     }
+
+    { [{AEEBC807-34C6-4CE9-BA95-5CCD80CE6282}];2 ;CTVD                ;Element ;Text     }
+
+    { [{E24068D2-001E-4EA8-9379-C14C2224B244}];2 ;CLEC                ;Element ;Text     }
+
+    { [{A6AC29F2-60DE-4B05-9020-01DCF6E02F9A}];2 ;CMOA                ;Element ;Text     }
+
+    { [{0DEB991B-A5A0-447D-8F69-B610535C43DE}];2 ;CMOG                ;Element ;Text     }
+
+    { [{5AE7CA77-090E-447F-A51C-C1FEEE9AA7BB}];2 ;MON1                ;Element ;Text     }
+
+    { [{CDE7235E-46D2-4F17-82C6-31B1F1C69AD3}];2 ;MON2                ;Element ;Text     }
+
+    { [{412330CC-E745-4A0B-AC19-3CF27E83C6C0}];2 ;MON3                ;Element ;Text     }
+
+    { [{24AABE3A-C2F9-4ACF-BD5E-6035F148F9AC}];2 ;MLT1                ;Element ;Text     }
+
+    { [{4162EEC9-43AB-4412-A579-6B558875D9F7}];2 ;MLT2                ;Element ;Text     }
+
+    { [{BABA92E8-495C-4264-A7C3-F213967B96B5}];2 ;DTLE                ;Element ;Text     }
+
+    { [{5555AFA8-91BB-486E-9B92-72C98D59CD09}];2 ;DTSP                ;Element ;Text     }
+
+    { [{90C6580F-7152-4DD3-96F3-61CCED532631}];2 ;SPT1                ;Element ;Text     }
+
+    { [{972EF230-5C7F-4C51-BA92-5F66E9F37A36}];2 ;SPT2                ;Element ;Text     }
+
+    { [{11A78FB0-0F34-4A44-8440-54E31EEE469D}];2 ;SPT3                ;Element ;Text     }
+
+    { [{1F286DD1-A9BB-4317-AF1C-7654C3BC39CC}];2 ;TOS1                ;Element ;Text     }
+
+    { [{C457EB48-EBBD-4930-B938-5C192E62DBC6}];2 ;TOS2                ;Element ;Text     }
+
+    { [{6DC06E65-0F2B-4F0E-B151-77BAA8E67D08}];2 ;TOS3                ;Element ;Text     }
+
+    { [{78C2DA5A-7B54-4F58-8207-A39A3F5929CA}];2 ;SPE1                ;Element ;Text     }
+
+    { [{5D1725A5-AC60-4E11-9C7A-63DDAF451E05}];2 ;SPE2                ;Element ;Text     }
+
+    { [{9169FE6F-96A0-40F4-9274-49934F7D4B59}];2 ;SPE3                ;Element ;Text     }
+
+    { [{8B9EA264-2915-42D2-B98D-E1EE13A84C88}];2 ;SPE4                ;Element ;Text     }
+
+    { [{22B2B3E7-5AB1-42B9-A0DE-DE68493679B6}];2 ;SPA1                ;Element ;Text     }
+
+    { [{29ED8B3E-5F45-4577-8A55-4F404701C685}];2 ;SPA2                ;Element ;Text     }
+
+    { [{F1D31FD0-652B-4A5B-B174-70F9F867DCD1}];2 ;TOT1                ;Element ;Text     }
+
+    { [{7EBC5B2B-7D08-437A-A584-CB27AFC2FCB9}];2 ;TOT2                ;Element ;Text     }
+
+    { [{DA743D1A-4723-4D48-83F3-CF6B6A78B69E}];2 ;TOT3                ;Element ;Text     }
+
+    { [{1C72CE03-B903-4555-9DBC-6511B535DCCB}];2 ;DTST                ;Element ;Text     }
+
+    { [{8F524E9B-9CE1-469A-A231-EE2368555F70}];2 ;DTSA                ;Element ;Text     }
+
+    { [{AA33296C-1872-44E2-A831-91AD1ACAD5E1}];2 ;QT01                ;Element ;Text     }
+
+    { [{EAEF37EE-EF32-4E50-88FC-6D0422B619E7}];2 ;QT02                ;Element ;Text     }
+
+    { [{630587CD-54AC-4597-99B5-C1EC83AD4EEC}];2 ;QT03                ;Element ;Text     }
+
+    { [{08809DCC-98D1-43F3-85C4-DFC9CB657CB4}];2 ;QT04                ;Element ;Text     }
+
+    { [{F7DFFA55-3EAE-48FA-B75F-C1A84D65C686}];2 ;QT05                ;Element ;Text     }
+
+    { [{20317A67-7695-440A-A5E1-1962B2C58F64}];2 ;ZA061               ;Element ;Text     }
+
+    { [{AB9CA572-D66D-4BC7-A60E-CD89489A5834}];2 ;ZA062               ;Element ;Text     }
+
+    { [{6E70CBFA-1197-4E21-A723-28E006BACB9E}];2 ;ZA101               ;Element ;Text     }
+
+    { [{A967E5EE-938B-4FA9-B0BC-EF5D6E26AF7C}];2 ;ZA102               ;Element ;Text     }
+
+    { [{9B261885-9DA1-4124-AA1A-554EC9A678CC}];2 ;ZA151               ;Element ;Text     }
+
+    { [{6EB12E7F-6151-4CA4-8104-253EC4B12643}];2 ;LOTM                ;Element ;Text     }
+
+    { [{C086A37B-3947-45E2-8445-DE020B0CE7DD}];2 ;AXE5                ;Element ;Text     }
+
+    { [{574671AD-3354-4831-9526-47E50643B642}];2 ;AXE6                ;Element ;Text     }
+
+    { [{351A7A74-37D3-4C21-9199-11E14CD830D5}];2 ;AXE7                ;Element ;Text     }
+
+    { [{7BACFA57-74F6-4A0B-A0FA-5DB426ACE637}];2 ;AXE8                ;Element ;Text     }
+
+    { [{96A732DE-4BE9-4CE1-96A5-9792F08BBBE3}];2 ;AXE9                ;Element ;Text     }
+
+    { [{B06301BE-D32E-4941-B667-C3AAC4A9D66E}];2 ;CLCR                ;Element ;Text     }
+
+    { [{76CC947C-B153-4BA3-A040-CA9FCAB9F1AA}];2 ;CLIA                ;Element ;Text     }
+
+    { [{B50DBB0F-BA1E-4515-90CB-321408B4DFD8}];2 ;DTEI                ;Element ;Text     }
+
+    { [{B1AE6AC3-3BA1-484B-8857-2AA232975E74}];2 ;MRGI                ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gtext_Champ@1000000179 : ARRAY [10] OF Text[250];
+      EGtext_Champ@1000000176 : ARRAY [10] OF Text[250];
+      Grec_CompanyInfo@1000000014 : Record 79;
+      Lint_Compteur@1000000013 : Integer;
+      Gint_TransactionCourante@1000000012 : Text[30];
+      Gint_TransactionPrecedente@1000000011 : Text[30];
+      Gtxt_RTVA_piece@1000000010 : Text[1];
+      Grec_PlanComptable@1000000009 : Record 15;
+      Grec_FactureAchatEnreg@1000000008 : Record 122;
+      "Grec_R‚ceptionAchat"@1000000007 : Record 120;
+      Grec_EcritureComptable@1000000006 : Record 17;
+      Grec_EcritureIRIS@1000000005 : Record 50002;
+      Gdatetime_CurrentDateTime@1000000004 : DateTime;
+      Gtext_FileName@1000000003 : Text[200];
+      "Gbool_Op‚rationAnnul‚e"@1000000002 : Boolean;
+      Fbool_EtatIRIS@1000000001 : Codeunit 50000;
+      Gcu_Converter@1000000000 : Codeunit 50002;
+      text001@1000000178 : TextConst 'ENU=Do you import data to IRIS Finance ?;FRA=Confirmez-vous l''importation des donn‚es vers IRIS Finance ?';
+      text002@1000000177 : TextConst 'ENU=Operation canceled;FRA=Op‚ration annul‚e';
+
+    PROCEDURE RAZ_Champs@1000000000();
+    BEGIN
+      CLEAR(FILL0);CLEAR(CSTE);CLEAR(CORI);CLEAR(NCPT);CLEAR(DNOR);CLEAR(NPIE);
+      CLEAR(AXE0);CLEAR(LECR);CLEAR(MREG);CLEAR(DTEC);CLEAR(SENS);CLEAR(DTCT);CLEAR(CPTC);
+      CLEAR(CRAP);CLEAR(CLET);CLEAR(QTES);CLEAR(FILL2);CLEAR(ETAB);CLEAR(SPEC);
+      CLEAR(DTLT);CLEAR(RAPL);CLEAR(RUBR);CLEAR(AXE1);CLEAR(AXE2);CLEAR(AXE3);CLEAR(AXE4);
+      CLEAR(CUOE);CLEAR(CTVA);CLEAR(RTVA);CLEAR(BTVA);CLEAR(NTVA);CLEAR(TYPP);CLEAR(TOPT);
+      CLEAR(CPTR);CLEAR(TOPR);CLEAR(CDEV);CLEAR(MTDV);CLEAR(TDEV);CLEAR(DTCV);CLEAR(DTPC);
+      CLEAR(DTVL);CLEAR(CONT);CLEAR(ZLIB);CLEAR(DTMJ);CLEAR(UTIL);CLEAR(FILL3);CLEAR(TYMJ);
+      CLEAR(OTEC);CLEAR(DTDE);CLEAR(SVAC);CLEAR(FILL5);CLEAR(TECA);CLEAR(CONS);CLEAR(MTLD);
+      CLEAR(FILL6);CLEAR(OBSV);CLEAR(CENR);CLEAR(TCLO);CLEAR(FILL7);CLEAR(FILL8);CLEAR(FILL9);
+      CLEAR(REFC);CLEAR(NOFT);CLEAR(TIRG);CLEAR(NFTR);CLEAR(ZP061);CLEAR(ZP062);CLEAR(ZP151);
+      CLEAR(ZP152);CLEAR(DANA);CLEAR(NDOS);CLEAR(NDEF);CLEAR(TYTR);CLEAR(CDTR);CLEAR(NREL);
+      CLEAR(NLET);CLEAR(CIRL);CLEAR(UREL);CLEAR(DREL);CLEAR(NBRL);CLEAR(FILL10);CLEAR(CBAP);
+      CLEAR(CBLC);CLEAR(CGES);CLEAR(CSER);CLEAR(NLIT);CLEAR(DBLC);CLEAR(DBAP);CLEAR(CDST);
+      CLEAR(METR);CLEAR(CPTB);CLEAR(NEFF);CLEAR(AXT0);CLEAR(AXT1);CLEAR(AXT2);CLEAR(AXT3);
+      CLEAR(AXT4);CLEAR(LOTT);CLEAR(DTLO);CLEAR(CPTS);CLEAR(RAPS);CLEAR(TBAP);CLEAR(NURE);
+      CLEAR(CTGE);CLEAR(IDEX);CLEAR(TOP1);CLEAR(TOP2);CLEAR(TOP3);CLEAR(ZLI1);CLEAR(ZLI2);
+      CLEAR(ZLI3);CLEAR(CNAT);CLEAR(EXOR);CLEAR(CTVD);CLEAR(CLEC);CLEAR(CMOA);CLEAR(CMOG);
+      CLEAR(MON1);CLEAR(MON2);CLEAR(MON3);CLEAR(MLT1);CLEAR(MLT2);CLEAR(DTLE);CLEAR(DTSP);
+      CLEAR(SPT1);CLEAR(SPT2);CLEAR(SPT3);CLEAR(TOS1);CLEAR(TOS2);CLEAR(TOS3);CLEAR(SPE1);
+      CLEAR(SPE2);CLEAR(SPE3);CLEAR(SPE4);CLEAR(SPA1);CLEAR(SPA2);CLEAR(TOT1);CLEAR(TOT2);
+      CLEAR(TOT3);CLEAR(DTST);CLEAR(DTSA);CLEAR(QT01);CLEAR(QT02);CLEAR(QT03);CLEAR(QT04);
+      CLEAR(QT05);CLEAR(ZA061);CLEAR(ZA062);CLEAR(ZA101);CLEAR(ZA102);CLEAR(ZA151);
+      CLEAR(LOTM);CLEAR(AXE5);CLEAR(AXE6);CLEAR(AXE7);CLEAR(AXE8);CLEAR(AXE9);CLEAR(CLCR);
+      CLEAR(CLIA);CLEAR(DTEI);CLEAR(MRGI);
+    END;
+
+    LOCAL PROCEDURE FormatAmount@1120000(Amount@1000000000 : Decimal;Width@1000000001 : Integer) : Text[50];
+    VAR
+      FormatAmount@1000000002 : Text[50];
+    BEGIN
+      FormatAmount := FORMAT(Amount,Width,'<Precision,2:2><Integer><Decimal><Comma,,>');
+      EXIT(FormatAmount);
+    END;
+
+    PROCEDURE FormatDate@1000000003(Date_NAV@1000000000 : Date) Date_IRIS : Text[8];
+    BEGIN
+      Date_IRIS := FORMAT(DATE2DMY(Date_NAV,3),4) + FORMAT(Date_NAV,4,'<Month,2><Day,2>');
+    END;
+
+    PROCEDURE InitDataport@1000000001(Ldatetime_CurrentDateTime@1000000000 : DateTime);
+    BEGIN
+      Gdatetime_CurrentDateTime := Ldatetime_CurrentDateTime;
+      MESSAGE('%1',Gdatetime_CurrentDateTime);
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD Juin 2008
+      G‚n‚ration d'un fichier contenant les ‚critures comptables, tiers et analytiques dans un format sp‚cifique destin‚ … IRIS Finance
+
+      Ce dataport a pour but de g‚n‚rer des enregistrements de 161 champs au format XCRFD1F,
+      chaque champ ‚tant s‚par‚ par un point virgule, de maniŠre … g‚n‚rer un fichier d'extension CSV accessible avec EXCEL.
+
+      Chaque champ est renseign‚ dans une variable du mˆme nom que le champ indiqu‚ dans le document IRIS Finance (Guide utilisateur) :
+      "Int‚gration des ‚critures externe". Il faut donc s'appuyer sur ce document pour identifier les variables de ce dataport.
+
+      MODIF JX-XAD 21/11/2008 : FLAG IRIS
+      Ajout d'un flag pour les ‚critures qui ont d‚j… ‚t‚ export‚es vers un fichier (champ "Date Ecriture IRIS")
+      Voir aussi report 50021 et table 50002
+
+      //modif LAB du 04/11/08 et 18/11/08
+      //Ajout codes souche virement VIRIMFR et VIRNMFR et RGL
+
+      //Modif JX-XAD 04/12/2008
+      //Type de piŠce doit ˆtre D (d‚pense) pour les codes souche CHQ et RGL
+
+      //Modif JX-XAD 13/05/2009
+      //Ajout des noms des axes analytiques pour les soci‚t‚s VSC et Agence
+
+      JX-XAD 05/06/2009
+      Traduction en Anglais
+
+      JX-XAD 22/09/2009
+      Utilisation de la fonction ascii2ansi du codeunit 50002 pour la description
+
+      ----------------------------------- V1.2 ----------------------------------
+
+      JX-XAD 28/04/2010
+      Mise … jour en ce qui concerne les FNP semi-automatiques
+    }
+    END.
+  }
+}
+

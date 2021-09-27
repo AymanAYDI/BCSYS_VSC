@@ -1,0 +1,85 @@
+OBJECT XMLport 50042 PERM
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+  }
+  ELEMENTS
+  {
+    { [{1BFAA1BC-D086-4FA8-B5C4-55AAC211A99E}];  ;Root                ;Element ;Text     }
+
+    { [{0AD0FE42-3498-44FA-8217-3B8D12DDB278}];1 ;Perm                ;Element ;Table   ;
+                                                  SourceTable=Table2000000005;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 EVALUATE(iObjType,ObjType);
+                                                                                 EVALUATE(iObjID,ObjID);
+                                                                                 IF gPerm.GET(RoleID,iObjType,iObjID) THEN
+                                                                                  currXMLport.SKIP;
+                                                                                 Permission."Role ID" := RoleID;
+                                                                                 Permission."Object Type" := iObjType;
+                                                                                 Permission."Object ID" := iObjID;
+                                                                               END;
+                                                                                }
+
+    { [{6E00FF29-CFB4-440B-8FB1-6B3BC83D9C85}];2 ;RoleID              ;Element ;Text     }
+
+    { [{4E1201DD-95C0-4EC9-AB8C-FB0BB3F01632}];2 ;ObjType             ;Element ;Text    ;
+                                                  DataType=Code }
+
+    { [{13757366-0441-4AF1-AB27-93D8CE44A149}];2 ;ObjID               ;Element ;Text     }
+
+    { [{411DAAA7-B803-460D-8261-7134CCE867A6}];2 ;Read                ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Permission::Read Permission }
+
+    { [{08B65DD8-4DCF-4159-BF41-561DF2DD0788}];2 ;Inse                ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Permission::Insert Permission }
+
+    { [{70BF304A-F99E-4765-8AFF-A758D33F3629}];2 ;Modi                ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Permission::Modify Permission }
+
+    { [{1A2C31A1-97B3-4ACF-91D7-7E773E500C57}];2 ;Dele                ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Permission::Delete Permission }
+
+    { [{1F7AED66-D193-4874-9668-53A1CD3B4327}];2 ;Exe                 ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Permission::Execute Permission }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      gPerm@1000000000 : Record 2000000005;
+      iObjType@1000000001 : 'DonnÇesTable,Table,Formulaire,êtat,Dataport,Codeunit,XMLPort,MenuSuite,Page,,Systäme';
+      iObjID@1000000002 : Integer;
+
+    BEGIN
+    END.
+  }
+}
+

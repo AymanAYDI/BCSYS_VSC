@@ -1,0 +1,49 @@
+OBJECT Page 50025 Matricule list
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Matricule list;
+               FRA=Liste matricule];
+    SourceTable=Table50010;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Matricule No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Provider name" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Provider first name" }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Society code" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //Creation JX-AUD du 17/02/2012
+      //Modification JX-AU du 31/03/2014: Ajout du champ "Soci‚t‚ sous-traitante"
+    }
+    END.
+  }
+}
+

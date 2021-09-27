@@ -1,0 +1,292 @@
+OBJECT XMLport 50016 Cash Pooling
+{
+  OBJECT-PROPERTIES
+  {
+    Date=17/07/15;
+    Time=16:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    Encoding=UTF-8;
+    OnPreXMLport=BEGIN
+                   Gint_Compteur := 0;
+                   Grec_CompanyInfo.GET;
+
+                   Gcode_JournalTemplateName := 'GêNêRAL';
+                   Gcode_JournalBatchName := 'C-POOL';
+
+                   Grec_GlobalTemporaryTable.DELETEALL;
+                   Grec_Company.RESET;
+
+                   //Pour chaque sociÇtÇ, dÇterminer si elle est paramÇtrÇe avec C-POOL, et initialiser le N¯ doc et le n¯ ligne
+                   IF Grec_Company.FIND('-') THEN
+                   REPEAT
+                     Grec_GlobalTemporaryTable.INIT;
+                     Grec_GlobalTemporaryTable."Document No." := Grec_Company.Name;
+
+                     Grec_FeuilleCashPooling.CHANGECOMPANY(Grec_Company.Name);
+                     Grec_NoSeriesLine.CHANGECOMPANY(Grec_Company.Name);
+                     Grec_GenJnlBatch.CHANGECOMPANY(Grec_Company.Name);
+
+                     IF Grec_GenJnlBatch.GET(Gcode_JournalTemplateName,Gcode_JournalBatchName) THEN
+                     BEGIN
+                       Grec_GlobalTemporaryTable.Description := 'OK';
+
+                       Grec_FeuilleCashPooling.RESET;
+                       Grec_FeuilleCashPooling.SETFILTER(Grec_FeuilleCashPooling."Journal Template Name",Gcode_JournalTemplateName);
+                       Grec_FeuilleCashPooling.SETFILTER(Grec_FeuilleCashPooling."Journal Batch Name",Gcode_JournalBatchName);
+                       IF Grec_FeuilleCashPooling.FIND('+') THEN
+                       BEGIN
+                         Grec_GlobalTemporaryTable."Account No." := FORMAT(Grec_FeuilleCashPooling."Line No." + 10000);
+                         Grec_GlobalTemporaryTable."External document No." := INCSTR(Grec_FeuilleCashPooling."Document No.");
+                       END ELSE
+                       BEGIN
+                         Grec_GlobalTemporaryTable."Account No." := '10000';
+                         Grec_NoSeriesLine.RESET;
+                         Grec_NoSeriesLine.SETFILTER(Grec_NoSeriesLine."Series Code",Gcode_JournalBatchName);
+                         Grec_NoSeriesLine.SETFILTER(Grec_NoSeriesLine.Open,'%1',TRUE);
+                         IF Grec_NoSeriesLine.FIND('-') THEN
+                         BEGIN
+                           IF Grec_NoSeriesLine."Last No. Used" <> '' THEN
+                             Grec_GlobalTemporaryTable."External document No." := INCSTR(Grec_NoSeriesLine."Last No. Used")
+                           ELSE
+                             Grec_GlobalTemporaryTable."External document No." := Grec_NoSeriesLine."Starting No.";
+                         END;
+                       END;
+                     END;
+
+                     Grec_GlobalTemporaryTable.INSERT;
+
+                   UNTIL Grec_Company.NEXT = 0;
+
+                   Grec_FeuilleCashPooling.CHANGECOMPANY(COMPANYNAME);
+                   Grec_GenJnlBatch.CHANGECOMPANY(COMPANYNAME);
+                   Grec_NoSeriesLine.CHANGECOMPANY(COMPANYNAME);
+
+                   //IF (Grec_FeuilleCashPooling.COUNT > 0) THEN
+                   //ERROR(Text002);
+
+                   //Gcode_CashPooling := Grec_FeuilleCashPooling."Document No.";
+                   //Gcode_CodeJournal := Grec_FeuilleCashPooling."Source Code";
+                 END;
+
+    Format=Variable Text;
+    FieldSeparator=|;
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{1C13560A-F50D-4C6D-B4A8-2285CF57EA85}];  ;Root                ;Element ;Text     }
+
+    { [{516D3B34-ABEC-4291-A791-6FC3C0F1A269}];1 ;CashPooling         ;Element ;Table   ;
+                                                  VariableName=Integer;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Grec_GlobalTemporaryTable.RESET;
+                                                                                 Grec_GlobalTemporaryTable.SETFILTER(Grec_GlobalTemporaryTable.Description,'OK');
+
+                                                                                 //Pour chaque sociÇtÇ, tester le code sociÇtÇ et si il correspond, renseigner la feuille de compta
+                                                                                 IF Grec_GlobalTemporaryTable.FIND('-') THEN
+                                                                                 REPEAT
+
+                                                                                   Grec_CompanyInfo.CHANGECOMPANY(Grec_GlobalTemporaryTable."Document No.");
+                                                                                   Grec_CompanyInfo.GET;
+                                                                                   IF Grec_CompanyInfo."IC Partner Code" = Gtext_Champ1 THEN
+                                                                                   BEGIN
+                                                                                     Grec_GlobalTemporaryTable."Posting date" := TODAY;
+
+                                                                                     Grec_FeuilleCashPooling.CHANGECOMPANY(Grec_GlobalTemporaryTable."Document No.");
+
+                                                                                     //initialisation de la ligne
+                                                                                     Grec_FeuilleCashPooling.INIT;
+                                                                                     Grec_FeuilleCashPooling."Journal Template Name" := Gcode_JournalTemplateName;
+                                                                                     Grec_FeuilleCashPooling."Journal Batch Name" := Gcode_JournalBatchName;
+
+                                                                                     //dÇfinition des champs
+                                                                                     IF EVALUATE(Grec_FeuilleCashPooling."Line No.",Grec_GlobalTemporaryTable."Account No.") THEN
+                                                                                     BEGIN
+                                                                                       Grec_GlobalTemporaryTable."Account No." := FORMAT(Grec_FeuilleCashPooling."Line No." + 10000);
+                                                                                       Grec_GlobalTemporaryTable.MODIFY;
+                                                                                     END;
+
+                                                                                     Gtext_AccountNo := Gtext_Champ10;
+
+
+                                                                                     IF EVALUATE(varDecimal, CONVERTSTR(Gtext_Champ12,'.',',')) AND (Gtext_Champ8 = 'C')THEN BEGIN
+                                                                                            Gdec_CreditAmount := varDecimal;
+                                                                                            Grec_FeuilleCashPooling."Credit Amount" := Gdec_CreditAmount;
+                                                                                            //Grec_FeuilleCashPooling.VALIDATE("Credit Amount",Gdec_CreditAmount);
+                                                                                     END;
+
+                                                                                     IF EVALUATE(varDecimal, CONVERTSTR(Gtext_Champ12,'.',',')) AND (Gtext_Champ8 = 'D')THEN BEGIN
+                                                                                         Gdec_DebitAmount := varDecimal;
+                                                                                         Grec_FeuilleCashPooling."Debit Amount" :=Gdec_DebitAmount;
+                                                                                        //Grec_FeuilleCashPooling.VALIDATE("Debit Amount",Gdec_DebitAmount);
+                                                                                     END;
+
+                                                                                     IF EVALUATE(varInteger,COPYSTR(Gtext_Champ9,1,4))THEN BEGIN
+                                                                                       Gint_Year :=  varInteger;
+                                                                                     END;
+
+                                                                                     //DEBUT MODIF JX-XAD 31/01/2011
+                                                                                     //IF EVALUATE(varInteger,DELSTR(COPYSTR(Gtext_Champ9,2,5),1,2))THEN BEGIN
+                                                                                     IF EVALUATE(varInteger,COPYSTR(Gtext_Champ9,5,2))THEN BEGIN
+                                                                                       Gint_Month :=  varInteger;
+                                                                                     END;
+
+                                                                                     //IF EVALUATE(varInteger,DELSTR(Gtext_Champ9,1,6))THEN BEGIN
+                                                                                     IF EVALUATE(varInteger,COPYSTR(Gtext_Champ9,7,2))THEN BEGIN
+                                                                                       Gint_Day :=  varInteger;
+                                                                                     END;
+                                                                                     //FIN MODIF JX-XAD 31/01/2011
+
+                                                                                     Gdate_PostingDate := DMY2DATE(Gint_Day, Gint_Month, Gint_Year);
+                                                                                     Grec_FeuilleCashPooling."Posting Date" := Gdate_PostingDate;
+                                                                                     Grec_FeuilleCashPooling."Account No." := Gtext_AccountNo;
+                                                                                     Grec_FeuilleCashPooling."Account Type" := Grec_FeuilleCashPooling."Account Type"::"G/L Account";
+
+                                                                                     //validation
+                                                                                     //Grec_FeuilleCashPooling.VALIDATE("Document No.",Grec_GlobalTemporaryTable."External document No.");
+                                                                                     //Grec_FeuilleCashPooling.VALIDATE("Source Code",'COMPTA');
+                                                                                     //Grec_FeuilleCashPooling.VALIDATE("Posting Date",Gdate_PostingDate);
+                                                                                     //Grec_FeuilleCashPooling.VALIDATE("Account No.",Gtext_AccountNo);
+                                                                                     Grec_FeuilleCashPooling."Document No." := Grec_GlobalTemporaryTable."External document No.";
+                                                                                     Grec_FeuilleCashPooling."Source Code" := 'COMPTA';
+                                                                                     Grec_FeuilleCashPooling."Posting Date" := Gdate_PostingDate;
+                                                                                     Grec_FeuilleCashPooling."Account No." := Gtext_AccountNo;
+
+                                                                                     Grec_FeuilleCashPooling.Description := Gtext_Champ5;
+
+                                                                                     //insertion ligne
+                                                                                     Grec_FeuilleCashPooling.INSERT;
+
+                                                                                   END;
+
+                                                                                 UNTIL Grec_GlobalTemporaryTable.NEXT = 0
+                                                                                 ELSE
+                                                                                   ERROR(Text004)
+                                                                               END;
+                                                                                }
+
+    { [{F8E2109B-7684-4D40-AB66-A42C0D194E9B}];2 ;Gtext_Champ1        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ1;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  Grec_FeuilleCashPooling.CHANGECOMPANY(COMPANYNAME);
+                                                                                  Grec_CompanyInfo.CHANGECOMPANY(COMPANYNAME);
+                                                                                END;
+                                                                                 }
+
+    { [{57199BF5-1288-41A0-9954-40C2567411C9}];2 ;Gtext_Champ2        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ2 }
+
+    { [{E853871C-281F-4850-A62E-DBB728CE0BEE}];2 ;Gtext_Champ3        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ3 }
+
+    { [{DE4949A4-1B90-4C1C-AFF5-D5A6CC3E3AC8}];2 ;Gtext_Champ4        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ4 }
+
+    { [{9C635497-6BD6-43F3-97A0-0A878B767E04}];2 ;Gtext_Champ5        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ5 }
+
+    { [{AC7ED6FF-2C3A-4E4E-A6B9-975D1DBDC34A}];2 ;Gtext_Champ6        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ6 }
+
+    { [{24E4F60D-61D0-4BE9-AC9E-B1A1F8BE94F8}];2 ;Gtext_Champ7        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ7 }
+
+    { [{7DCACDDA-05D8-4FC3-8097-546D2348F101}];2 ;Gtext_Champ8        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ8 }
+
+    { [{60C88AAF-1898-4BAF-8731-6C32DC91118B}];2 ;Gtext_Champ9        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ9 }
+
+    { [{D7291C17-C01F-4B4C-A351-C4B4B1BB5193}];2 ;Gtext_Champ10       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ10 }
+
+    { [{77643CB0-CAF0-404F-897F-7AF5F0B86CB2}];2 ;Gtext_Champ11       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ11 }
+
+    { [{38E19FA1-730D-479F-AB24-27489D3351D4}];2 ;Gtext_Champ12       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ12 }
+
+    { [{9CB7F747-C2AC-47B1-B296-91D13EB82616}];2 ;Gtext_Champ13       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ13 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      i@1000000023 : Integer;
+      Grec_FeuilleCashPooling@1000000022 : Record 81;
+      Gint_Compteur@1000000021 : Integer;
+      Gint_Year@1000000020 : Integer;
+      Gint_Month@1000000019 : Integer;
+      Gint_Day@1000000018 : Integer;
+      varInteger@1000000017 : Integer;
+      varDecimal@1000000016 : Decimal;
+      Gdate_PostingDate@1000000015 : Date;
+      Gdec_DebitAmount@1000000014 : Decimal;
+      Gdec_CreditAmount@1000000013 : Decimal;
+      Gtext_AccountNo@1000000012 : Text[30];
+      Gcode_CashPooling@1000000011 : Code[10];
+      Gcode_CodeJournal@1000000010 : Code[10];
+      Grec_GenJnlBatch@1000000009 : Record 232;
+      Grec_CompanyInfo@1000000008 : Record 79;
+      Grec_Company@1000000007 : Record 2000000006;
+      Gcode_JournalBatchName@1000000006 : Code[20];
+      Gcode_JournalTemplateName@1000000005 : Code[20];
+      Grec_NoSeriesLine@1000000004 : Record 309;
+      Grec_GlobalTemporaryTable@1000000003 : TEMPORARY Record 50005;
+      Grec_GL_Account@1000000002 : Record 15;
+      Gtext_CompanyNames@1000000001 : Text[200];
+      Gtext_FinProcedure@1000000000 : Text[200];
+      Text002@1000000029 : TextConst 'ENU=This sheet is not empty. Please open a new sheet;FRA=Cette feuille n''est pas vide. Veuillez ouvrir une nouvelle feuille';
+      Text001@1000000028 : TextConst 'ENU=This fonction is not destinated for the current sheet;FRA=Cette fonction n''est pas destinÇe pour la feuille en cours';
+      Text003@1000000027 : TextConst 'ENU=This file is not destinated to this company;FRA=Ce fichier n''est pas destinÇ Ö cette sociÇtÇ';
+      Text004@1000000026 : TextConst 'ENU=No company accounting sheet contains named C-POOL;FRA=Aucune sociÇtÇ ne contient de feuille de comptabilitÇ nommÇe C-POOL';
+      Text005@1000000025 : TextConst 'ENU=Sheet Cash Pooling accounting has been updated for the following companies :;FRA=La feuille de comptabilitÇ Cash Pooling a ÇtÇ mise Ö jour pour les sociÇtÇs suivantes :';
+
+    PROCEDURE SetCPOOLJnlLine@1000000000(FeuilleCashPooling@1000000000 : Record 81);
+    BEGIN
+      Grec_FeuilleCashPooling := FeuilleCashPooling;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD 17/09/2010
+      //CASH POOLING
+
+      MODIF JX-XAD 05/10/2010
+      Traitement de l'import sur toutes les sociÇtÇs Ö la fois
+      Utilisation de la table temporaire 50005 avec les correspondances suivantes :
+        Document No. = Nom SociÇtÇ
+        Account No. = N¯ ligne
+        External document No. = N¯ document
+        Description = OK si la sociÇtÇ est paramÇtrÇe pour recevoir les information du fichier Cash pooling
+
+      MODIF JX-XAD 31/01/2011
+      Correction bug au niveau de la rÇcupÇration de la date
+    }
+    END.
+  }
+}
+

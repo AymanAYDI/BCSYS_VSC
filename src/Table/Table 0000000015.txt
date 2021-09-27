@@ -2,9 +2,10 @@ OBJECT Table 15 G/L Account
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=09/05/16;
+    Time=16:09:37;
+    Modified=Yes;
+    Version List=NAVW18.00,NAVFR8.00,JX-VSC1.0-XAD-LABJX-VSC1.0-ABE;
   }
   PROPERTIES
   {
@@ -507,6 +508,7 @@ OBJECT Table 15 G/L Account
                                                    OptionCaptionML=[ENU=Definitive,Simulation;
                                                                     FRA=D‚finitive,Simulation];
                                                    OptionString=Definitive,Simulation }
+    { 50005;  ;Rubrique            ;Code20         }
   }
   KEYS
   {
@@ -598,6 +600,18 @@ OBJECT Table 15 G/L Account
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD du 25/08/2008
+      Ajout de 5 champs li‚s … IRIS Finance. Ces champs sont utilis‚s dans le dataport de g‚n‚ration des ‚critures compta pour IRIS ainsi
+      que dans le report de synthŠse de TVA fournisseurs.
+
+      //Modif LAB du 07/11/08
+      //Nouveau formulaire liste sur lookup
+
+      // Modif ABE du 09/05/2016
+      // Modifier le champ Rubrique de 10 … 20 caractŠres.
+    }
     END.
   }
 }

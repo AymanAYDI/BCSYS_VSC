@@ -2,8 +2,9 @@ OBJECT Codeunit 5817 Undo Posting Management
 {
   OBJECT-PROPERTIES
   {
-    Date=31/10/14;
-    Time=12:00:00;
+    Date=16/11/15;
+    Time=11:00:00;
+    Modified=Yes;
     Version List=NAVW18.00.00.38457;
   }
   PROPERTIES
@@ -473,7 +474,9 @@ OBJECT Codeunit 5817 Undo Posting Management
       ValueEntry@1001 : Record 5802;
       ItemRec@1002 : Record 27;
       PostedATOLink@1004 : Record 914;
+      InventorySetup@1000000000 : Record 313;
     BEGIN
+      InventorySetup.GET; // PBE -> Bug 2015 (Non contr“le article non g‚r‚)
       WITH TempItemLedgEntry DO BEGIN
         FIND('-'); // Assertion: will fail if not found.
         ValueEntry.SETCURRENTKEY("Item Ledger Entry No.");
@@ -485,6 +488,9 @@ OBJECT Codeunit 5817 Undo Posting Management
                NOT (("Order Type" = "Order Type"::Assembly) AND
                     PostedATOLink.GET(PostedATOLink."Assembly Document Type"::Assembly,"Document No."))
             THEN
+             IF (ItemRec."Prevent Negative Inventory" = ItemRec."Prevent Negative Inventory"::Yes) // PBE -> Bug 2015 (Non contr“le article non g‚r‚)
+               OR ((ItemRec."Prevent Negative Inventory" = ItemRec."Prevent Negative Inventory"::Default)
+                AND (InventorySetup."Prevent Negative Inventory")) THEN
               TESTFIELD("Remaining Quantity",Quantity);
           END ELSE
             TESTFIELD("Shipped Qty. Not Returned",Quantity);

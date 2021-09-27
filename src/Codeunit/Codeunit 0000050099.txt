@@ -1,0 +1,44 @@
+OBJECT Codeunit 50099 Upgrade Windows Login=>User
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-USER;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 339=rm;
+    OnRun=BEGIN
+            W.OPEN('#1######################## #2###########################');
+            WITH TempWindowsLogin DO
+              IF FINDSET THEN BEGIN
+                LOCKTABLE;
+                REPEAT
+                  W.UPDATE(1,"User ID");
+                  W.UPDATE(2,"User Name");
+                  User.SETRANGE("User Name","User Name");
+                  IF NOT User.ISEMPTY THEN
+                    UpgradeUserMgt.RenameUser("User ID","User Name");
+                UNTIL NEXT = 0;
+
+                DELETEALL;
+              END;
+            W.CLOSE;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      TempWindowsLogin@1000000002 : Record 104087;
+      User@1000000001 : Record 2000000120;
+      UpgradeUserMgt@1000000000 : Codeunit 104056;
+      W@1000000003 : Dialog;
+
+    BEGIN
+    END.
+  }
+}
+

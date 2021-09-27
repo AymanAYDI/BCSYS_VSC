@@ -2,8 +2,9 @@ OBJECT Codeunit 74 Purch.-Get Receipt
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=02/11/15;
+    Time=21:15:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -30,7 +31,7 @@ OBJECT Codeunit 74 Purch.-Get Receipt
   CODE
   {
     VAR
-      Text000@1000 : TextConst 'ENU=The %1 on the %2 %3 and the %4 %5 must be the same.;FRA=Le %1 de l''%2 %3 et de l''%4 %5 doit ˆtre le mˆme.';
+      Text000@1000 : TextConst 'ENU=The %1 on the %2 %3 and the %4 %5 must be the same.;FRA=Le %1 de l''%2 %3 et de l''%4 %5 doit ˆtre le mˆme. %6 %7';
       PurchHeader@1001 : Record 38;
       PurchLine@1002 : Record 39;
       PurchRcptHeader@1003 : Record 120;
@@ -59,7 +60,7 @@ OBJECT Codeunit 74 Purch.-Get Receipt
                   Text000,
                   PurchHeader.FIELDCAPTION("Currency Code"),
                   PurchHeader.TABLECAPTION,PurchHeader."No.",
-                  PurchRcptHeader.TABLECAPTION,PurchRcptHeader."No.");
+                  PurchRcptHeader.TABLECAPTION,PurchRcptHeader."No.",'','');
                 TransferLine := FALSE;
               END;
               IF PurchRcptHeader."Pay-to Vendor No." <> PurchHeader."Pay-to Vendor No." THEN BEGIN
@@ -67,13 +68,14 @@ OBJECT Codeunit 74 Purch.-Get Receipt
                   Text000,
                   PurchHeader.FIELDCAPTION("Pay-to Vendor No."),
                   PurchHeader.TABLECAPTION,PurchHeader."No.",
-                  PurchRcptHeader.TABLECAPTION,PurchRcptHeader."No.");
+                  PurchRcptHeader.TABLECAPTION,PurchRcptHeader."No.",PurchHeader."Pay-to Vendor No.",PurchRcptHeader."Pay-to Vendor No.");
                 TransferLine := FALSE;
               END;
             END;
             IF TransferLine THEN BEGIN
               PurchRcptLine := PurchRcptLine2;
-              PurchRcptLine.TESTFIELD("VAT Bus. Posting Group",PurchHeader."VAT Bus. Posting Group");
+      // Migration 2015 : A la demande de VSC
+      //        PurchRcptLine.TESTFIELD("VAT Bus. Posting Group",PurchHeader."VAT Bus. Posting Group");
               PurchRcptLine.InsertInvLineFromRcptLine(PurchLine);
               IF Type = Type::"Charge (Item)" THEN
                 GetItemChargeAssgnt(PurchRcptLine2,PurchLine."Qty. to Invoice");
@@ -200,6 +202,9 @@ OBJECT Codeunit 74 Purch.-Get Receipt
     END;
 
     BEGIN
+    {
+      // Migration 2015 : A la demande de VSC
+    }
     END.
   }
 }

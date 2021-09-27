@@ -2,13 +2,16 @@ OBJECT Codeunit 81 Sales-Post (Yes/No)
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=06/07/15;
+    Time=16:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00,JX-VSC2.0-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
     TableNo=36;
+    Permissions=TableData 480=rimd,
+                TableData 481=rimd;
     OnRun=BEGIN
             SalesHeader.COPY(Rec);
             Code;
@@ -29,13 +32,22 @@ OBJECT Codeunit 81 Sales-Post (Yes/No)
     VAR
       SalesSetup@1002 : Record 311;
       SalesPostViaJobQueue@1000 : Codeunit 88;
+      Lrec_SalesLine@1000000005 : Record 37;
+      Lint_Compteur@1000000004 : Integer;
+      Lrec_Dimension@1000000002 : Record 348;
+      Lrec_DimensionValue@1000000001 : Record 349;
+      Lcode_AxeReserve@1000000000 : Code[10];
+      Lcu_Dimension@1000000003 : Codeunit 408;
+      LCode_DimCode@1000000007 : ARRAY [50] OF Code[20];
+      LCode_DimValueCode@1000000006 : ARRAY [50] OF Code[20];
     BEGIN
       SalesSetup.GET;
       WITH SalesHeader DO BEGIN
         CASE "Document Type" OF
           "Document Type"::Order:
             BEGIN
-              Selection := STRMENU(Text000,3);
+              //Selection := STRMENU(Text000,3); //JX-AUD du 23/09/2014
+              Selection := STRMENU(Text000,1); //JX-AUD du 23/09/2014
               IF Selection = 0 THEN
                 EXIT;
               Ship := Selection IN [1,3];
@@ -59,6 +71,47 @@ OBJECT Codeunit 81 Sales-Post (Yes/No)
         END;
         "Print Posted Documents" := FALSE;
 
+
+        //DEBUT MODIF JX XAD 16/03/2011 (traitement modification analytique manuelle post validation)
+        Lcode_AxeReserve := 'RESERVE';
+        IF Lrec_Dimension.GET(Lcode_AxeReserve) THEN
+        BEGIN
+          // On initialise, si n‚cessaire, les sections de l'axe analytique 'RESERVE'
+          IF NOT Lrec_DimensionValue.GET(Lcode_AxeReserve,'100') THEN
+          BEGIN
+            FOR Lint_Compteur := 1 TO 100 DO
+            BEGIN
+              IF NOT Lrec_DimensionValue.GET(Lcode_AxeReserve,FORMAT(Lint_Compteur)) THEN
+              BEGIN
+                Lrec_DimensionValue.INIT;
+                Lrec_DimensionValue.VALIDATE(Lrec_DimensionValue."Dimension Code",Lcode_AxeReserve);
+                Lrec_DimensionValue.VALIDATE(Lrec_DimensionValue.Code,FORMAT(Lint_Compteur));
+                Lrec_DimensionValue.INSERT;
+              END;
+            END;
+          END;
+          // Traitement de l'axe analytique 'RESERVE' pour chaque ligne du document
+          IF ("Document Type" IN ["Document Type"::Invoice,"Document Type"::"Credit Memo", "Document Type"::Order]) THEN
+          BEGIN
+            Lrec_SalesLine.RESET;
+            Lrec_SalesLine.SETFILTER(Lrec_SalesLine."Document Type",'%1',"Document Type");
+            Lrec_SalesLine.SETFILTER(Lrec_SalesLine."Document No.",'%1',"No.");
+            Lrec_SalesLine.SETFILTER(Lrec_SalesLine.Type,'<>%1',Lrec_SalesLine.Type::" ");
+            Lrec_SalesLine.SETFILTER(Lrec_SalesLine."No.",'<>%1','');
+            Lint_Compteur := 0;
+            IF Lrec_SalesLine.FIND('-') THEN
+            REPEAT
+              Lint_Compteur += 1;
+              LCode_DimCode[1] := Lcode_AxeReserve;
+              LCode_DimValueCode[1] := FORMAT(Lint_Compteur);
+              Lrec_SalesLine."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(Lrec_SalesLine."Dimension Set ID",Lrec_SalesLine."Shortcut Dimension 1 Code",
+                                            Lrec_SalesLine."Shortcut Dimension 2 Code",LCode_DimCode,LCode_DimValueCode);
+              Lrec_SalesLine.MODIFY;
+            UNTIL Lrec_SalesLine.NEXT = 0;
+          END;
+        END;
+        //FIN MODIF JX XAD 16/03/2011 (traitement modification analytique manuelle post validation)
+
         IF SalesSetup."Post with Job Queue" THEN
           SalesPostViaJobQueue.EnqueueSalesDoc(SalesHeader)
         ELSE
@@ -67,6 +120,18 @@ OBJECT Codeunit 81 Sales-Post (Yes/No)
     END;
 
     BEGIN
+    {
+
+      MODIF JX XAD 16/03/2011
+      Traitement de l'axe analytique 'RESERVE' li‚ … la modification analytique manuelle post validation
+      Initialisation de cet axe avec les sections
+
+      //Modif JX-AUD 15/02/2013
+      //Ajout "Document Type"::"Order" pour prendre en compte l'axe RESERVE lorsque que l'on facture par la commande
+
+      //Modif JX-AUD du 23/09/2014
+      //Mise en commentaire de l'option "Livrer & facturer"
+    }
     END.
   }
 }

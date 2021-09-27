@@ -2,9 +2,10 @@ OBJECT Page 47 Sales Invoice Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,KITNA6.00,JX-VSC2.0-LAB;
   }
   PROPERTIES
   {
@@ -256,9 +257,11 @@ OBJECT Page 47 Sales Invoice Subform
                 SourceExpr=Nonstock;
                 Visible=FALSE }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group" }
+
     { 14  ;2   ;Field     ;
                 SourceExpr="VAT Prod. Posting Group";
-                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -525,15 +528,32 @@ OBJECT Page 47 Sales Invoice Subform
                          END;
                           }
 
-    { 104 ;2   ;Field     ;
-                SourceExpr="Document No.";
+    { 1000000001;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
                 Visible=FALSE;
-                Editable=FALSE }
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
 
-    { 106 ;2   ;Field     ;
-                SourceExpr="Line No.";
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
+
+    { 1000000002;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
                 Visible=FALSE;
-                Editable=FALSE }
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
 
     { 39  ;1   ;Group     ;
                 GroupType=Group }
@@ -632,7 +652,7 @@ OBJECT Page 47 Sales Invoice Subform
       SalesCalcDiscByType@1015 : Codeunit 56;
       DocumentTotals@1016 : Codeunit 57;
       VATAmount@1017 : Decimal;
-      ShortcutDimCode@1004 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1004 : ARRAY [10] OF Code[20];
       UpdateAllowedVar@1002 : Boolean;
       Text000@1006 : TextConst 'ENU=Unable to run this function while in View mode.;FRA=Impossible d''ex‚cuter cette fonction en mode Afficher.';
       ItemPanelVisible@19014573 : Boolean INDATASET;
@@ -752,6 +772,12 @@ OBJECT Page 47 Sales Invoice Subform
     END;
 
     BEGIN
+    {
+      // modif LAB du 30/08/2010
+      // Ajout des champs en visible : groupe compta produit et groupe compta produit TVA
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

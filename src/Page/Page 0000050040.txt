@@ -1,0 +1,41 @@
+OBJECT Page 50040 User Setup Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table91;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Signature;
+                GroupType=Group }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="User ID" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr=Nom }
+
+    { 1000000004;2;Field  ;
+                SourceExpr=Picture }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

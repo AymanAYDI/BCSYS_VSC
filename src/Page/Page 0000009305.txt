@@ -2,8 +2,9 @@ OBJECT Page 9305 Sales Order List
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=19/05/16;
+    Time=15:21:46;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -28,6 +29,20 @@ OBJECT Page 9305 Sales Order List
 
                  JobQueueActive := SalesSetup.JobQueueActive;
                END;
+
+    OnAfterGetRecord=BEGIN
+
+                       //Modif AEL
+                       ShowShortcutDimCode(ShortcutDimCode);
+                       //Fin de modif
+                     END;
+
+    OnNewRecord=BEGIN
+
+                  //Modif AEL
+                  CLEAR(ShortcutDimCode);
+                  //Fin de modif
+                END;
 
     ActionList=ACTIONS
     {
@@ -396,10 +411,28 @@ OBJECT Page 9305 Sales Order List
                 SourceExpr="No." }
 
     { 4   ;2   ;Field     ;
-                SourceExpr="Sell-to Customer No." }
+                SourceExpr="Sell-to Customer No.";
+                Visible=FALSE }
 
     { 6   ;2   ;Field     ;
                 SourceExpr="Sell-to Customer Name" }
+
+    { 1000000000;2;Field  ;
+                CaptionML=[ENU=Our reference;
+                           FRA=Notre r‚f‚rence];
+                SourceExpr="Your Reference" }
+
+    { 1000000001;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
 
     { 17  ;2   ;Field     ;
                 SourceExpr="External Document No." }
@@ -470,7 +503,7 @@ OBJECT Page 9305 Sales Order List
 
     { 123 ;2   ;Field     ;
                 SourceExpr="Location Code";
-                Visible=TRUE }
+                Visible=FALSE }
 
     { 99  ;2   ;Field     ;
                 SourceExpr="Salesperson Code";
@@ -496,7 +529,8 @@ OBJECT Page 9305 Sales Order List
                 Visible=FALSE }
 
     { 1102601029;2;Field  ;
-                SourceExpr=Status }
+                SourceExpr=Status;
+                Visible=FALSE }
 
     { 1102601039;2;Field  ;
                 SourceExpr="Payment Terms Code";
@@ -527,7 +561,8 @@ OBJECT Page 9305 Sales Order List
                 Visible=FALSE }
 
     { 16  ;2   ;Field     ;
-                SourceExpr="Completely Shipped" }
+                SourceExpr="Completely Shipped";
+                Visible=FALSE }
 
     { 5   ;2   ;Field     ;
                 SourceExpr="Job Queue Status";
@@ -569,6 +604,7 @@ OBJECT Page 9305 Sales Order List
       UserMgt@1000 : Codeunit 5700;
       Usage@1001 : 'Order Confirmation,Work Order,Pick Instruction';
       JobQueueActive@1004 : Boolean INDATASET;
+      ShortcutDimCode@1000000000 : ARRAY [10] OF Code[20];
 
     BEGIN
     END.

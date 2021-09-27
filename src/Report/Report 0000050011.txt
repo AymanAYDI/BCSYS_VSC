@@ -1,0 +1,1125 @@
+OBJECT Report 50011 Listing achats
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.0-XAD,JX-VSC1.1-AUD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+  }
+  DATASET
+  {
+    { 4458;    ;DataItem;                    ;
+               DataItemTable=Table38;
+               DataItemTableView=SORTING(Document Type,No.);
+               PrintOnlyIfDetail=Yes;
+               OnPreDataItem=BEGIN
+                               CompanyInfo.GET;
+                               CompanyInfo.CALCFIELDS(CompanyInfo.Picture);
+
+
+                               Gtxt_DateDocFilter := "Purchase Header".GETFILTER("Purchase Header"."Document Date");
+                               Gtxt_TypeDocFilter := "Purchase Header".GETFILTER("Purchase Header"."Document Type");
+                               Gtxt_FournisseurFilter := "Purchase Header".GETFILTER("Purchase Header"."Buy-from Vendor No.");
+
+                               //D‚but Modif JX-XAD du 11/06/2008
+                               //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                               FILTERGROUP(2);
+                               SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                               FILTERGROUP(0);
+                               //Fin Modif JX-XAD du 11/06/2008
+                             END;
+
+               ReqFilterFields=Document Type,Buy-from Vendor No.,Document Date }
+
+    { 1000000032;1;Column;Text005            ;
+               SourceExpr=Text005 }
+
+    { 1000000011;1;Column;Date_____Gtxt_DateDocFilter;
+               SourceExpr='Date : '+Gtxt_DateDocFilter }
+
+    { 1000000012;1;Column;Text002_____Gtxt_TypeDocFilter;
+               SourceExpr=Text002+' '+Gtxt_TypeDocFilter }
+
+    { 1000000016;1;Column;Text003_____Gtxt_FournisseurFilter;
+               SourceExpr=Text003+' '+Gtxt_FournisseurFilter }
+
+    { 1000000036;1;Column;USERID             ;
+               SourceExpr=USERID }
+
+    { 1000000037;1;Column;FORMAT_TODAY_      ;
+               SourceExpr=FORMAT(TODAY) }
+
+    { 1000000038;1;Column;Text004_____FORMAT_TIME_;
+               SourceExpr=Text004+' '+FORMAT(TIME) }
+
+    { 1000000039;1;Column;STRSUBSTNO_Text001_FORMAT_CurrReport_PAGENO__;
+               SourceExpr=STRSUBSTNO(Text001,FORMAT(CurrReport.PAGENO)) }
+
+    { 1000000020;1;Column;CompanyInfo_Picture;
+               SourceExpr=CompanyInfo.Picture }
+
+    { 1000000023;1;Column;PH_Buy_from_Vendor_No__;
+               SourceExpr="Buy-from Vendor No." }
+
+    { 1000000025;1;Column;PH_No_             ;
+               SourceExpr="No." }
+
+    { 1000000026;1;Column;PH_Document_Date_  ;
+               SourceExpr="Purchase Header"."Document Date" }
+
+    { 1000000029;1;Column;PH_Document_Type_  ;
+               SourceExpr="Purchase Header"."Document Type" }
+
+    { 1000000030;1;Column;Purchase_Header__Due_Date_;
+               SourceExpr="Due Date" }
+
+    { 1000000046;1;Column;TOTAL_FORMAT_PH_Document_Type_;
+               SourceExpr='TOTAL '+FORMAT("Purchase Header"."Document Type") }
+
+    { 1000000047;1;Column;Gdec_TotalDocument ;
+               SourceExpr=Gdec_TotalDocument }
+
+    { 1000000021;1;Column;Reminder_of_the_selectionCaption;
+               SourceExpr=Reminder_of_the_selectionCaptionLbl }
+
+    { 1000000034;1;Column;Date__Caption      ;
+               SourceExpr=Date__CaptionLbl }
+
+    { 1000000035;1;Column;User__Caption      ;
+               SourceExpr=User__CaptionLbl }
+
+    { 1000000024;1;Column;Vendor__Caption    ;
+               SourceExpr=Vendor__CaptionLbl }
+
+    { 1000000027;1;Column;Document_Date__Caption;
+               SourceExpr=Document_Date__CaptionLbl }
+
+    { 1000000028;1;Column;Due_Date__Caption  ;
+               SourceExpr=Due_Date__CaptionLbl }
+
+    { 1000000005;1;Column;No_Caption         ;
+               SourceExpr=No_CaptionLbl }
+
+    { 1000000008;1;Column;DescriptionCaption ;
+               SourceExpr=DescriptionCaptionLbl }
+
+    { 1000000013;1;Column;QtyCaption         ;
+               SourceExpr=QtyCaptionLbl }
+
+    { 1000000014;1;Column;UnitCaption        ;
+               SourceExpr=UnitCaptionLbl }
+
+    { 1000000015;1;Column;Direct_Unit_CostCaption;
+               SourceExpr=Direct_Unit_CostCaptionLbl }
+
+    { 1000000017;1;Column;Disc___Caption     ;
+               SourceExpr=Disc___CaptionLbl }
+
+    { 1000000018;1;Column;VATCaption         ;
+               SourceExpr=VATCaptionLbl }
+
+    { 1000000019;1;Column;AmountCaption      ;
+               SourceExpr=AmountCaptionLbl }
+
+    { 1000000031;1;Column;Receiv_Caption     ;
+               SourceExpr=Receiv_CaptionLbl }
+
+    { 1000000041;1;Column;Purch_Caption      ;
+               SourceExpr=Purch_CaptionLbl }
+
+    { 6547;1   ;DataItem;                    ;
+               DataItemTable=Table39;
+               ReqFilterFields=Quantity;
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 1000000040;2;Column;Purchase_Line__No__;
+               SourceExpr="No." }
+
+    { 1000000042;2;Column;Purchase_Line_Description;
+               SourceExpr=Description }
+
+    { 1000000044;2;Column;Purchase_Line_Quantity;
+               SourceExpr=Quantity }
+
+    { 1000000001;2;Column;PL_Unit_of_Measure_;
+               SourceExpr="Purchase Line"."Unit of Measure" }
+
+    { 1000000002;2;Column;PL_Direct_Unit_Cost_;
+               SourceExpr="Purchase Line"."Direct Unit Cost" }
+
+    { 1000000003;2;Column;PL_Line_Discount___;
+               SourceExpr="Purchase Line"."Line Discount %" }
+
+    { 1000000004;2;Column;PL_VAT_Identifier_ ;
+               SourceExpr="Purchase Line"."VAT Identifier" }
+
+    { 1000000006;2;Column;PL_Line_Amount_    ;
+               SourceExpr="Purchase Line"."Line Amount" }
+
+    { 1000000043;2;Column;PL_Quantity_Received_;
+               SourceExpr="Purchase Line"."Quantity Received" }
+
+    { 1000000045;2;Column;PL_Quantity_Invoiced_;
+               SourceExpr="Purchase Line"."Quantity Invoiced" }
+
+    { 1000000009;2;Column;PL_Line_Amount__Control1000000009;
+               SourceExpr="Purchase Line"."Line Amount" }
+
+    { 1000000010;2;Column;TOTAL_FORMAT_Purchase_Header_No_;
+               SourceExpr='TOTAL '+FORMAT("Purchase Header"."No.") }
+
+    { 1380;2   ;Column  ;Purchase_Line_Document_Type;
+               SourceExpr="Document Type" }
+
+    { 2757;2   ;Column  ;Purchase_Line_Document_No_;
+               SourceExpr="Document No." }
+
+    { 5144;2   ;Column  ;Purchase_Line_Line_No_;
+               SourceExpr="Line No." }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      CompanyInfo@1000000000 : Record 79;
+      Text001@1000000001 : TextConst 'FRA=Page %1';
+      Gtxt_DateDocFilter@1000000002 : Text[50];
+      Gtxt_TypeDocFilter@1000000003 : Text[50];
+      Gtxt_FournisseurFilter@1000000004 : Text[50];
+      "Gtxt_Quantit‚Filter"@1000000005 : Text[30];
+      Grec_PurchaseLine@1000000006 : Record 39;
+      Gdec_TotalDocument@1000000007 : Decimal;
+      Gint_CompteurTotal@1000000008 : Decimal;
+      UserMgt@1000000009 : Codeunit 5700;
+      Text002@1000000010 : TextConst 'ENU=Document type :;FRA=Type document :';
+      Text003@1000000011 : TextConst 'ENU=Vendor :;FRA=Fournisseur :';
+      Text004@1000000012 : TextConst 'ENU=at;FRA=…';
+      Text005@1000000013 : TextConst 'ENU=Listing of Purchases;FRA=Listing des achats';
+      Reminder_of_the_selectionCaptionLbl@1000317749 : TextConst 'ENU=Reminder of the selection;FRA=Rappel de la s‚lection';
+      Date__CaptionLbl@1000349334 : TextConst 'FRA=Date :';
+      User__CaptionLbl@1000239910 : TextConst 'ENU=User :;FRA=Utilisateur :';
+      Vendor__CaptionLbl@1000328878 : TextConst 'ENU=Vendor :;FRA=Fournisseur :';
+      Document_Date__CaptionLbl@1000411681 : TextConst 'ENU=Document Date :;FRA=Date document :';
+      Due_Date__CaptionLbl@1000772862 : TextConst 'ENU=Due Date :;FRA=Date d''‚ch‚ance :';
+      No_CaptionLbl@1000026740 : TextConst 'ENU=No.;FRA=Nø';
+      DescriptionCaptionLbl@1000780929 : TextConst 'ENU=Description;FRA=D‚signation';
+      QtyCaptionLbl@1000761398 : TextConst 'ENU=Qty;FRA=Qt‚';
+      UnitCaptionLbl@1000994140 : TextConst 'ENU=Unit;FRA=Unit‚';
+      Direct_Unit_CostCaptionLbl@1000790853 : TextConst 'ENU=Direct Unit Cost;FRA=Co–t unit. direct';
+      Disc___CaptionLbl@1000180795 : TextConst 'ENU=Disc. %;FRA=% Rem.';
+      VATCaptionLbl@1000339054 : TextConst 'ENU=VAT;FRA=TVA';
+      AmountCaptionLbl@1000029838 : TextConst 'ENU=Amount;FRA=Montant';
+      Receiv_CaptionLbl@1000619583 : TextConst 'ENU=Receiv.;FRA=Re‡ue';
+      Purch_CaptionLbl@1000448929 : TextConst 'ENU=Purch.;FRA=Fact.';
+
+    BEGIN
+    {
+      CREATION JX-XAD du 13/08/2008
+      Listing de documents d'achats en cours
+
+      //modif AUD du 22/04/2009
+      //traduction des champs Anglais/Fran‡ais
+
+      //JX-AUD du 13/05/2013
+      //Agrandissement logo
+    }
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>f86dd93f-7c7d-46d8-bf4d-0bdf53b6729a</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="Text005">
+          <DataField>Text005</DataField>
+        </Field>
+        <Field Name="Date_____Gtxt_DateDocFilter">
+          <DataField>Date_____Gtxt_DateDocFilter</DataField>
+        </Field>
+        <Field Name="Text002_____Gtxt_TypeDocFilter">
+          <DataField>Text002_____Gtxt_TypeDocFilter</DataField>
+        </Field>
+        <Field Name="Text003_____Gtxt_FournisseurFilter">
+          <DataField>Text003_____Gtxt_FournisseurFilter</DataField>
+        </Field>
+        <Field Name="USERID">
+          <DataField>USERID</DataField>
+        </Field>
+        <Field Name="FORMAT_TODAY_">
+          <DataField>FORMAT_TODAY_</DataField>
+        </Field>
+        <Field Name="Text004_____FORMAT_TIME_">
+          <DataField>Text004_____FORMAT_TIME_</DataField>
+        </Field>
+        <Field Name="STRSUBSTNO_Text001_FORMAT_CurrReport_PAGENO__">
+          <DataField>STRSUBSTNO_Text001_FORMAT_CurrReport_PAGENO__</DataField>
+        </Field>
+        <Field Name="CompanyInfo_Picture">
+          <DataField>CompanyInfo_Picture</DataField>
+        </Field>
+        <Field Name="PH_Buy_from_Vendor_No__">
+          <DataField>PH_Buy_from_Vendor_No__</DataField>
+        </Field>
+        <Field Name="PH_No_">
+          <DataField>PH_No_</DataField>
+        </Field>
+        <Field Name="PH_Document_Date_">
+          <DataField>PH_Document_Date_</DataField>
+        </Field>
+        <Field Name="PH_Document_Type_">
+          <DataField>PH_Document_Type_</DataField>
+        </Field>
+        <Field Name="Purchase_Header__Due_Date_">
+          <DataField>Purchase_Header__Due_Date_</DataField>
+        </Field>
+        <Field Name="TOTAL_FORMAT_PH_Document_Type_">
+          <DataField>TOTAL_FORMAT_PH_Document_Type_</DataField>
+        </Field>
+        <Field Name="Gdec_TotalDocument">
+          <DataField>Gdec_TotalDocument</DataField>
+        </Field>
+        <Field Name="Gdec_TotalDocumentFormat">
+          <DataField>Gdec_TotalDocumentFormat</DataField>
+        </Field>
+        <Field Name="Reminder_of_the_selectionCaption">
+          <DataField>Reminder_of_the_selectionCaption</DataField>
+        </Field>
+        <Field Name="Date__Caption">
+          <DataField>Date__Caption</DataField>
+        </Field>
+        <Field Name="User__Caption">
+          <DataField>User__Caption</DataField>
+        </Field>
+        <Field Name="Vendor__Caption">
+          <DataField>Vendor__Caption</DataField>
+        </Field>
+        <Field Name="Document_Date__Caption">
+          <DataField>Document_Date__Caption</DataField>
+        </Field>
+        <Field Name="Due_Date__Caption">
+          <DataField>Due_Date__Caption</DataField>
+        </Field>
+        <Field Name="No_Caption">
+          <DataField>No_Caption</DataField>
+        </Field>
+        <Field Name="DescriptionCaption">
+          <DataField>DescriptionCaption</DataField>
+        </Field>
+        <Field Name="QtyCaption">
+          <DataField>QtyCaption</DataField>
+        </Field>
+        <Field Name="UnitCaption">
+          <DataField>UnitCaption</DataField>
+        </Field>
+        <Field Name="Direct_Unit_CostCaption">
+          <DataField>Direct_Unit_CostCaption</DataField>
+        </Field>
+        <Field Name="Disc___Caption">
+          <DataField>Disc___Caption</DataField>
+        </Field>
+        <Field Name="VATCaption">
+          <DataField>VATCaption</DataField>
+        </Field>
+        <Field Name="AmountCaption">
+          <DataField>AmountCaption</DataField>
+        </Field>
+        <Field Name="Receiv_Caption">
+          <DataField>Receiv_Caption</DataField>
+        </Field>
+        <Field Name="Purch_Caption">
+          <DataField>Purch_Caption</DataField>
+        </Field>
+        <Field Name="Purchase_Line__No__">
+          <DataField>Purchase_Line__No__</DataField>
+        </Field>
+        <Field Name="Purchase_Line_Description">
+          <DataField>Purchase_Line_Description</DataField>
+        </Field>
+        <Field Name="Purchase_Line_Quantity">
+          <DataField>Purchase_Line_Quantity</DataField>
+        </Field>
+        <Field Name="Purchase_Line_QuantityFormat">
+          <DataField>Purchase_Line_QuantityFormat</DataField>
+        </Field>
+        <Field Name="PL_Unit_of_Measure_">
+          <DataField>PL_Unit_of_Measure_</DataField>
+        </Field>
+        <Field Name="PL_Direct_Unit_Cost_">
+          <DataField>PL_Direct_Unit_Cost_</DataField>
+        </Field>
+        <Field Name="PL_Direct_Unit_Cost_Format">
+          <DataField>PL_Direct_Unit_Cost_Format</DataField>
+        </Field>
+        <Field Name="PL_Line_Discount___">
+          <DataField>PL_Line_Discount___</DataField>
+        </Field>
+        <Field Name="PL_Line_Discount___Format">
+          <DataField>PL_Line_Discount___Format</DataField>
+        </Field>
+        <Field Name="PL_VAT_Identifier_">
+          <DataField>PL_VAT_Identifier_</DataField>
+        </Field>
+        <Field Name="PL_Line_Amount_">
+          <DataField>PL_Line_Amount_</DataField>
+        </Field>
+        <Field Name="PL_Line_Amount_Format">
+          <DataField>PL_Line_Amount_Format</DataField>
+        </Field>
+        <Field Name="PL_Quantity_Received_">
+          <DataField>PL_Quantity_Received_</DataField>
+        </Field>
+        <Field Name="PL_Quantity_Received_Format">
+          <DataField>PL_Quantity_Received_Format</DataField>
+        </Field>
+        <Field Name="PL_Quantity_Invoiced_">
+          <DataField>PL_Quantity_Invoiced_</DataField>
+        </Field>
+        <Field Name="PL_Quantity_Invoiced_Format">
+          <DataField>PL_Quantity_Invoiced_Format</DataField>
+        </Field>
+        <Field Name="PL_Line_Amount__Control1000000009">
+          <DataField>PL_Line_Amount__Control1000000009</DataField>
+        </Field>
+        <Field Name="PL_Line_Amount__Control1000000009Format">
+          <DataField>PL_Line_Amount__Control1000000009Format</DataField>
+        </Field>
+        <Field Name="TOTAL_FORMAT_Purchase_Header_No_">
+          <DataField>TOTAL_FORMAT_Purchase_Header_No_</DataField>
+        </Field>
+        <Field Name="Purchase_Line_Document_Type">
+          <DataField>Purchase_Line_Document_Type</DataField>
+        </Field>
+        <Field Name="Purchase_Line_Document_No_">
+          <DataField>Purchase_Line_Document_No_</DataField>
+        </Field>
+        <Field Name="Purchase_Line_Line_No_">
+          <DataField>Purchase_Line_Line_No_</DataField>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>DataSet</rd:DataSetName>
+        <rd:SchemaPath>Report.xsd</rd:SchemaPath>
+        <rd:TableName>Result</rd:TableName>
+      </rd:DataSetInfo>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>0.79045cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.79245cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.62146cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.86439cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.3081cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="CompanyInfo_Picture">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=System.Convert.ToBase64String(Fields!CompanyInfo_Picture.Value)</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Text005">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Text005.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Date_____Gtxt_DateDocFilter">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Date_____Gtxt_DateDocFilter.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Text002_____Gtxt_TypeDocFilter">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Text002_____Gtxt_TypeDocFilter.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Text003_____Gtxt_FournisseurFilter">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Text003_____Gtxt_FournisseurFilter.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Text004_____FORMAT_TIME_">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Text004_____FORMAT_TIME_.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Reminder_of_the_selectionCaption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Reminder_of_the_selectionCaption.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Date__Caption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!Date__Caption.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="User__Caption">
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value EvaluationMode="Auto">=Fields!User__Caption.Value</Value>
+                                  <Style>
+                                    <Color>#ff0000</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Visibility>
+                            <Hidden>true</Hidden>
+                          </Visibility>
+                          <Style>
+                            <BackgroundColor>LightCyan</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Details" />
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>DataSet_Result</DataSetName>
+            <Top>0.07056cm</Top>
+            <Height>0.3081cm</Height>
+            <Width>15.56875cm</Width>
+            <Visibility>
+              <Hidden>true</Hidden>
+            </Visibility>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>5.31977cm</Height>
+        <Style />
+      </Body>
+      <Width>32.5cm</Width>
+      <Page>
+        <PageHeader>
+          <Height>5.499cm</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="User__Caption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!User__Caption.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>13.06875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>1.8cm</Width>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Date__Caption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Date__Caption.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Left>13.06875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>1.8cm</Width>
+              <ZIndex>1</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Reminder_of_the_selectionCaption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Reminder_of_the_selectionCaption.Value</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>3.807cm</Top>
+              <Left>0.31875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>4.95cm</Width>
+              <ZIndex>2</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Text004_____FORMAT_TIME_1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Text004_____FORMAT_TIME_.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Left>17.41875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>2.25cm</Width>
+              <ZIndex>3</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Text003_____Gtxt_FournisseurFilter1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Text003_____Gtxt_FournisseurFilter.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>4.653cm</Top>
+              <Left>0.31875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>9.3cm</Width>
+              <ZIndex>4</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Text002_____Gtxt_TypeDocFilter1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Text002_____Gtxt_TypeDocFilter.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>4.23cm</Top>
+              <Left>0.31875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>9.3cm</Width>
+              <ZIndex>5</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Date_____Gtxt_DateDocFilter1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Date_____Gtxt_DateDocFilter.Value</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>4.23cm</Top>
+              <Left>9.91875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>9.3cm</Width>
+              <ZIndex>6</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="Text0051">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=ReportItems!Text005.Value</Value>
+                      <Style>
+                        <FontSize>12pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.846cm</Top>
+              <Left>6.91875cm</Left>
+              <Height>0.846cm</Height>
+              <Width>5.85cm</Width>
+              <ZIndex>7</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Image Name="CompanyInfo_Picture1">
+              <Source>Database</Source>
+              <Value>=Convert.FromBase64String(ReportItems!CompanyInfo_Picture.Value)</Value>
+              <MIMEType>image/bmp</MIMEType>
+              <Left>0.01875cm</Left>
+              <Height>3.5cm</Height>
+              <Width>6cm</Width>
+              <ZIndex>8</ZIndex>
+              <Style />
+            </Image>
+            <Textbox Name="ExecutionTimeTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=Globals!ExecutionTime</Value>
+                      <Style>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Left>14.86875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>1.5cm</Width>
+              <ZIndex>9</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="UserIdTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=User!UserID</Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>13.86875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>3.85cm</Width>
+              <ZIndex>10</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="PageNumberTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=Globals!PageNumber</Value>
+                      <Style />
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>17.86875cm</Left>
+              <Height>0.423cm</Height>
+              <Width>1.8cm</Width>
+              <ZIndex>11</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style />
+        </PageHeader>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>22.50001cm</PageWidth>
+        <LeftMargin>0.8cm</LeftMargin>
+        <TopMargin>1cm</TopMargin>
+        <BottomMargin>1cm</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Cm</rd:ReportUnitType>
+  <rd:ReportID>2fa62657-9bd9-4c20-9171-8b1db88d4e2b</rd:ReportID>
+</Report>
+    END_OF_RDLDATA
+  }
+}
+

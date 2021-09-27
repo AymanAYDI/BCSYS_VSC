@@ -2,9 +2,10 @@ OBJECT Table 17 G/L Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,JX-VSC1.0-XAD,JX-VSC2.0-XAD,TFS353134,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -222,6 +223,18 @@ OBJECT Table 17 G/L Entry
     { 10813;  ;Letter Date         ;Date          ;CaptionML=[ENU=Letter Date;
                                                               FRA=Date de la lettre];
                                                    Editable=No }
+    { 50000;  ;Vendor No.          ;Code20        ;CaptionML=FRA=Nø Fournisseur }
+    { 50002;  ;Customer No.        ;Code20        ;CaptionML=[ENU=Customer No.;
+                                                              FRA=Nø Client] }
+    { 50003;  ;Temp Entry No.      ;Integer        }
+    { 50004;  ;Temp Rcpt No.       ;Code20         }
+    { 50005;  ;Temp Rcpt Line No.  ;Integer        }
+    { 50006;  ;Temp Dim. Set ID    ;Integer        }
+    { 50010;  ;Document Type Prepaid;Option       ;CaptionML=FRA=Type Document Pr‚pay‚;
+                                                   OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50011;  ;Document Prepaid    ;Code20        ;CaptionML=FRA=Nø Document Pr‚pay‚ }
   }
   KEYS
   {
@@ -251,6 +264,8 @@ OBJECT Table 17 G/L Entry
                                                    SumIndexFields=Amount }
     {    ;Posting Date                             }
     {    ;Document Type,Document No.               }
+    {    ;Vendor No.                               }
+    {    ;Customer No.                             }
   }
   FIELDGROUPS
   {
@@ -261,6 +276,7 @@ OBJECT Table 17 G/L Entry
     VAR
       GLSetup@1000 : Record 98;
       GLSetupRead@1002 : Boolean;
+      Text50000@1000000000 : TextConst 'FRA=Pour modifier les axes analytiques d''une facture ou d''un avoir, vous devez les modifier … partir de la page facture ou avoir enregistr‚.';
 
     PROCEDURE GetCurrencyCode@1() : Code[10];
     BEGIN
@@ -292,8 +308,23 @@ OBJECT Table 17 G/L Entry
     PROCEDURE ShowDimensions@2();
     VAR
       DimMgt@1000 : Codeunit 408;
+      lNewDimSet@1000000001 : Integer;
+      lUpdateDim@1000000000 : Report 50063;
     BEGIN
-      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+      // Ligne standard Nav
+      // Migration Nav 2015 => Modification imputation analytique
+      //DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+      IF ("Document Type" = "Document Type"::Invoice) OR ("Document Type" = "Document Type"::"Credit Memo") THEN BEGIN
+       MESSAGE(Text50000);
+       DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+      END ELSE BEGIN
+       lNewDimSet := DimMgt.EditDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"Entry No."));
+       IF "Dimension Set ID" <> lNewDimSet THEN BEGIN
+        CLEAR(lUpdateDim);
+        lUpdateDim.SetGLEntry(Rec,lNewDimSet);
+        lUpdateDim.RUN;
+       END;
+      END;
     END;
 
     PROCEDURE UpdateDebitCredit@3(Correction@1000 : Boolean);
@@ -405,6 +436,24 @@ OBJECT Table 17 G/L Entry
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD du 08/08/2008
+      Ajout de la cl‚ "G/L Account No.,Source No.,Transaction No." dans le but de r‚aliser l'‚tat de synthŠse TVA fournisseurs
+
+      MODIF JX-XAD 17/10/2008
+      Ajout d'un champ "Nø Fournisseur" (utilis‚ pour les FNP)
+
+      MODIF JX-XAD 29/10/2008
+      Ajout d'un champ "Date Ecriture IRIS" utilis‚ comme Flag afin de savoir si une ‚criture est d‚j… import‚e dans IRIS Finance
+
+      MODIF JX-XAD 01/10/2010
+      Ajout d'un champ "Nø Client"
+      Ajout de deux cl‚s secondaires (Vendor No. et Customer No.) dans le but de r‚aliser les ‚tats de consultation de comptes g‚n‚raux
+
+      MODIF JX-AUD du 24/01/14 en rapport avec le patch TSF353134
+      Ajout de la cl‚ "Posting Date", afin de permettre au report 10885 de fonctionner
+    }
     END.
   }
 }

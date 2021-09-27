@@ -1,0 +1,287 @@
+OBJECT Page 50013 Duplicating List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/02/16;
+    Time=15:45:00;
+    Modified=Yes;
+    Version List=JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Duplicating List;
+               FRA=Liste de duplication];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table50003;
+    PageType=Card;
+    OnInit=BEGIN
+             DimensionVisible := TRUE;
+             Gbool_SelectAll := TRUE;
+             Gbool_SelectAllWithDim := TRUE;
+           END;
+
+    OnOpenPage=BEGIN
+                 CASE Gopt_TypeFiche OF
+                   Gopt_TypeFiche::Vendor : Gtxt_TypeFiche := text011;
+                   Gopt_TypeFiche::"G/L Account" : Gtxt_TypeFiche := text012;
+                   Gopt_TypeFiche::Item : Gtxt_TypeFiche := text013;
+                   Gopt_TypeFiche::VendorBankAccount :
+                   BEGIN
+                    Gtxt_TypeFiche := text014;
+                    DimensionVisible := FALSE;
+                   END;
+                   //MODIF JX-AUD du 07/04/2014
+                   Gopt_TypeFiche::User :
+                   BEGIN
+                     Gtxt_TypeFiche := text015;
+                     DimensionVisible := FALSE;
+                   END;
+                   //FIN MODIF JX-AUD du 07/04/2014
+                   ELSE
+                     ERROR(text010);
+                 END;
+
+                 Gcu_DuplicatingRecords.Initialiser();
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000007;1 ;Action    ;
+                      CaptionML=[ENU=Validate duplication;
+                                 FRA=Valider duplication];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostponedInteractions;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 Lint_DuplicationNumber@1000000001 : Integer;
+                                 Ltxt_Duplication@1000000002 : Text[1024];
+                                 Ltxt_Echec@1000000003 : Text[1024];
+                               BEGIN
+                                 //DEBUT MODIF JX-XAD 15/06/2010
+                                 //Lint_DuplicationNumber := Gcu_DuplicatingRecords.Dupliquer(Gopt_TypeFiche,Gcode_Fiche);
+                                 Lint_DuplicationNumber := Gcu_DuplicatingRecords.Dupliquer(Gopt_TypeFiche,Gcode_Fiche,Gcode_Fiche2);
+                                 //FIN MODIF JX-XAD 15/06/2010
+
+
+                                 //**** Traitement du message final r‚capitulatif *****
+                                 IF Lint_DuplicationNumber = 0 THEN
+                                   MESSAGE(text001)
+                                 ELSE
+                                 BEGIN
+                                   Ltxt_Duplication := text007;
+                                   CASE Gopt_TypeFiche OF
+                                    Gopt_TypeFiche::Vendor:
+                                     Ltxt_Duplication := text007 + Text019;
+                                    Gopt_TypeFiche::VendorBankAccount:
+                                     Ltxt_Duplication := text007 + Text020;
+                                   END;
+                                   Ltxt_Duplication := ' ' + Gcode_Fiche +' '+text009+'\\';
+                                   Ltxt_Echec := '';
+                                   IF FIND('-') THEN
+                                   REPEAT
+                                     IF Duplication THEN
+                                     BEGIN
+                                       IF Echec THEN
+                                       BEGIN
+                                         Ltxt_Echec += Name + '\';
+                                       END ELSE
+                                       BEGIN
+                                         Ltxt_Duplication += Name;
+                                 //        IF Dimension THEN
+                                 //          Ltxt_Duplication += ' ' + text005 + '\'
+                                 //        ELSE
+                                           Ltxt_Duplication += '\';
+                                       END;
+                                     END;
+                                   UNTIL NEXT = 0;
+                                   IF Ltxt_Echec <> '' THEN
+                                     Ltxt_Echec := '\'+text008+'\\' + Ltxt_Echec;
+                                   MESSAGE(Ltxt_Duplication+Ltxt_Echec);
+                                 END;
+
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+      { 1000000016;1 ;Action    ;
+                      CaptionML=FRA=S‚lection toutes soci‚t‚s;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SelectEntries;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 07/06/2011
+                                 SelectAll(Gbool_SelectAll);
+                                 IF Gopt_TypeFiche <> Gopt_TypeFiche:: User THEN //JX-AUD 07/04/14
+                                   SelectAllWithDim(Gbool_SelectAllWithDim);
+                                 //FIN MODIF JX-XAD 07/06/2011
+                               END;
+                                }
+      { 1000000010;1 ;Action    ;
+                      CaptionML=[ENU=Validate deletion;
+                                 FRA=Valider suppression];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Delete;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 Lint_DuplicationNumber@1000000001 : Integer;
+                                 Ltxt_Duplication@1000000002 : Text[1024];
+                                 Ltxt_Echec@1000000003 : Text[1024];
+                               BEGIN
+                                 //DEBUT MODIF JX-AUD du 07/04/14
+                                 IF Gopt_TypeFiche <> Gopt_TypeFiche::User THEN  ERROR(text016);
+
+                                 Gopt_TypeFiche:= Gopt_TypeFiche::UserDelete;
+
+                                 Lint_DuplicationNumber := Gcu_DuplicatingRecords.Dupliquer(Gopt_TypeFiche,Gcode_Fiche,Gcode_Fiche2);
+
+                                 //**** Traitement du message final r‚capitulatif *****
+                                 IF Lint_DuplicationNumber = 0 THEN
+                                   MESSAGE(text001)
+                                 ELSE
+                                 BEGIN
+                                   Ltxt_Duplication := text007+' '+ Gcode_Fiche +' '+text017+'\\';
+                                   Ltxt_Echec := '';
+                                   IF FIND('-') THEN
+                                   REPEAT
+                                     IF Duplication THEN
+                                     BEGIN
+                                       IF Echec THEN
+                                       BEGIN
+                                         Ltxt_Echec += Name + '\';
+                                       END ELSE
+                                       BEGIN
+                                         Ltxt_Duplication += Name;
+                                 //        IF Dimension THEN
+                                 //          Ltxt_Duplication += ' ' + text005 + '\'
+                                 //        ELSE
+                                           Ltxt_Duplication += '\';
+                                       END;
+                                     END;
+                                   UNTIL NEXT = 0;
+                                   IF Ltxt_Echec <> '' THEN
+                                     Ltxt_Echec := '\'+text018+'\\' + Ltxt_Echec;
+                                   MESSAGE(Ltxt_Duplication+Ltxt_Echec);
+                                 END;
+
+                                 //Gcu_DuplicatingRecords.Dupliquer(Gopt_TypeFiche::UserDeleteActualSociety,Gcode_Fiche,Gcode_Fiche2);
+                                 Gcu_DuplicatingRecords.DeleteUserActualSociety(Gcode_Fiche);
+                                 CurrPage.CLOSE;
+
+                                 //FIN MODIF JX-AUD du 07/04/14
+                               END;
+                                }
+      { 1000000008;1 ;Action    ;
+                      CaptionML=[ENU=Cancel;
+                                 FRA=Annuler];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CancelAllLines;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000009;1;Field  ;
+                SourceExpr=COMPANYNAME;
+                Editable=FALSE;
+                Style=Standard;
+                StyleExpr=TRUE }
+
+    { 1000000011;1;Field  ;
+                CaptionClass=FORMAT (text006+' '+Gtxt_TypeFiche+' '+Gcode_Fiche);
+                Editable=FALSE }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                CaptionML=[ENU=Company;
+                           FRA=Soci‚t‚];
+                SourceExpr=Name }
+
+    { 1000000005;2;Field  ;
+                CaptionML=[ENU=Dupliacate to;
+                           FRA=Dupliquer vers];
+                SourceExpr=Duplication }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=With dimensions;
+                           FRA=Avec l'analytique];
+                SourceExpr=Dimension;
+                Visible=DimensionVisible }
+
+  }
+  CODE
+  {
+    VAR
+      Grec_CompanyList@1000000000 : Record 2000000006;
+      Gtxt_TypeFiche@1000000001 : Text[30];
+      Gcode_Fiche@1000000002 : Code[50];
+      Gopt_TypeFiche@1000000003 : ',Vendor,G/L Account,Item,VendorBankAccount,User,UserDelete,UserDeleteActualSociety';
+      Gcu_DuplicatingRecords@1000000004 : Codeunit 50000;
+      text001@1000000005 : TextConst 'ENU=Transaction canceled;FRA=Op‚ration annul‚e';
+      text002@1000000006 : TextConst 'ENU=Summary on the duplication of the record;FRA="R‚capitulatif concernant la duplication de la fiche "';
+      text003@1000000007 : TextConst 'ENU=Failure in;FRA=Echec dans';
+      text004@1000000008 : TextConst 'ENU=diplucation successful in;FRA=Duplication r‚ussie dans';
+      text005@1000000009 : TextConst 'ENU=[with dimensions];FRA=[avec l''analytique]';
+      text006@1000000010 : TextConst 'ENU=Duplicate card;FRA=Dupliquer fiche';
+      text007@1000000011 : TextConst 'ENU=The card;FRA=La fiche';
+      text008@1000000012 : TextConst 'ENU=Duplication has failed in :;FRA=La duplication a ‚chou‚ dans :';
+      text009@1000000013 : TextConst 'ENU=has been duplicated in the following company :;FRA=a ‚t‚ dupliqu‚e dans la (ou les) soci‚t‚(s) suivante(s) :';
+      text010@1000000018 : TextConst 'ENU=This form must be launched from a sheet supplier, a general account, an article or a bank account!;FRA=Ce formulaire doit ˆtre lanc‚ depuis une fiche fournisseur, un compte g‚n‚ral, un article, un compte bancaire ou la liste des paramŠtres utilisateurs !';
+      text011@1000000017 : TextConst 'ENU=Vendor;FRA=fournisseur';
+      text012@1000000016 : TextConst 'ENU=item;FRA=article';
+      text013@1000000015 : TextConst 'ENU=G/L account;FRA=compte g‚n‚ral';
+      text014@1000000014 : TextConst 'ENU=bank account;FRA=compte bancaire';
+      Gcode_Fiche2@1000000019 : Code[50];
+      Gbool_SelectAll@1000000020 : Boolean;
+      Gbool_SelectAllWithDim@1000000021 : Boolean;
+      text015@1000000022 : TextConst 'FRA=utilisateur';
+      text016@1000000023 : TextConst 'FRA=Ce bouton ne s''applique pas pour votre traitement';
+      text017@1000000024 : TextConst 'ENU=has been duplicated in the following company :;FRA=a ‚t‚ supprim‚e dans la (ou les) soci‚t‚(s) suivante(s) :';
+      text018@1000000025 : TextConst 'ENU=Duplication has failed in :;FRA=La suppression a ‚chou‚ dans :';
+      DimensionVisible@19028944 : Boolean INDATASET;
+      Text019@1000000026 : TextConst 'FRA=Fournisseur';
+      Text020@1000000027 : TextConst 'FRA=Compte bancaire';
+
+    PROCEDURE initialiser@1000000000(Lopt_TypeFiche@1000000000 : ',Vendor,G/L Account,Item';Lcode_Fiche@1000000001 : Code[50];Lcode_Fiche2@1000000002 : Code[50]);
+    BEGIN
+      Gopt_TypeFiche := Lopt_TypeFiche;
+      Gcode_Fiche := Lcode_Fiche;
+      Gcode_Fiche2 := Lcode_Fiche2
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD LE 06/04/2009
+      Permet la duplication de fiches fournisseur, compte g‚n‚ral et article d'une soci‚t‚ vers une autre.
+      Objets li‚s modifi‚s ou cr‚‚s : Form 16, 26, 30; Codeunit 50001 ; Table 50003
+
+      ---------------------------- V1.2 ----------------------------
+
+      MODIF JX-XAD 15/06/2010 (Fait le 15/10/2010 pour Nav 2009)
+      Ajout de la duplication d'un compte bancaire
+
+      MODIF JX-XAD 07/06/2011
+      Ajout d'un bouton permettant de tout s‚lectionner
+
+      MODIF JX-AUD du 07/04/2014
+      Ajout du bouton Suppression utilisateur
+      Changement des libell‚s "Valider duplication" et "S‚lectionner toutes soci‚t‚s"
+    }
+    END.
+  }
+}
+

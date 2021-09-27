@@ -2,8 +2,9 @@ OBJECT Table 9055 Purchase Cue
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=30/01/17;
+    Time=17:53:30;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -33,7 +34,7 @@ OBJECT Table 9055 Purchase Cue
                                                    Editable=No }
     { 4   ;   ;Outstanding Purchase Orders;Integer;FieldClass=FlowField;
                                                    CalcFormula=Count("Purchase Header" WHERE (Document Type=FILTER(Order),
-                                                                                              Status=FILTER(Released),
+                                                                                              Status=FILTER(Open|Released),
                                                                                               Completely Received=FILTER(No),
                                                                                               Responsibility Center=FIELD(Responsibility Center Filter)));
                                                    AccessByPermission=TableData 120=R;
@@ -74,6 +75,59 @@ OBJECT Table 9055 Purchase Cue
                                                    CaptionML=[ENU=Responsibility Center Filter;
                                                               FRA=Filtre centre de gestion];
                                                    Editable=No }
+    { 50000;  ;Quote Open          ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Quote),
+                                                                                              Status=CONST(Open),
+                                                                                              Assigned User ID=FIELD(User Filter)));
+                                                   CaptionML=FRA=Devis Ouvert;
+                                                   Editable=No }
+    { 50001;  ;Quote to Release    ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Quote),
+                                                                                              Status=CONST(Pending Approval),
+                                                                                              Assigned User ID=FIELD(User Filter)));
+                                                   CaptionML=FRA=Devis En Appro.;
+                                                   Editable=No }
+    { 50002;  ;Quote to tranform   ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Quote),
+                                                                                              Status=CONST(Released),
+                                                                                              Assigned User ID=FIELD(User Filter)));
+                                                   CaptionML=FRA=Devis … Transformer en BC;
+                                                   Editable=No }
+    { 50003;  ;All Orders          ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Order),
+                                                                                              Status=FILTER(Open|Released),
+                                                                                              Assigned User ID=FIELD(User Filter)));
+                                                   CaptionML=FRA=Tous mes BC;
+                                                   Editable=No }
+    { 50004;  ;Invoice To Approve  ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Invoice),
+                                                                                              Status Code=CONST(08),
+                                                                                              Assigned User ID=FIELD(User Filter),
+                                                                                              Status=CONST(Open)));
+                                                   CaptionML=FRA=Factures … approuver;
+                                                   Editable=No }
+    { 50005;  ;Credit Memo To Approve;Integer     ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Credit Memo),
+                                                                                              Assigned User ID=FIELD(User Filter),
+                                                                                              Status=CONST(Open)));
+                                                   CaptionML=FRA=Avoirs … approuver;
+                                                   Editable=No }
+    { 50006;  ;Order To Receipt    ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Order),
+                                                                                              Assigned User ID=FIELD(User Filter),
+                                                                                              Receipt Status=FILTER(' '|Not receive|Partially receive)));
+                                                   CaptionML=FRA=BC … r‚ceptionner;
+                                                   Editable=No }
+    { 50007;  ;Invoices            ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Purchase Header" WHERE (Document Type=CONST(Invoice),
+                                                                                              Status Code=FILTER(01..08|10..11|20),
+                                                                                              Assigned User ID=FIELD(User Filter)));
+                                                   CaptionML=[ENU=Invoices;
+                                                              FRA=Actions … mener];
+                                                   Editable=No }
+    { 50010;  ;User Filter         ;Code50        ;FieldClass=FlowFilter;
+                                                   TableRelation="User Setup"."User ID";
+                                                   CaptionML=FRA=Filtre Utilisateur }
   }
   KEYS
   {

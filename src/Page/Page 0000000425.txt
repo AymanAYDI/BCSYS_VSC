@@ -2,9 +2,10 @@ OBJECT Page 425 Vendor Bank Account Card
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00,NAVFR4.00,NAVFR4.00JX-VSC1.2-LAB-XAD;
   }
   PROPERTIES
   {
@@ -12,6 +13,25 @@ OBJECT Page 425 Vendor Bank Account Card
                FRA=Fiche compte bancaire fourn.];
     SourceTable=Table288;
     PageType=Card;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 40      ;1   ;ActionGroup;
+                      CaptionML=[ENU=&Bank Acc.;
+                                 FRA=&Banque] }
+      { 1000000002;2 ;Separator  }
+      { 1000000003;2 ;Action    ;
+                      CaptionML=FRA=Dupliquer vers une autre soci‚t‚;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 15/06/2010
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::VendorBankAccount,"Vendor No.",Code);
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 15/06/2010
+                               END;
+                                }
+    }
   }
   CONTROLS
   {
@@ -43,11 +63,11 @@ OBJECT Page 425 Vendor Bank Account Card
     { 14  ;2   ;Field     ;
                 SourceExpr="Phone No." }
 
-    { 10  ;2   ;Field     ;
-                SourceExpr=City }
-
     { 18  ;2   ;Field     ;
                 SourceExpr=Contact }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr=City }
 
     { 34  ;2   ;Field     ;
                 SourceExpr="Currency Code" }
@@ -66,6 +86,9 @@ OBJECT Page 425 Vendor Bank Account Card
 
     { 1120004;2;Field     ;
                 SourceExpr="RIB Checked" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Change RIB/IBAN" }
 
     { 1902768601;1;Group  ;
                 CaptionML=[ENU=Communication;
@@ -128,8 +151,20 @@ OBJECT Page 425 Vendor Bank Account Card
   }
   CODE
   {
+    VAR
+      GForm_Dupliquer@1000000001 : Page 50013;
+      Gopt_TypeFiche@1000000000 : ',Vendor,G/L Account,Item,VendorBankAccount';
 
     BEGIN
+    {
+      //Modif LAB du 26/05/2010
+      //Ajout du champ Modification du RIB/IBAN
+
+      ---------------------------- V1.2 ----------------------------
+
+      //Ajout JX-XAD le 15/06/2010 (fait le 15/10/2010)
+      //Ajout de la fonction "Dupliquer" dans le menu Banque
+    }
     END.
   }
 }

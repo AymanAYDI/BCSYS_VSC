@@ -1,0 +1,803 @@
+OBJECT XMLport 50026 Timing
+{
+  OBJECT-PROPERTIES
+  {
+    Date=16/01/17;
+    Time=16:17:10;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    OnPreXMLport=BEGIN
+                   //Modif JX-AUD du 22/02/2012
+                   Gint_CompteurLigne := 0;
+                   Gint_nb :=0;
+                   //Fin modif JX-AUD du 22/02/2012
+                   Grec_TemporaryTable.SETCURRENTKEY("Account No.");
+                   Grec_Temporary_Table_Log_Ini.DELETEALL;
+                   Grec_Temporary_Table_Log_Rec.DELETEALL;
+                   Gint_nb1 :=0;
+                   Gint_NumImport := 0;
+                   //TempExcelBuffer.RESET;//Modif JX-AUD 28/02/2012
+                   PurchSetup.GET;
+                 END;
+
+    OnPostXMLport=BEGIN
+                    //Modif JX-AUD 28/02/2012
+                    //Modif Buffer Excel //fichier lignes non import‚es
+                    Window.OPEN(
+                      Text014 +
+                      '@1@@@@@@@@@@@@@@@@@@@@@\');
+                    Window.UPDATE(1,0);
+                    TotalRecNo := Grec_TemporaryTable.COUNT;
+                    RecNo :=0;
+
+                    //TempExcelBuffer.DELETEALL;
+                    //CLEAR(TempExcelBuffer);
+                    TempExcelBuffer.RESET;
+                    EnterCell(1, 1, Text013, TRUE, FALSE, FALSE);
+                    EnterCell(1, 3, 'Import du ' + FORMAT(TODAY), TRUE, FALSE, FALSE);
+                    EnterCell(2, 1, 'Code entit‚', TRUE, FALSE, FALSE);
+                    EnterCell(2, 2, 'Code matricule', TRUE, FALSE, FALSE);
+                    EnterCell(2, 3, 'Date comptabilisation', TRUE, FALSE, FALSE);
+                    EnterCell(2, 4, 'Quantit‚', TRUE, FALSE, FALSE);
+                    EnterCell(2, 5, 'Axe 0', TRUE, FALSE, FALSE);
+                    EnterCell(2, 6, 'Axe 1', TRUE, FALSE, FALSE);
+                    EnterCell(2, 7, 'Axe 2', TRUE, FALSE, FALSE);
+                    EnterCell(2, 8, 'Axe 3', TRUE, FALSE, FALSE);
+                    EnterCell(2, 9, 'Commentaire', TRUE, FALSE, FALSE);
+
+                    Row := 2;
+                    //Fin modif Buffer Excel
+                    //Fin modif JX-AUD 28/02/2012
+
+                    //Modif Buffer Excel //fichier lignes quantit‚ modifi‚e
+                    Window1.OPEN(
+                      Text014 +
+                      '@1@@@@@@@@@@@@@@@@@@@@@\');
+                    Window1.UPDATE(1,0);
+                    TotalRecNo1 := Grec_TemporaryTable.COUNT;
+                    RecNo1 :=0;
+
+                    //TempExcelBuffer.DELETEALL;
+                    //CLEAR(TempExcelBuffer);
+                    TempExcelBuffer1.RESET;
+                    EnterCell1(1, 1, Text015, TRUE, FALSE, FALSE);
+                    EnterCell1(1, 3, 'Import du ' + FORMAT(TODAY), TRUE, FALSE, FALSE);
+                    {
+                    //EnterCell1(2, 1, 'Code entit‚', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 2, 'Code matricule', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 3, 'Date comptabilisation', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 4, 'Quantit‚', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 5, 'Axe 0', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 6, 'Axe 1', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 7, 'Axe 2', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 8, 'Axe 3', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 9, 'Quantit‚ cde avant', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 10, 'Quantit‚ cde aprŠs', TRUE, FALSE, FALSE);
+                    //EnterCell1(2, 11, 'Nø commande', TRUE, FALSE, FALSE);
+                    }
+                    EnterCell1(2, 1, 'Nø commande', TRUE, FALSE, FALSE);
+                    EnterCell1(2, 2, 'Nø ligne commande', TRUE, FALSE, FALSE);
+                    EnterCell1(2, 3, 'Quantit‚ ligne initiale', TRUE, FALSE, FALSE);
+                    EnterCell1(2, 4, 'Quantit‚ ajout‚e par F2i', TRUE, FALSE, FALSE);
+                    EnterCell1(2, 5, 'Quantit‚ ligne cmd aprŠs', TRUE, FALSE, FALSE);
+
+                    Row1 := 2;
+                    //Fin modif Buffer Excel
+                    //Fin modif JX-AUD 28/02/2012
+
+                    //traitement cl‚ import
+                    Grec_PurchLine.SETCURRENTKEY("Matricule No.");
+
+                    IF Grec_TemporaryTable.FIND('-') THEN
+                    BEGIN
+                      REPEAT
+                        //recherche si doublon dans la table temporaire pour la cl‚ Matricule,Axe0,Axe1,Axe2,Axe3
+                        Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Account No.", Grec_TemporaryTable."Account No.");
+                        Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 0", Grec_TemporaryTable."Axe 0");
+                        Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 1", Grec_TemporaryTable."Axe 1");
+                        Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 2", Grec_TemporaryTable."Axe 2");
+                        Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 3", Grec_TemporaryTable."Axe 3");
+                        IF Grec_TemporaryTable2.FINDFIRST THEN
+                          IF Grec_TemporaryTable2.COUNT > 1 THEN //il y a plusieurs lignes
+                          BEGIN
+                            InsertionExcel(Grec_TemporaryTable,Text016,'');//doublon pour cl‚ Matricule,Axe0, Axe1, Axe2,Axe3
+                          END ELSE
+                          BEGIN
+                            //si pas de doublons, on recherche les doublons pour la cl‚ Matricule, Axe0, Axe1, Axe3
+                            ///Grec_TemporaryTable2.RESET;
+                            ///Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Account No.", Grec_TemporaryTable."Account No.");
+                            ///Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 0", Grec_TemporaryTable."Axe 0");
+                            ///Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 1", Grec_TemporaryTable."Axe 1");
+                            ///Grec_TemporaryTable2.SETFILTER(Grec_TemporaryTable2."Axe 3", Grec_TemporaryTable."Axe 3");
+                            ///IF Grec_TemporaryTable2.FIND('-') THEN
+                              ///IF Grec_TemporaryTable2.COUNT > 1 THEN //il y a plusieurs lignes
+                              ///BEGIN
+                                //recherche de toutes les lignes commandes NAV pour le matricule
+                                Grec_PurchLine.RESET;
+                                Grec_PurchLine.SETFILTER("Document Type",
+                                FORMAT(Grec_PurchLine."Document Type"::Order));//filtre sur le document type commande
+                                //Grec_PurchLine.SETFILTER(Grec_PurchLine."Outstanding Quantity",'>0');//filtre sur quantit‚ restante >0 // Migration Nav 2015
+                                Grec_PurchLine.SETFILTER(Grec_PurchLine."Matricule No.",Grec_TemporaryTable2."Account No.");
+                                Grec_PurchLine.SETFILTER(Quantity,'<>%1',0);
+                                Grec_PurchLine.SETRANGE(Grec_PurchLine."Quantity Received",0);
+                                Grec_PurchLine.SETRANGE("VTIME New Line",FALSE); // Nav 2015
+                                Grec_TemporaryTable3.DELETEALL;
+                                  IF Grec_PurchLine.FINDLAST THEN
+                                  BEGIN
+                                    REPEAT
+                                    //puis qui ont la combinaison d'axes Axe0,Axe1,Axe3
+                                     IF ValidateDimensions(Grec_PurchLine,Grec_TemporaryTable2."Axe 0",Grec_TemporaryTable2."Axe 1",
+                                     Grec_TemporaryTable2."Axe 2",Grec_TemporaryTable2."Axe 3") THEN
+                                     BEGIN
+                                      //on insert la commande dans une table temporaire
+                                      Gint_nb += 1;
+                                      Grec_TemporaryTable3.INIT;
+                                      Grec_TemporaryTable3."Line No." := Gint_nb;
+                                      Grec_TemporaryTable3."Document No." := Grec_PurchLine."Document No.";
+                                      Grec_TemporaryTable3."Account No." := FORMAT(Gint_nb) + '' + Grec_PurchLine."Matricule No.";
+                                      Grec_TemporaryTable3."External document No." := FORMAT(Grec_PurchLine."Line No.");//LineNo.
+                                      Grec_TemporaryTable3.INSERT;
+                                     END;
+                                    UNTIL Grec_PurchLine.NEXT =0;
+
+                                    //v‚rification si x lignes NAV dans la table temporaire
+                                    IF Grec_TemporaryTable3.FIND('-') THEN
+                                    BEGIN
+                                      IF Grec_TemporaryTable3.COUNT >1 THEN
+                                      BEGIN
+                                        InsertionExcel(Grec_TemporaryTable2,Text017,'');//doublon pour cl‚ Matricule,Axe0, Axe1,Axe3
+                                      END ELSE
+                                      BEGIN
+                                        //insertion de la reception
+                                        Grec_PurchLine2.RESET;
+                                        EVALUATE(Gint_LineNo,Grec_TemporaryTable3."External document No.");
+                                        Grec_PurchLine2.GET(Grec_PurchLine2."Document Type"::Order,Grec_TemporaryTable3."Document No.",
+                                        Gint_LineNo);
+                                        IF NOT (Grec_PurchLine2.Quantity = Grec_PurchLine2."Quantity Invoiced") THEN
+                                        BEGIN
+                                          IF AjouterAxeClient(Grec_TemporaryTable2,Grec_PurchLine2) THEN
+                                          BEGIN
+                                            ModifierQuantite(Grec_TemporaryTable2,Grec_PurchLine2);
+                                            Grec_PurchLine2.GET(Grec_PurchLine2."Document Type"::Order,Grec_TemporaryTable3."Document No.",
+                                            Gint_LineNo);
+                                            ValiderReception(Grec_TemporaryTable2,Grec_PurchLine2)
+                                          END
+                                          ELSE
+                                            InsertionExcel(Grec_TemporaryTable2,Text020,'');//axe client erron‚
+                                        END ELSE
+                                            InsertionExcel(Grec_TemporaryTable2,Text022,'');//ligne d‚j… factur‚e
+                                      END;
+                                    END ELSE
+                                      InsertionExcel(Grec_TemporaryTable2,Text018,'');//aucune ligne nav
+                                  END ELSE
+                                    InsertionExcel(Grec_TemporaryTable2,Text023,'')//aucune ligne nav
+                             ///END ELSE
+                              ///BEGIN
+                              ///END;
+                          END;
+                      UNTIL Grec_TemporaryTable.NEXT = 0;
+                    END;
+
+                    //d‚but traitement log lignes modifi‚es
+                    IF Grec_Temporary_Table_Log_Ini.FIND('-') THEN
+                      BEGIN
+                        REPEAT
+                          Gdec_QuantiteIni :=0;
+                          Gdec_QuantiteIni := Grec_Temporary_Table_Log_Ini."Credit amount";
+                          Gdec_CalculQuantite :=0;
+                          Grec_Temporary_Table_Log_Rec.RESET;
+                          Grec_Temporary_Table_Log_Rec.SETFILTER("Document No.",Grec_Temporary_Table_Log_Ini."Document No.");
+                          Grec_Temporary_Table_Log_Rec.SETFILTER("External document No.",FORMAT(Grec_Temporary_Table_Log_Ini."External document No."));
+                          IF Grec_Temporary_Table_Log_Rec.FIND('-') THEN
+                          BEGIN
+                            REPEAT
+                              Gdec_CalculQuantite += Grec_Temporary_Table_Log_Rec."Credit amount";
+                            UNTIL Grec_Temporary_Table_Log_Rec.NEXT =0;
+                          END;
+
+                            //IF Gdec_CalculQuantite > Grec_Temporary_Table_Log_Ini."Credit amount" THEN
+                            //BEGIN
+                          EVALUATE(Gint_NumLigne,Grec_Temporary_Table_Log_Ini."External document No.");
+                          IF Grec_PurchLine.GET(Grec_PurchLine."Document Type"::Order,Grec_Temporary_Table_Log_Ini."Document No.",
+                          Gint_NumLigne) THEN
+                          BEGIN
+                             InsertionExcel1(Gdec_QuantiteIni,Gdec_CalculQuantite,Grec_Temporary_Table_Log_Ini."Document No.",
+                             Grec_PurchLine.Quantity,Gint_NumLigne);
+                          END;
+                            //END;
+                          ///END;
+                        UNTIL Grec_Temporary_Table_Log_Ini.NEXT = 0;
+                      END;
+                    //fin traitement log lignes modifi‚es
+
+                    FinalisationFichierExcel;//Modif JX-AUD 28/02/2012
+                  END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;Timing              ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=VAR
+                                                                                 Nb@1000000000 : Integer;
+                                                                               BEGIN
+                                                                                 //Modif JX-AUD du 22/02/2012
+                                                                                 Gint_CompteurLigne += 1;
+                                                                                 IF ((Gint_CompteurLigne > 1) AND (Gtxt_CodeEntite = PurchSetup."Entity Code")) THEN //insertion des lignes du fichier dans une table temporaire
+                                                                                 BEGIN
+                                                                                   IF EVALUATE(Gdec_Quantit‚,Gtxt_Quantit‚) THEN;
+                                                                                   IF EVALUATE(Gdate_DateComptabilisation,Gtxt_DateComptabilisation) THEN;
+                                                                                   Grec_Import.RESET;
+                                                                                   Grec_Import.SETRANGE("External document No.",Gtxt_CodeEntite);
+                                                                                   Grec_Import.SETRANGE("Account No.",Gtxt_CodeMatricule);
+                                                                                   Grec_Import.SETRANGE("Posting date",Gdate_DateComptabilisation);
+                                                                                   Grec_Import.SETRANGE("Credit amount",Gdec_Quantit‚);
+                                                                                   Grec_Import.SETRANGE("Axe 0",Gtxt_Axe0);
+                                                                                   Grec_Import.SETRANGE("Axe 1",Gtxt_Axe1);
+                                                                                   Grec_Import.SETRANGE("Axe 2",Gtxt_Axe2);
+                                                                                   Grec_Import.SETRANGE("Axe 3",Gtxt_Axe3);
+                                                                                   IF NOT Grec_Import.FINDFIRST THEN BEGIN
+
+                                                                                     Grec_TemporaryTable.INIT;
+                                                                                     Grec_TemporaryTable."Line No." := Gint_CompteurLigne;//inutile mais n‚cessaire pour l'insertion des donn‚es car cl‚ primaire
+                                                                                     Grec_TemporaryTable."Document No." := FORMAT(Gint_CompteurLigne) + '' + Gtxt_CodeMatricule;//inutile mais n‚cessaire pour l'insert
+                                                                                     Grec_TemporaryTable."External document No." := Gtxt_CodeEntite;
+                                                                                     Grec_TemporaryTable."Account No." := Gtxt_CodeMatricule;
+                                                                                     IF EVALUATE(Gdate_DateComptabilisation,Gtxt_DateComptabilisation) THEN
+                                                                                       Grec_TemporaryTable."Posting date" := Gdate_DateComptabilisation;
+                                                                                     IF EVALUATE(Gdec_Quantit‚,Gtxt_Quantit‚) THEN
+                                                                                       Grec_TemporaryTable."Credit amount" := Gdec_Quantit‚;
+                                                                                     Grec_TemporaryTable."Axe 0" := Gtxt_Axe0;
+                                                                                     Grec_TemporaryTable."Axe 1" := Gtxt_Axe1;
+                                                                                     Grec_TemporaryTable."Axe 2" := Gtxt_Axe2;
+                                                                                     Grec_TemporaryTable."Axe 3" := Gtxt_Axe3;
+                                                                                     Grec_TemporaryTable.INSERT;
+                                                                                     Grec_TemporaryTable2.INIT; //initialisation d'une seconde table temporaire identique
+                                                                                     Grec_TemporaryTable2 := Grec_TemporaryTable;
+                                                                                     Grec_TemporaryTable2.INSERT;
+
+                                                                                     Gint_NumImport += 1;
+                                                                                     Grec_Import.INIT;
+                                                                                     Grec_Import := Grec_TemporaryTable;
+                                                                                     Grec_Import."Document No." := FORMAT(Gint_NumImport);
+                                                                                     Grec_Import."Line No." := Gint_NumImport;
+                                                                                     Grec_Import.INSERT;
+                                                                                   END;
+                                                                                 END;
+                                                                               END;
+                                                                                }
+
+    { [{2DAF8459-606A-4105-8635-92927A08623B}];2 ;Gtxt_CodeEntite     ;Element ;Text    ;
+                                                  VariableName=Gtxt_CodeEntite }
+
+    { [{1C0ACEB5-8EDC-48DE-8837-B245BDF9FBE1}];2 ;Gtxt_CodeMatricule  ;Element ;Text    ;
+                                                  VariableName=Gtxt_CodeMatricule }
+
+    { [{E7E304D0-C186-447C-8BEC-649E7CAD74E4}];2 ;Gtxt_DateComptabilisation;Element;Text;
+                                                  VariableName=Gtxt_DateComptabilisation }
+
+    { [{BBB76674-2D62-4C8A-A253-2CC17E1B0DFA}];2 ;Gtxt_Quantit‚       ;Element ;Text    ;
+                                                  VariableName=Gtxt_Quantit‚ }
+
+    { [{45A5DC2A-B426-4147-BFFE-DF7766140D0F}];2 ;Gtxt_Axe0           ;Element ;Text    ;
+                                                  VariableName=Gtxt_Axe0 }
+
+    { [{FA9D8CEF-45AB-4D7B-8D1D-FF02B1B92887}];2 ;Gtxt_Axe1           ;Element ;Text    ;
+                                                  VariableName=Gtxt_Axe1 }
+
+    { [{46D9E993-3444-42D1-BBF8-B16FABDDA0D6}];2 ;Gtxt_Axe2           ;Element ;Text    ;
+                                                  VariableName=Gtxt_Axe2 }
+
+    { [{06929A33-AF64-466A-AAB7-4C6E4E01C528}];2 ;Gtxt_Axe3           ;Element ;Text    ;
+                                                  VariableName=Gtxt_Axe3 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gint_CompteurLigne@1000000063 : Integer;
+      Gint_Ligne@1000000062 : Integer;
+      "Gdec_Quantit‚"@1000000061 : Decimal;
+      Grec_DocumentDimension@1000000042 : Record 480;
+      Grec_PurchHeader@1000000060 : Record 38;
+      Grec_PurchLine@1000000059 : Record 39;
+      Grec_Item@1000000058 : Record 27;
+      Gtxt_ColonneSup3@1000000054 : Text[50];
+      Gtxt_ColonneSup4C@1000000053 : Text[50];
+      Gtxt_ColonneSup5@1000000052 : Text[50];
+      Gtxt_ColonneSup6@1000000051 : Text[50];
+      Gtxt_ColonneSup7@1000000050 : Text[50];
+      Gtxt_ColonneSup8@1000000049 : Text[50];
+      Gtxt_ColonneSup9@1000000048 : Text[50];
+      Gtxt_ColonneSup10@1000000047 : Text[50];
+      Gbool_Erreur@1000000046 : Boolean;
+      Grec_PurchReceiptHeader@1000000045 : Record 120;
+      Grec_PurchReceiptLine@1000000044 : Record 121;
+      Gint_Ligne100@1000000043 : Integer;
+      Gcu_PurchPost@1000000041 : Codeunit 90;
+      Gdate_DateComptabilisation@1000000040 : Date;
+      Gbool_AxesOk@1000000039 : Boolean;
+      Grec_TemporaryTable@1000000038 : TEMPORARY Record 50005;
+      Grec_TemporaryTable2@1000000037 : TEMPORARY Record 50005;
+      TempExcelBuffer@1000000036 : TEMPORARY Record 370;
+      Window@1000000035 : Dialog;
+      Row@1000000034 : Integer;
+      TotalRecNo@1000000033 : Integer;
+      RecNo@1000000032 : Integer;
+      TempExcelBuffer1@1000000031 : TEMPORARY Record 370;
+      Window1@1000000030 : Dialog;
+      Row1@1000000029 : Integer;
+      TotalRecNo1@1000000028 : Integer;
+      RecNo1@1000000027 : Integer;
+      Gdec_QuantiteCmdAvant@1000000026 : Decimal;
+      Gdec_QuantiteCmdApres@1000000025 : Decimal;
+      Grec_TemporaryTable3@1000000024 : TEMPORARY Record 50005;
+      Grec_Import@1000000084 : TEMPORARY Record 50005;
+      Gint_nb@1000000023 : Integer;
+      Gbool_AxeClientOk@1000000022 : Boolean;
+      Grec_PurchaseLine2@1000000021 : Record 39;
+      Gint_LineNo@1000000020 : Integer;
+      Grec_PurchaseLine_Validate@1000000019 : Record 39;
+      Grec_PurchLine2@1000000018 : Record 39;
+      Grec_PurchLine3@1000000017 : Record 39;
+      Gint_LineNo2@1000000016 : Integer;
+      Gtxt_DocumentNo2@1000000015 : Text[30];
+      PurchHeader@1000000014 : Record 38;
+      PurchPost@1000000013 : Codeunit 90;
+      Selection@1000000012 : Integer;
+      Grec_Temp@1000000011 : Record 50001;
+      Grec_DimensionValue@1000000010 : Record 349;
+      Grec_PurchHeader2@1000000009 : Record 38;
+      Gbool_CommandeFacturee@1000000008 : Boolean;
+      Grec_Temporary_Table_Log_Ini@1000000007 : TEMPORARY Record 50005;
+      Grec_Temporary_Table_Log_Rec@1000000006 : TEMPORARY Record 50005;
+      Grec_PurchaseLineArchive@1000000005 : Record 5110;
+      Gint_nb1@1000000004 : Integer;
+      Gdec_CalculQuantite@1000000003 : Decimal;
+      Gdec_QuantiteIni@1000000002 : Decimal;
+      Grec_Archive_Management@1000000001 : Codeunit 5063;
+      Gint_NumLigne@1000000000 : Integer;
+      Text001@1000000082 : TextConst 'ENU=Error about item %1! Line number %2 must be an integer;FRA=Erreur concernant l''article %1! Le nø ligne %2 doit ˆtre un entier';
+      Text002@1000000081 : TextConst 'ENU=Error on line;FRA=Erreur ligne';
+      Text003@1000000080 : TextConst 'ENU=Warning! No line n''exite not in control;FRA=Attention ! nø ligne n''exite pas dans la commande';
+      Text004@1000000079 : TextConst 'ENU=Error ! This command has no line;FRA=Erreur ! cette commande ne comporte aucune ligne';
+      Text005@1000000078 : TextConst 'ENU=Interrupted operation;FRA=Op‚ration interrompue';
+      Text006@1000000077 : TextConst 'ENU=The quantity is incorrect;FRA=La quantit‚ est incorrecte';
+      Text007@1000000076 : TextConst 'ENU=Do you really like to continue import ?;FRA=Souhaitez-vous tout de mˆme poursuivre l''import ?';
+      Text008@1000000075 : TextConst 'ENU=There is not item card correspondent;FRA=Il n''y a pas de fiche article correspondante';
+      Text009@1000000074 : TextConst 'ENU=Warning!\\The file contains errors.\\All quantities have not been updated.;FRA=Attention !\\Le fichier comporte des erreurs.\\Toutes les quantit‚s n''ont pu ˆtre mises … jour.';
+      Text010@1000000073 : TextConst 'ENU=Error on line %1 !\\Item %2 of the file does not correspond with that of the order;FRA=Erreur ligne %1 !\\L''article %2 du fichier ne correspond pas avec celui de la commande';
+      Text011@1000000072 : TextConst 'ENU=Warning! You do not cancel approvals\\Do you really like to continue import ?;FRA=Attention ! vous n''avez pas annul‚ les r‚ceptions\\Souhaitez-vous tout de mˆme poursuivre l''import ?';
+      Text012@1000000071 : TextConst 'ENU=There is no reception with this command\\Do you really like to continue import ?;FRA=Il n''y a aucun bon de r‚ception li‚ … cette commande\\Souhaitez-vous tout de mˆme poursuivre l''import ?';
+      Text013@1000000070 : TextConst 'FRA=Historique des lignes en erreur';
+      Text014@1000000069 : TextConst 'ENU=Analyzing Data...;FRA=Analyse donn‚es';
+      Text015@1000000068 : TextConst 'FRA=Historique des lignes modifi‚es';
+      Text016@1000000067 : TextConst 'FRA=Doublon fichier F2i Axe 2';
+      Text017@1000000066 : TextConst 'FRA=Doublon Nav';
+      Text018@1000000065 : TextConst 'FRA=Section Inexistante Nav';
+      Text019@1000000064 : TextConst 'FRA=Analytique erron‚e';
+      Text020@1000000057 : TextConst 'FRA=Axe client erron‚ ou bloqu‚';
+      Text021@1000000056 : TextConst 'FRA=Doublon fichier F2i Axe0 Axe1 Axe 3';
+      Text022@1000000055 : TextConst 'FRA=Ligne d‚j… factur‚e';
+      Text023@1000000083 : TextConst 'FRA=Inexistant Nav';
+      Gint_NumImport@1000000085 : Integer;
+      PurchSetup@1000000086 : Record 312;
+
+    PROCEDURE ValidateDimensions@1000000011(Grec_PurchaseLine@1000000000 : Record 39;Axe0@1000000001 : Text[30];Axe1@1000000002 : Text[30];Axe2@1000000003 : Text[30];Axe3@1000000004 : Text[30]) : Boolean;
+    BEGIN
+      Gbool_AxesOk := TRUE;
+
+      //recherche Axe0
+      IF (PurchSetup."Verify Dim 0 on Purch. Line") AND (PurchSetup."Timing Dimension 0" <> '') THEN
+       IF Grec_DocumentDimension.GET(Grec_PurchaseLine."Dimension Set ID",PurchSetup."Timing Dimension 0") THEN BEGIN
+         IF NOT (Grec_DocumentDimension."Dimension Value Code" = Axe0) THEN
+            Gbool_AxesOk := FALSE;
+       END ELSE
+         Gbool_AxesOk := FALSE;
+
+      //recherche Axe1
+      IF (PurchSetup."Verify Dim 1 on Purch. Line") AND (PurchSetup."Timing Dimension 1" <> '') THEN
+       IF Grec_DocumentDimension.GET(Grec_PurchaseLine."Dimension Set ID",PurchSetup."Timing Dimension 1") THEN BEGIN
+         IF NOT (Grec_DocumentDimension."Dimension Value Code" = Axe1) THEN
+            Gbool_AxesOk := FALSE;
+       END ELSE
+         Gbool_AxesOk := FALSE;
+
+      //recherche Axe2
+      IF (PurchSetup."Verify Dim 2 on Purch. Line") AND (PurchSetup."Timing Dimension 2" <> '') THEN
+       IF Grec_DocumentDimension.GET(Grec_PurchaseLine."Dimension Set ID",PurchSetup."Timing Dimension 2") THEN BEGIN
+         IF NOT (Grec_DocumentDimension."Dimension Value Code" = Axe2) THEN
+            Gbool_AxesOk := FALSE;
+       END ELSE
+         Gbool_AxesOk := FALSE;
+
+      //recherche Axe3
+      IF (PurchSetup."Verify Dim 3 on Purch. Line") AND (PurchSetup."Timing Dimension 3" <> '') THEN
+       IF Grec_DocumentDimension.GET(Grec_PurchaseLine."Dimension Set ID",PurchSetup."Timing Dimension 3") THEN BEGIN
+         IF NOT (Grec_DocumentDimension."Dimension Value Code" = Axe3) THEN
+            Gbool_AxesOk := FALSE;
+       END ELSE
+         Gbool_AxesOk := FALSE;
+
+      EXIT(Gbool_AxesOk);
+    END;
+
+    PROCEDURE AjouterAxeClient@1000000001(lrec_TemporaryTable@1000000000 : Record 50005;VAR lrec_PurchLine@1000000001 : Record 39) : Boolean;
+    VAR
+      Lcu_Dimension@1000000004 : Codeunit 408;
+      LCode_DimCode@1000000003 : ARRAY [50] OF Code[20];
+      LCode_DimValueCode@1000000002 : ARRAY [50] OF Code[20];
+      LTemp_PurchLine@1000000005 : TEMPORARY Record 39;
+      lRec_PurchlineNew@1000000007 : Record 39;
+      LRec_Purchline2@1000000006 : Record 39;
+      Lrec_DimSetEntry@1000000008 : Record 480;
+    BEGIN
+      //fonction permettant d'int‚grer l'axe 2 client
+      Gbool_AxeClientOk := FALSE;
+
+      //v‚rification des sections des axes … ne pas v‚rifier initialement
+      IF (PurchSetup."Verify Dim 0 on Purch. Line") AND (PurchSetup."Verify Dim 1 on Purch. Line")
+        AND (PurchSetup."Verify Dim 2 on Purch. Line") AND (PurchSetup."Verify Dim 3 on Purch. Line") THEN
+          Gbool_AxeClientOk := TRUE
+      ELSE BEGIN
+        IF (NOT PurchSetup."Verify Dim 0 on Purch. Line") AND (PurchSetup."Timing Dimension 0" <> '') THEN
+         IF Grec_DimensionValue.GET(PurchSetup."Timing Dimension 0",Grec_TemporaryTable."Axe 0") THEN
+          IF NOT Grec_DimensionValue.Blocked THEN
+            Gbool_AxeClientOk := TRUE;
+        IF (NOT PurchSetup."Verify Dim 1 on Purch. Line") AND (PurchSetup."Timing Dimension 1" <> '') THEN
+         IF Grec_DimensionValue.GET(PurchSetup."Timing Dimension 1",Grec_TemporaryTable."Axe 1") THEN
+          IF NOT Grec_DimensionValue.Blocked THEN
+            Gbool_AxeClientOk := TRUE;
+        IF (NOT PurchSetup."Verify Dim 2 on Purch. Line") AND (PurchSetup."Timing Dimension 2" <> '') THEN
+         IF Grec_DimensionValue.GET(PurchSetup."Timing Dimension 2",Grec_TemporaryTable."Axe 2") THEN
+          IF NOT Grec_DimensionValue.Blocked THEN
+            Gbool_AxeClientOk := TRUE;
+        IF (NOT PurchSetup."Verify Dim 3 on Purch. Line") AND (PurchSetup."Timing Dimension 3" <> '') THEN
+         IF Grec_DimensionValue.GET(PurchSetup."Timing Dimension 3",Grec_TemporaryTable."Axe 3") THEN
+          IF NOT Grec_DimensionValue.Blocked THEN
+            Gbool_AxeClientOk := TRUE;
+      END;
+
+      IF Gbool_AxeClientOk THEN BEGIN
+        LTemp_PurchLine := lrec_PurchLine;
+        LCode_DimCode[1] := PurchSetup."Timing Dimension 0";
+        LCode_DimValueCode[1] := lrec_TemporaryTable."Axe 0";
+        LCode_DimCode[2] := PurchSetup."Timing Dimension 1";
+        LCode_DimValueCode[2] := lrec_TemporaryTable."Axe 1";
+        LCode_DimCode[3] := PurchSetup."Timing Dimension 2";
+        LCode_DimValueCode[3] := lrec_TemporaryTable."Axe 2";
+        LCode_DimCode[4] := PurchSetup."Timing Dimension 3";
+        LCode_DimValueCode[4] := lrec_TemporaryTable."Axe 3";
+        LTemp_PurchLine."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(LTemp_PurchLine."Dimension Set ID",LTemp_PurchLine."Shortcut Dimension 1 Code",
+                                      LTemp_PurchLine."Shortcut Dimension 2 Code",LCode_DimCode,LCode_DimValueCode);
+
+        IF lrec_PurchLine."Quantity Received" = 0 THEN BEGIN
+         IF LTemp_PurchLine."Dimension Set ID" <> lrec_PurchLine."Dimension Set ID" THEN BEGIN
+          lrec_PurchLine."Dimension Set ID" := LTemp_PurchLine."Dimension Set ID";
+          lrec_PurchLine.MODIFY;
+         END;
+        END ELSE
+          IF LTemp_PurchLine."Dimension Set ID" <> lrec_PurchLine."Dimension Set ID" THEN BEGIN
+           lRec_PurchlineNew := lrec_PurchLine;
+           LRec_Purchline2.RESET;
+           LRec_Purchline2.SETRANGE("Document Type",lrec_PurchLine."Document Type");
+           LRec_Purchline2.SETRANGE("Document No.",lrec_PurchLine."Document No.");
+           IF LRec_Purchline2.FINDLAST THEN
+            lRec_PurchlineNew."Line No." := LRec_Purchline2."Line No." + 10000
+           ELSE
+            lRec_PurchlineNew."Line No." := 10000;
+           lRec_PurchlineNew.INSERT;
+           lRec_PurchlineNew."Dimension Set ID" := LTemp_PurchLine."Dimension Set ID";
+           lRec_PurchlineNew."Outstanding Quantity" := lRec_PurchlineNew.Quantity;
+           lRec_PurchlineNew."Qty. to Invoice" := 0;
+           lRec_PurchlineNew."Qty. to Receive" := 0;
+           lRec_PurchlineNew."Qty. Rcd. Not Invoiced" := 0;
+           lRec_PurchlineNew."Amt. Rcd. Not Invoiced" := 0;
+           lRec_PurchlineNew."Quantity Received" := 0;
+           lRec_PurchlineNew."Quantity Invoiced" := 0;
+           lRec_PurchlineNew."Outstanding Qty. (Base)" := lRec_PurchlineNew."Quantity (Base)";
+           lRec_PurchlineNew."Qty. to Receive (Base)" := 0;
+           lRec_PurchlineNew."Qty. to Invoice (Base)" := 0;
+           lRec_PurchlineNew."Qty. Rcd. Not Invoiced (Base)" := 0;
+           lRec_PurchlineNew."Qty. Received (Base)" := 0;
+           lRec_PurchlineNew."Qty. Invoiced (Base)" := 0;
+           lRec_PurchlineNew."VTIME New Line" := TRUE;
+           lRec_PurchlineNew.MODIFY;
+           LCode_DimCode[1] := PurchSetup."Timing Dimension 0";
+           LCode_DimValueCode[1] := lrec_TemporaryTable."Axe 0";
+           LCode_DimCode[2] := PurchSetup."Timing Dimension 1";
+           LCode_DimValueCode[2] := lrec_TemporaryTable."Axe 1";
+           LCode_DimCode[3] := PurchSetup."Timing Dimension 2";
+           LCode_DimValueCode[3] := lrec_TemporaryTable."Axe 2";
+           LCode_DimCode[4] := PurchSetup."Timing Dimension 3";
+           LCode_DimValueCode[4] := lrec_TemporaryTable."Axe 3";
+           IF Lrec_DimSetEntry.GET(lrec_PurchLine."Dimension Set ID",'INTRAGROUPE') THEN BEGIN
+            LCode_DimCode[5] := 'INTRAGROUPE';
+            LCode_DimValueCode[5] := Lrec_DimSetEntry."Dimension Value Code";
+           END;
+           lRec_PurchlineNew."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(lRec_PurchlineNew."Dimension Set ID",lRec_PurchlineNew."Shortcut Dimension 1 Code",
+                                        lRec_PurchlineNew."Shortcut Dimension 2 Code",LCode_DimCode,LCode_DimValueCode);
+           lRec_PurchlineNew.MODIFY;
+           lrec_PurchLine := lRec_PurchlineNew;
+          END;
+      END;
+      //si axe2 absent dans f2i et NAV alors on renvoie false
+      EXIT(Gbool_AxeClientOk);
+    END;
+
+    PROCEDURE ModifierQuantite@1000000000(Grec_TemporaryTable@1000000000 : Record 50005;Grec_PurchaseLine1@1000000001 : Record 39);
+    VAR
+      ReleasePurchDoc@1000000002 : Codeunit 415;
+    BEGIN
+      //d‚but traitement pour ins‚r‚r la commande dans la table Grec_Temporary_Log_Ini
+      Grec_Temporary_Table_Log_Ini.SETCURRENTKEY("Document No.","External document No.");
+      Gint_nb1 += 1;
+      Grec_Temporary_Table_Log_Ini.SETFILTER(Grec_Temporary_Table_Log_Ini."Document No.",Grec_PurchaseLine1."Document No.");
+      Grec_Temporary_Table_Log_Ini.
+      SETFILTER(Grec_Temporary_Table_Log_Ini."External document No.",FORMAT(Grec_PurchaseLine1."Line No."));
+      IF NOT Grec_Temporary_Table_Log_Ini.FIND('-') THEN
+      BEGIN
+        //v‚rification si premiŠre archive pour la ligne
+        Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Document Type",
+        FORMAT(Grec_PurchaseLineArchive."Document Type"::Order));
+        Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Document No.",Grec_PurchaseLine1."Document No.");
+        Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Doc. No. Occurrence",'1');
+        Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Line No.",FORMAT(Grec_PurchaseLine1."Line No."));
+        Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Matricule No.",Grec_PurchaseLine1."Matricule No.");
+        IF NOT Grec_PurchaseLineArchive.FIND('-') THEN
+        BEGIN
+          //on cr‚er une archive
+          IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Order,Grec_PurchaseLine1."Document No.") THEN
+            Grec_Archive_Management.StorePurchDocument(Grec_PurchHeader,FALSE);
+          //on r‚cupŠre l'archive cr‚e et la ligne initiale
+          Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Document Type",
+          FORMAT(Grec_PurchaseLineArchive."Document Type"::Order));
+          Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Document No.",Grec_PurchaseLine1."Document No.");
+          Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Doc. No. Occurrence",'1');
+          Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Line No.",FORMAT(Grec_PurchaseLine1."Line No."));
+          Grec_PurchaseLineArchive.SETFILTER(Grec_PurchaseLineArchive."Matricule No.",Grec_PurchaseLine1."Matricule No.");
+          IF Grec_PurchaseLineArchive.FIND('-') THEN
+          BEGIN
+            Grec_Temporary_Table_Log_Ini.RESET;
+            Grec_Temporary_Table_Log_Ini.INIT;
+            Grec_Temporary_Table_Log_Ini."Line No." :=Gint_nb1;
+            Grec_Temporary_Table_Log_Ini."Document No." := Grec_PurchaseLineArchive."Document No.";
+            Grec_Temporary_Table_Log_Ini."External document No." := FORMAT(Grec_PurchaseLineArchive."Line No.");
+            Grec_Temporary_Table_Log_Ini."Credit amount" := Grec_PurchaseLineArchive.Quantity;//Qt‚ initiale de la ligne
+            Grec_Temporary_Table_Log_Ini.INSERT;
+          END;
+        END ELSE
+          BEGIN
+            Grec_Temporary_Table_Log_Ini.RESET;
+            Grec_Temporary_Table_Log_Ini.INIT;
+            Grec_Temporary_Table_Log_Ini."Line No." :=Gint_nb1;
+            Grec_Temporary_Table_Log_Ini."Document No." := Grec_PurchaseLineArchive."Document No.";
+            Grec_Temporary_Table_Log_Ini."External document No." := FORMAT(Grec_PurchaseLineArchive."Line No.");
+            Grec_Temporary_Table_Log_Ini."Credit amount" := Grec_PurchaseLineArchive.Quantity;//Qt‚ initiale de la ligne
+            Grec_Temporary_Table_Log_Ini.INSERT;
+
+          END;
+      END;
+      Grec_Temporary_Table_Log_Ini.RESET;
+      //fin
+
+      IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Order,Grec_PurchaseLine1."Document No.") THEN
+        IF Grec_PurchHeader.Status <> Grec_PurchHeader.Status::Open THEN
+        BEGIN
+             ReleasePurchDoc.PerformManualReopen(Grec_PurchHeader);
+        END;
+
+      {IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Order,Grec_PurchaseLine1."Document No.") THEN
+        IF Grec_PurchHeader.Status = Grec_PurchHeader.Status::Released THEN
+        BEGIN
+            //on modifie le statut en "Ouvert" si la commande est lanc‚e
+            Grec_PurchHeader.VALIDATE(Status,Grec_PurchHeader.Status::Open);
+            Grec_PurchHeader.MODIFY;
+            //COMMIT;
+        END;
+      }
+
+      Gint_LineNo2 := Grec_PurchaseLine1."Line No.";
+      Gtxt_DocumentNo2 := Grec_PurchaseLine1."Document No.";
+
+      //pour une commande ayant plusieurs lignes mettre toutes les "Quantit‚ … recevoir" … 0 avant de changer la quantit‚ et valider
+      //la commande en reception
+      Grec_PurchLine3.SETFILTER(Grec_PurchLine3."Document No.",Gtxt_DocumentNo2);
+      IF Grec_PurchLine3.FIND('-') THEN
+        REPEAT
+          BEGIN
+            Grec_PurchLine3.VALIDATE("Qty. to Receive",0);
+            Grec_PurchLine3.MODIFY;
+          END;
+        UNTIL Grec_PurchLine3.NEXT = 0;
+
+      //fonction permettant de modifier les quantit‚ de la commande
+      Grec_PurchaseLine1.RESET;
+      Grec_PurchaseLine1.GET(Grec_PurchaseLine1."Document Type"::Order,Gtxt_DocumentNo2,Gint_LineNo2);//rechargement de la ligne
+      Gdec_Quantit‚ := Grec_TemporaryTable."Credit amount";
+      IF Gdec_Quantit‚ > Grec_PurchaseLine1."Outstanding Quantity" THEN
+      BEGIN
+        Gdec_QuantiteCmdAvant := Grec_PurchaseLine1.Quantity;
+        Grec_PurchaseLine1.VALIDATE(Grec_PurchaseLine1.Quantity,
+        Grec_PurchaseLine1.Quantity + (Gdec_Quantit‚ - Grec_PurchaseLine1."Outstanding Quantity"));
+        Grec_PurchaseLine1.MODIFY;
+        Gdec_QuantiteCmdApres := Grec_PurchaseLine1.Quantity;
+        //InsertionExcel1(Grec_TemporaryTable,Gdec_QuantiteCmdAvant,Gdec_QuantiteCmdApres,Grec_PurchaseLine1."Document No.");
+      END ELSE
+        IF Gdec_Quantit‚ < Grec_PurchaseLine1."Outstanding Quantity" THEN
+        BEGIN
+          Grec_PurchaseLine1.VALIDATE(Grec_PurchaseLine1.Quantity,
+          (Grec_PurchaseLine1.Quantity + (Gdec_Quantit‚ - Grec_PurchaseLine1."Outstanding Quantity")));
+          Grec_PurchaseLine1.MODIFY;
+        END ELSE
+        BEGIN
+          Grec_PurchaseLine1.VALIDATE(Grec_PurchaseLine1.Quantity,Grec_PurchaseLine1.Quantity);
+          Grec_PurchaseLine1.MODIFY;
+        END;
+
+      //d‚but traitement pour int‚grer la ligne dans la table Grec_Temporary_Log_Rec
+      Grec_Temporary_Table_Log_Rec.INIT;
+      Grec_Temporary_Table_Log_Rec."Line No." := Gint_nb1;
+      Grec_Temporary_Table_Log_Rec."Document No." := Grec_PurchaseLine1."Document No.";
+      Grec_Temporary_Table_Log_Rec."External document No." := FORMAT(Grec_PurchaseLine1."Line No.");
+      Grec_Temporary_Table_Log_Rec."Credit amount" := Grec_PurchaseLine1."Qty. to Receive";//Qt‚ … recevoir
+      Grec_Temporary_Table_Log_Rec.INSERT;
+      //fin
+    END;
+
+    PROCEDURE ValiderReception@1000000010(Grec_TemporaryTable@1000000001 : Record 50005;Grec_PurchaseLine@1000000000 : Record 39);
+    VAR
+      lReleaseDoc@1000000002 : Codeunit 415;
+    BEGIN
+      //fonction permettant la validation automatique de la r‚ception
+      Grec_PurchHeader2.RESET;
+
+      IF Grec_PurchHeader2.GET(Grec_PurchHeader2."Document Type"::Order,Grec_PurchaseLine."Document No.") THEN //recuperation num commande
+      //modifier la date de comptabilisation de l'entˆte de la commande avant le traitement pour que la r‚ception aie la date du fichier
+      BEGIN
+        Grec_PurchHeader2.VALIDATE(Grec_PurchHeader2."Posting Date",Grec_TemporaryTable."Posting date");
+        Grec_PurchHeader2.VALIDATE(Grec_PurchHeader2.Receive, TRUE);
+        Grec_PurchHeader2.MODIFY;
+        CODEUNIT.RUN(CODEUNIT::"Purch.-Post",Grec_PurchHeader2); //lancement du traitement de la r‚ception
+        IF Grec_PurchHeader2.GET(Grec_PurchHeader2."Document Type"::Order,Grec_PurchaseLine."Document No.") THEN BEGIN
+         lReleaseDoc.FctReceiptStatus(Grec_PurchHeader2);
+         Grec_PurchHeader2.MODIFY;
+        END;
+      END;
+    END;
+
+    PROCEDURE InsertionExcel@1000000004(Grec_TemporaryExcel@1000000000 : Record 50005;Gtxt_Commentaire@1000000001 : Text[30];Gtxt_Num_Commande@1000000002 : Text[30]);
+    BEGIN
+      //Modif JX-AUD 28/02/2012
+      //Modif Buffer Excel
+      Row := Row + 1;
+      EnterCell(Row, 1, Grec_TemporaryTable."External document No.", FALSE, FALSE, FALSE);
+      EnterCell(Row, 2, Grec_TemporaryTable."Account No.", FALSE, FALSE, FALSE);
+      EnterCell(Row, 3, FORMAT(Grec_TemporaryTable."Posting date"), FALSE, FALSE, FALSE);
+      EnterCell(Row, 4, FORMAT(Grec_TemporaryTable."Credit amount"), FALSE, FALSE, FALSE);
+      EnterCell(Row, 5, Grec_TemporaryTable."Axe 0", FALSE, FALSE, FALSE);
+      EnterCell(Row, 6, Grec_TemporaryTable."Axe 1", FALSE, FALSE, FALSE);
+      EnterCell(Row, 7, Grec_TemporaryTable."Axe 2", FALSE, FALSE, FALSE);
+      EnterCell(Row, 8, Grec_TemporaryTable."Axe 3", FALSE, FALSE, FALSE);
+      EnterCell(Row, 9, Gtxt_Commentaire, FALSE, FALSE, FALSE);
+
+      RecNo := RecNo + 1;
+      Window.UPDATE(1,ROUND(RecNo / TotalRecNo * 10000,1));
+    END;
+
+    LOCAL PROCEDURE EnterCell@2(RowNo@1000 : Integer;ColumnNo@1001 : Integer;CellValue@1002 : Text[250];Bold@1003 : Boolean;Italic@1004 : Boolean;UnderLine@1005 : Boolean);
+    BEGIN
+      //Modif JX-AUD 28/02/2012
+      //Modif Buffer Excel
+      TempExcelBuffer.INIT;
+      TempExcelBuffer.VALIDATE("Row No.",RowNo);
+      TempExcelBuffer.VALIDATE("Column No.",ColumnNo);
+      TempExcelBuffer."Cell Value as Text" := CellValue;
+      TempExcelBuffer.Formula := '';
+      TempExcelBuffer.Bold := Bold;
+      TempExcelBuffer.Italic := Italic;
+      TempExcelBuffer.Underline := UnderLine;
+      TempExcelBuffer.INSERT;
+    END;
+
+    PROCEDURE InsertionExcel1@1000000009(Gdec_QuantiteCmdAvant@1000000001 : Decimal;Gdec_QuantiteCmdApres@1000000002 : Decimal;Gtext_Num_Commande@1000000003 : Text[30];Gdec_QuantiteTotale@1000000004 : Decimal;Gint_NumeroLigne@1000000000 : Integer);
+    BEGIN
+      //Modif JX-AUD 28/02/2012
+      //Modif Buffer Excel  //fichier lignes quantit‚ modifi‚e sup‚rieure
+      Row1 := Row1 + 1;
+      //{EnterCell1(Row1, 1, Grec_TemporaryTable."External document No.", FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 2, Grec_TemporaryTable."Account No.", FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 3, FORMAT(Grec_TemporaryTable."Posting date"), FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 4, FORMAT(Grec_TemporaryTable."Credit amount"), FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 5, Grec_TemporaryTable."Axe 0", FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 6, Grec_TemporaryTable."Axe 1", FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 7, Grec_TemporaryTable."Axe 2", FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 8, Grec_TemporaryTable."Axe 3", FALSE, FALSE, FALSE);
+
+      //EnterCell1(Row1, 9, FORMAT(Gdec_QuantiteCmdAvant), FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 10, FORMAT(Gdec_QuantiteCmdApres), FALSE, FALSE, FALSE);
+      //EnterCell1(Row1, 11, Gtext_Num_Commande, FALSE, FALSE, FALSE);}
+      EnterCell1(Row1, 1, Gtext_Num_Commande, FALSE, FALSE, FALSE);
+      EnterCell1(Row1, 2, FORMAT(Gint_NumeroLigne), FALSE, FALSE, FALSE);
+      EnterCell1(Row1, 3, FORMAT(Gdec_QuantiteCmdAvant), FALSE, FALSE, FALSE);
+      EnterCell1(Row1, 4, FORMAT(Gdec_QuantiteCmdApres), FALSE, FALSE, FALSE);
+      EnterCell1(Row1, 5, FORMAT(Gdec_QuantiteTotale), FALSE, FALSE, FALSE);
+
+
+      RecNo1 := RecNo1 + 1;
+      Window1.UPDATE(1,ROUND(RecNo1 / TotalRecNo1 * 10000,1));
+    END;
+
+    LOCAL PROCEDURE EnterCell1@1000000008(RowNo@1000 : Integer;ColumnNo@1001 : Integer;CellValue@1002 : Text[250];Bold@1003 : Boolean;Italic@1004 : Boolean;UnderLine@1005 : Boolean);
+    BEGIN
+      //Modif JX-AUD 28/02/2012
+      //Modif Buffer Excel  //fichier lignes quantit‚ modifi‚e sup‚rieure
+      TempExcelBuffer1.INIT;
+      TempExcelBuffer1.VALIDATE("Row No.",RowNo);
+      TempExcelBuffer1.VALIDATE("Column No.",ColumnNo);
+      TempExcelBuffer1."Cell Value as Text" := CellValue;
+      TempExcelBuffer1.Formula := '';
+      TempExcelBuffer1.Bold := Bold;
+      TempExcelBuffer1.Italic := Italic;
+      TempExcelBuffer1.Underline := UnderLine;
+      TempExcelBuffer1.INSERT;
+    END;
+
+    PROCEDURE FinalisationFichierExcel@1000000006();
+    BEGIN
+      //Modif JX-AUD 28/02/2012
+      //Modif Buffer Excel //fichier lignes non import‚es
+      Window.CLOSE;
+
+      TempExcelBuffer.CreateBook(Text013);
+      TempExcelBuffer.WriteSheet(Text013,COMPANYNAME,USERID);
+      TempExcelBuffer.CloseBook;
+      TempExcelBuffer.OpenExcel;
+      TempExcelBuffer.GiveUserControl;
+
+      //Modif Buffer Excel //fichier lignes quantit‚ modifi‚e sup‚rieure
+      Window1.CLOSE;
+
+      TempExcelBuffer1.CreateBook(Text015);
+      TempExcelBuffer1.WriteSheet(Text015,COMPANYNAME,USERID);
+      TempExcelBuffer1.CloseBook;
+      TempExcelBuffer1.OpenExcel;
+      TempExcelBuffer1.GiveUserControl;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD du 22/02/2012
+      //MODIF JX-AUD du 24/03/14, modification du code entit‚ pour VSCT : BT0001
+      // PBE 02/03/16 Code entit‚ g‚rer dans les paramŠtres achats (312)
+    }
+    END.
+  }
+}
+

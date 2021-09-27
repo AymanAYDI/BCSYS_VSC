@@ -1,0 +1,136 @@
+OBJECT Table 50007 Users-Staff
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=No;
+    CaptionML=[ENU=Users-Staff;
+               FRA=Utilisateurs-Personnels];
+    LookupPageID=Page50017;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Last Name           ;Text30        ;OnValidate=BEGIN
+                                                                IF "Last Name" = '' THEN
+                                                                  VALIDATE("Full name","First name")
+                                                                ELSE IF "First name" = '' THEN
+                                                                  VALIDATE("Full name","Last Name")
+                                                                ELSE
+                                                                  VALIDATE("Full name","Last Name"+' '+"First name");
+                                                              END;
+
+                                                   CaptionML=[ENU=Last Name;
+                                                              FRA=Nom];
+                                                   NotBlank=No }
+    { 2   ;   ;First name          ;Text30        ;OnValidate=BEGIN
+                                                                IF "Last Name" = '' THEN
+                                                                  VALIDATE("Full name","First name")
+                                                                ELSE IF "First name" = '' THEN
+                                                                  VALIDATE("Full name","Last Name")
+                                                                ELSE
+                                                                  VALIDATE("Full name","Last Name"+' '+"First name");
+                                                              END;
+
+                                                   CaptionML=[ENU=First name;
+                                                              FRA=Pr‚nom] }
+    { 3   ;   ;Full name           ;Text60        ;CaptionML=[ENU=Full name;
+                                                              FRA=Nom Pr‚nom];
+                                                   NotBlank=No;
+                                                   Editable=No }
+    { 4   ;   ;User status         ;Option        ;OnValidate=BEGIN
+                                                                //MODIF LAB DU 01/09/2010
+                                                                //ajout du test d'utilisateur
+
+                                                                IF "User status" = Rec."User status"::"Salari‚ CDI" THEN
+                                                                  VALIDATE("release date",01019999D)
+                                                                ELSE
+                                                                  VALIDATE("release date",01012050D);
+
+                                                                //FIN MODIF LAB DU 01/09/2010
+
+                                                                //DEBUT MODIF JX-XAD DU 07/09/2010
+                                                                Grec_FA_Tracking.RESET;
+                                                                Grec_FA_Tracking.SETFILTER(Grec_FA_Tracking."User name",'%1',"Full name");
+                                                                IF Grec_FA_Tracking.FIND('-') THEN
+                                                                REPEAT
+                                                                  Grec_FA_Tracking."User status" := "User status";
+                                                                  Grec_FA_Tracking.MODIFY;
+                                                                UNTIL Grec_FA_Tracking.NEXT = 0;
+                                                                //FIN MODIF JX-XAD DU 07/09/2010
+                                                              END;
+
+                                                   CaptionML=[ENU=User status;
+                                                              FRA=Statut utilisateur];
+                                                   OptionCaptionML=[ENU=External employee,Employee fixed-term contract,Employee permanent contract;
+                                                                    FRA=Presta,Salari‚ CDD,Salari‚ CDI];
+                                                   OptionString=Presta,Salari‚ CDD,Salari‚ CDI }
+    { 5   ;   ;release date        ;Date          ;InitValue=01/01/2050;
+                                                   OnValidate=BEGIN
+                                                                //DEBUT MODIF JX-XAD DU 07/09/2010
+                                                                Grec_FA_Tracking.RESET;
+                                                                Grec_FA_Tracking.SETFILTER(Grec_FA_Tracking."User name",'%1',"Full name");
+                                                                IF Grec_FA_Tracking.FIND('-') THEN
+                                                                REPEAT
+                                                                  Grec_FA_Tracking."release date" := "release date";
+                                                                  Grec_FA_Tracking.MODIFY;
+                                                                UNTIL Grec_FA_Tracking.NEXT = 0;
+                                                                //FIN MODIF JX-XAD DU 07/09/2010
+                                                              END;
+
+                                                   CaptionML=[ENU=release date;
+                                                              FRA=Date de sortie];
+                                                   NotBlank=Yes }
+    { 6   ;   ;Location 2          ;Text50        ;OnValidate=BEGIN
+                                                                //Modif Jx-AUD du 14/10/10
+                                                                Grec_FA_Tracking.RESET;
+                                                                Grec_FA_Tracking.SETFILTER(Grec_FA_Tracking."User name",'%1',"Full name");
+                                                                IF Grec_FA_Tracking.FIND('-') THEN
+                                                                REPEAT
+                                                                  Grec_FA_Tracking."Location 2" := "Location 2";
+                                                                  Grec_FA_Tracking.MODIFY;
+                                                                UNTIL Grec_FA_Tracking.NEXT = 0;
+
+                                                                //FIN Modif JX-AUD du 14/10/10
+                                                              END;
+
+                                                   CaptionML=[ENU=Location 2;
+                                                              FRA=Emplacement 2] }
+    { 7   ;   ;Company             ;Text30        ;CaptionML=[ENU=Company;
+                                                              FRA=Soci‚t‚];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Last Name,First name,Full name          ;Clustered=Yes }
+    {    ;Full name                                }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Grec_FA_Tracking@1000000000 : Record 50006;
+
+    BEGIN
+    {
+      ----------------------------------- V 1.2 -----------------------------------
+      CREATION JX-XAD 29/01/2010
+      Projet : Suivi des affectations immo
+      Formulaire li‚ … la table "Utilisateurs-Personnels" qui est partag‚e entre toutes les soci‚t‚s
+
+      //MODIF JX-AUD du 15/10/10
+      //Rajout des champs Statut utilisateur, Date de sortie, Emplacement salari‚, Soci‚t‚
+      //Modification des triggers correspondants
+      //Champs de table remis en anglais
+    }
+    END.
+  }
+}
+

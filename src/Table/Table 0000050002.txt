@@ -1,0 +1,42 @@
+OBJECT Table 50002 IRIS Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.0-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=FRA=Ecritures IRIS;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=FRA=Nø s‚quence;
+                                                   Editable=No }
+    { 2   ;   ;Date Ecriture IRIS  ;DateTime      ;Editable=No }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD 20/11/2008
+      Cette table contient toutes les ‚critures qui ont ‚t‚ export‚es vers IRIS
+
+      Il se peut que la cl‚ s‚quence 0 apparaisse dans la table.
+      Cette cl‚ est r‚serv‚e … l'ex‚cution du programme (voir report 50021 et dataport 50001).
+      Elle peut ˆtre laiss‚e ou supprim‚e sans risque.
+    }
+    END.
+  }
+}
+

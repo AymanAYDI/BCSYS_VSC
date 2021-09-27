@@ -1,0 +1,2355 @@
+OBJECT Report 50015 Draft notice VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20/11/15;
+    Time=14:34:32;
+    Modified=Yes;
+    Version List=NAVFR8.00,JX-YOOZ2;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Draft notice;
+               FRA=Virement];
+    OnPreReport=BEGIN
+                  TransfertNo := COPYSTR("Payment Lines1".GETFILTER("No."),1,MAXSTRLEN(TransfertNo));
+                  IF TransfertNo = '' THEN
+                    ERROR(Text000);
+
+                  CompanyInformation.GET;
+                  FormatAddress.Company(CompanyAddr,CompanyInformation);
+                  GLSetup.GET;
+                END;
+
+    OnPostReport=BEGIN
+                   BankAccountBuffer.DELETEALL;
+                 END;
+
+  }
+  DATASET
+  {
+    { 2424;    ;DataItem;Payment Lines1      ;
+               DataItemTable=Table10866;
+               DataItemTableView=SORTING(No.,Line No.);
+               MaxIteration=1;
+               OnPreDataItem=BEGIN
+                               SETRANGE("No.",TransfertNo);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  PaymtHeader.GET("No.");
+                                  PaymtHeader.CALCFIELDS("Payment Class Name");
+                                  PostingDate := PaymtHeader."Posting Date";
+
+                                  BankAccountBuffer."Customer No." := "Account No.";
+                                  BankAccountBuffer."Bank Branch No." := "Bank Branch No.";
+                                  BankAccountBuffer."Agency Code" := "Agency Code";
+                                  BankAccountBuffer."Bank Account No." := "Bank Account No.";
+                                  IF NOT BankAccountBuffer.INSERT THEN;
+                                END;
+                                 }
+
+    { 1170000006;1;Column;Payment_Lines1_No_ ;
+               SourceExpr="No." }
+
+    { 1170000007;1;Column;Payment_Lines1_Line_No_;
+               SourceExpr="Line No." }
+
+    { 3182;1   ;DataItem;                    ;
+               DataItemTable=Table23;
+               DataItemTableView=SORTING(No.);
+               PrintOnlyIfDetail=Yes;
+               OnAfterGetRecord=BEGIN
+                                  PaymtLine.RESET;
+                                  PaymtLine.SETRANGE("No.",TransfertNo);
+                                  PaymtLine.SETRANGE("Account No.","No.");
+                                  IF NOT PaymtLine.FINDFIRST THEN
+                                    CurrReport.SKIP;
+                                END;
+
+               ReqFilterFields=No.;
+               DataItemLinkReference=Payment Lines1;
+               DataItemLink=No.=FIELD(Account No.) }
+
+    { 1170000008;2;Column;Vendor_No_         ;
+               SourceExpr="No." }
+
+    { 5701;2   ;DataItem;CopyLoop            ;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number);
+               OnPreDataItem=BEGIN
+                               OutputNo := 1;
+                               LoopsNumber := ABS(CopiesNumber) + 1;
+                               CopyText := '';
+                               SETRANGE(Number,1,LoopsNumber);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF Number > 1 THEN BEGIN
+                                    CopyText := Text001;
+                                    OutputNo := OutputNo + 1;
+                                  END;
+                                  CurrReport.PAGENO := 1;
+                                END;
+                                 }
+
+    { 2466;3   ;DataItem;                    ;
+               DataItemTable=Table10869;
+               DataItemTableView=SORTING(Customer No.,Bank Branch No.,Agency Code,Bank Account No.);
+               OnAfterGetRecord=BEGIN
+                                  IF CurrReport.PAGENO > 1 THEN
+                                    CurrReport.PAGENO := CurrReport.PAGENO - 1;
+                                END;
+                                 }
+
+    { 1170000009;4;Column;Bank_Account_Buffer_Customer_No_;
+               SourceExpr="Customer No." }
+
+    { 1170000010;4;Column;Bank_Account_Buffer_Bank_Branch_No_;
+               SourceExpr="Bank Branch No." }
+
+    { 1170000011;4;Column;Bank_Account_Buffer_Agency_Code;
+               SourceExpr="Agency Code" }
+
+    { 1170000012;4;Column;Bank_Account_Buffer_Bank_Account_No_;
+               SourceExpr="Bank Account No." }
+
+    { 3474;4   ;DataItem;                    ;
+               DataItemTable=Table10866;
+               DataItemTableView=SORTING(No.,Account No.,Bank Branch No.,Agency Code,Bank Account No.,Payment Address Code);
+               OnPreDataItem=BEGIN
+                               SETRANGE("No.",TransfertNo);
+                               SETRANGE("Account No.","Payment Lines1"."Account No.");
+
+                               CurrReport.CREATETOTALS(DraftAmount);
+
+                               TotalDraftAmount := 0;
+
+                               Gtxt_IBAN := '';
+                               Gtxt_SWIFT := '';
+
+                               IF Grec_Vendor.GET("Payment Line"."Account No.") THEN
+                               BEGIN
+                                 //MODIF JX-AUD du 11/02/14
+                                 //IF Grec_VendorBankAccount.GET("Payment Line"."Account No.",Grec_Vendor."Default Bank Account Code") THEN
+                                 IF Grec_VendorBankAccount.GET("Payment Line"."Account No.","Payment Line"."Bank Account Code") THEN  //MODIF JX-AUD du 11/02/14
+                                 BEGIN
+                                   Gtxt_IBAN := Grec_VendorBankAccount.IBAN;
+                                   Gtxt_SWIFT := Grec_VendorBankAccount."SWIFT Code";
+                                 END;
+                               END;
+
+                               HeaderTextVN := STRSUBSTNO(Text004,"Payment Line"."Bank Branch No.",
+                                 "Payment Line"."Agency Code","Payment Line"."Bank Account No.","Payment Line"."RIB Key",FORMAT(PostingDate,0,4));
+                               DraftCounting := 0;
+                               HeaderTextVI := STRSUBSTNO(Text005,Gtxt_IBAN,Gtxt_SWIFT,FORMAT(PostingDate,0,4));
+                               DraftCounting := 0;
+
+                               IF COPYSTR("Payment Line"."No.",1,2) = 'VN' THEN
+                                 HeaderText := HeaderTextVN
+                               ELSE
+                                 HeaderText := HeaderTextVI;
+                             END;
+
+               OnAfterGetRecord=VAR
+                                  PaymtAddr@1120000 : Record 10870;
+                                  PaymtManagt@1120001 : Codeunit 10860;
+                                BEGIN
+                                  IF Grec_Vendor.GET("Payment Line"."Account No.") THEN
+                                    Gtxt_Vendor := Grec_Vendor.Name
+                                  ELSE
+                                    Gtxt_Vendor := '';
+                                  HeaderText1 := STRSUBSTNO(Text004,"Bank Account Name","SWIFT Code",
+                                      "Agency Code",IBAN,PostingDate);
+
+                                  DraftCounting := 0;
+
+                                  TotalDraftAmount := TotalDraftAmount + ABS(Amount);
+
+                                  IF "Payment Address Code" = '' THEN
+                                    FormatAddress.Vendor(VendAddr,Vendor)
+                                  ELSE
+                                    IF PaymtAddr.GET("Account Type"::Vendor,"Account No.","Payment Address Code") THEN
+                                      PaymtManagt.PaymentAddr(VendAddr,PaymtAddr);
+
+                                  DraftAmount := ABS(Amount);
+                                END;
+
+               DataItemLinkReference=Bank Account Buffer;
+               DataItemLink=Account No.=FIELD(Customer No.),
+                            Bank Branch No.=FIELD(Bank Branch No.),
+                            Agency Code=FIELD(Agency Code),
+                            Bank Account No.=FIELD(Bank Account No.) }
+
+    { 1120062;5;Column  ;FORMAT_PostingDate_0_4_;
+               SourceExpr=FORMAT(PostingDate,0,4) }
+
+    { 1120027;5;Column  ;Payment_Lines1___No__;
+               SourceExpr="Payment Lines1"."No." }
+
+    { 1120053;5;Column  ;PaymtHeader_IBAN    ;
+               SourceExpr=PaymtHeader.IBAN }
+
+    { 1120055;5;Column  ;VendAddr_7_         ;
+               SourceExpr=VendAddr[7] }
+
+    { 1120023;5;Column  ;PaymtHeader_SWIFT_Code;
+               SourceExpr=PaymtHeader."SWIFT Code" }
+
+    { 1120054;5;Column  ;VendAddr_6_         ;
+               SourceExpr=VendAddr[6] }
+
+    { 1120052;5;Column  ;CompanyInformation__VAT_Registration_No__;
+               SourceExpr=CompanyInformation."VAT Registration No." }
+
+    { 1120018;5;Column  ;VendAddr_5_         ;
+               SourceExpr=VendAddr[5] }
+
+    { 1120051;5;Column  ;CompanyInformation__Fax_No__;
+               SourceExpr=CompanyInformation."Fax No." }
+
+    { 1120017;5;Column  ;VendAddr_4_         ;
+               SourceExpr=VendAddr[4] }
+
+    { 1120050;5;Column  ;CompanyInformation__Phone_No__;
+               SourceExpr=CompanyInformation."Phone No." }
+
+    { 1120056;5;Column  ;VendAddr_3_         ;
+               SourceExpr=VendAddr[3] }
+
+    { 1120049;5;Column  ;CompanyAddr_6_      ;
+               SourceExpr=CompanyAddr[6] }
+
+    { 1120057;5;Column  ;VendAddr_2_         ;
+               SourceExpr=VendAddr[2] }
+
+    { 1120048;5;Column  ;CompanyAddr_5_      ;
+               SourceExpr=CompanyAddr[5] }
+
+    { 1120058;5;Column  ;VendAddr_1_         ;
+               SourceExpr=VendAddr[1] }
+
+    { 1120044;5;Column  ;CompanyAddr_4_      ;
+               SourceExpr=CompanyAddr[4] }
+
+    { 1120043;5;Column  ;CompanyAddr_3_      ;
+               SourceExpr=CompanyAddr[3] }
+
+    { 1120042;5;Column  ;CompanyAddr_2_      ;
+               SourceExpr=CompanyAddr[2] }
+
+    { 1120041;5;Column  ;CompanyAddr_1_      ;
+               SourceExpr=CompanyAddr[1] }
+
+    { 1120040;5;Column  ;STRSUBSTNO__Page__1__FORMAT_CurrReport_PAGENO__;
+               SourceExpr=STRSUBSTNO(Text005,CurrReport.PAGENO) }
+
+    { 1120037;5;Column  ;STRSUBSTNO_Text002_CopyText_;
+               SourceExpr=STRSUBSTNO(Text002,CopyText) }
+
+    { 1120001;5;Column  ;PrintCurrencyCode   ;
+               SourceExpr=PrintCurrencyCode }
+
+    { 1120000;5;Column  ;OutputNo            ;
+               SourceExpr=OutputNo }
+
+    { 1120004;5;Column  ;Vendor__No__        ;
+               SourceExpr=Vendor."No." }
+
+    { 1120005;5;Column  ;CopyLoop_Number     ;
+               SourceExpr=CopyLoop.Number }
+
+    { 1120007;5;Column  ;Bank_Account_Buffer___Agency_Code_;
+               SourceExpr="Bank Account Buffer"."Agency Code" }
+
+    { 1120008;5;Column  ;Bank_Account_Buffer___Customer_No__;
+               SourceExpr="Bank Account Buffer"."Customer No." }
+
+    { 1120009;5;Column  ;Bank_Account_Buffer___Bank_Branch_No__;
+               SourceExpr="Bank Account Buffer"."Bank Branch No." }
+
+    { 1120010;5;Column  ;Bank_Account_Buffer___Bank_Account_No__;
+               SourceExpr="Bank Account Buffer"."Bank Account No." }
+
+    { 1120002;5;Column  ;HeaderText1         ;
+               SourceExpr=HeaderText1 }
+
+    { 1120069;5;Column  ;PrintCurrencyCode_Control1120069;
+               SourceExpr=PrintCurrencyCode }
+
+    { 1120070;5;Column  ;ABS_Amount_         ;
+               SourceExpr=ABS(Amount);
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1120071;5;Column  ;Payment_Line__Due_Date_;
+               SourceExpr=FORMAT("Due Date") }
+
+    { 1120072;5;Column  ;PostingDate         ;
+               SourceExpr=FORMAT(PostingDate) }
+
+    { 1120073;5;Column  ;Payment_Line__External_Document_No__;
+               SourceExpr="External Document No." }
+
+    { 1120074;5;Column  ;PaymtHeader__Payment_Class_Name_;
+               SourceExpr=PaymtHeader."Payment Class Name" }
+
+    { 1120075;5;Column  ;Payment_Line__Document_No__;
+               SourceExpr="Document No." }
+
+    { 1120064;5;Column  ;PrintCurrencyCode_Control1120064;
+               SourceExpr=PrintCurrencyCode }
+
+    { 1120039;5;Column  ;DraftAmount         ;
+               SourceExpr=DraftAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1120003;5;Column  ;TotalDraftAmount    ;
+               SourceExpr=TotalDraftAmount }
+
+    { 1170000013;5;Column;Payment_Line_No_   ;
+               SourceExpr="No." }
+
+    { 1170000014;5;Column;Payment_Line_Line_No_;
+               SourceExpr="Line No." }
+
+    { 1170000015;5;Column;Payment_Line_Payment_Address_Code;
+               SourceExpr="Payment Address Code" }
+
+    { 3603;5   ;Column  ;Payment_Line_Account_No_;
+               SourceExpr="Account No." }
+
+    { 5080;5   ;Column  ;Payment_Line_Bank_Branch_No_;
+               SourceExpr="Bank Branch No." }
+
+    { 3090;5   ;Column  ;Payment_Line_Agency_Code;
+               SourceExpr="Agency Code" }
+
+    { 2825;5   ;Column  ;Payment_Line_Bank_Account_No_;
+               SourceExpr="Bank Account No." }
+
+    { 5912;5   ;Column  ;Payment_Line_Applies_to_ID;
+               SourceExpr="Applies-to ID" }
+
+    { 1120029;5;Column  ;Payment_Lines1___No__Caption;
+               SourceExpr=Payment_Lines1___No__CaptionLbl }
+
+    { 1120038;5;Column  ;PaymtHeader__IBAN__Caption;
+               SourceExpr=PaymtHeader__IBAN__CaptionLbl }
+
+    { 1120025;5;Column  ;PaymtHeader__SWIFT_Code__Caption;
+               SourceExpr=PaymtHeader__SWIFT_Code__CaptionLbl }
+
+    { 1120047;5;Column  ;CompanyInformation__VAT_Registration_No__Caption;
+               SourceExpr=CompanyInformation__VAT_Registration_No__CaptionLbl }
+
+    { 1120046;5;Column  ;CompanyInformation__Fax_No__Caption;
+               SourceExpr=CompanyInformation__Fax_No__CaptionLbl }
+
+    { 1120045;5;Column  ;CompanyInformation__Phone_No__Caption;
+               SourceExpr=CompanyInformation__Phone_No__CaptionLbl }
+
+    { 1120006;5;Column  ;PrintCurrencyCodeCaption;
+               SourceExpr=PrintCurrencyCodeCaptionLbl }
+
+    { 1120016;5;Column  ;Draft_Notice_AmountCaption;
+               SourceExpr=Draft_Notice_AmountCaptionLbl }
+
+    { 1000000000;5;Column;Payment_Line__Payment_Line___No__;
+               SourceExpr="Payment Line"."No." }
+
+    { 1000000004;5;Column;Gtxt_Vendor        ;
+               SourceExpr=Gtxt_Vendor }
+
+    { 1000000003;5;Column;CompanyInformation_Picture;
+               SourceExpr=CompanyInformation.Picture }
+
+    { 1000000002;5;Column;Invoice_No_Caption ;
+               SourceExpr=Invoice_No_CaptionLbl }
+
+    { 1000000001;5;Column;SERVICE_COMPTABLECaption;
+               SourceExpr=SERVICE_COMPTABLECaptionLbl }
+
+    { 1000000005;5;Column;Invoice_DateCaption;
+               SourceExpr=Invoice_DateCaptionLbl }
+
+    { 1000000007;5;Column;Remaining_Amount__Control1120059Caption;
+               SourceExpr=Remaining_Amount__Control1120059CaptionLbl }
+
+    { 1000000009;5;Column;Gdec_TotalAmount   ;
+               SourceExpr=Gdec_TotalAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1000000011;5;Column;Gtxt_ResponsableComptable;
+               SourceExpr=Gtxt_ResponsableComptable }
+
+    { 1000000010;5;Column;Gtxt_TÇlComptabilitÇ;
+               SourceExpr=Gtxt_TÇlComptabilitÇ }
+
+    { 1000000012;5;Column;STATEMENT_OF_TRANSFERCaption;
+               SourceExpr=STATEMENT_OF_TRANSFERCaptionLbl }
+
+    { 1000000015;5;Column;Payment_Line__Payment_Line___No__Caption;
+               SourceExpr=Payment_Line__Payment_Line___No__CaptionLbl }
+
+    { 1000000014;5;Column;CodeCaption        ;
+               SourceExpr=CodeCaptionLbl }
+
+    { 1000000013;5;Column;Vendor_Caption     ;
+               SourceExpr=Vendor_CaptionLbl }
+
+    { 1000000021;5;Column;HeaderText         ;
+               SourceExpr=HeaderText }
+
+    { 1000000020;5;Column;CompanyInformation__Legal_Form______Text006_____CompanyInformation__Stock_Capital_;
+               SourceExpr=CompanyInformation."Legal Form"+' '+Text006+' '+CompanyInformation."Stock Capital" }
+
+    { 1000000019;5;Column;CompanyInformation_Address_____CompanyInformation__Address_2______CompanyInformation__Post_Code______CompanyInformation_City;
+               SourceExpr=CompanyInformation.Address+' '+CompanyInformation."Address 2"+' '+CompanyInformation."Post Code"+' '+CompanyInformation.City }
+
+    { 1000000018;5;Column;CompanyInformation__Trade_Register_;
+               SourceExpr=CompanyInformation."Trade Register" }
+
+    { 1000000017;5;Column;Text008_CompanyInformation__Phone_No_______FAX_____CompanyInformation__Fax_No__;
+               SourceExpr=Text008+CompanyInformation."Phone No."+' - FAX : '+CompanyInformation."Fax No." }
+
+    { 4114;5   ;DataItem;                    ;
+               DataItemTable=Table25;
+               DataItemTableView=SORTING(Document No.);
+               OnPreDataItem=BEGIN
+                               //DEBUT AJOUT JX-XAD 21/04/2010
+                               {IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC Test') OR (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT Test') THEN
+                               BEGIN
+                                 Gtxt_ResponsableComptable := 'AurÇlie Lucas';
+                                 Gtxt_TÇlComptabilitÇ := '01 74 54 13 87';
+                               END ELSE IF (COMPANYNAME = 'Agence') OR (COMPANYNAME = 'Agence Test') THEN
+                               BEGIN
+                                 Gtxt_ResponsableComptable := 'Noria Gherbi-Hammadou';
+                                 Gtxt_TÇlComptabilitÇ := '01 74 54 13 35';
+                               END ELSE
+                                 Gtxt_ResponsableComptable := '';
+                               }
+                               //FIN AJOUT JX-XAD 21/04/2010
+
+                               //DEBUT AJOUT JX-AUD 07/06/2012
+                               IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'Agence') THEN
+                               BEGIN
+                                 //Gtxt_ResponsableComptable := 'Nilma SAID-DAMAS';//JX-AUD du 02/07/2013
+                                 //Gtxt_TÇlComptabilitÇ := '01 74 54 13 63';//JX-AUD du 02/07/2013
+                                 Gtxt_ResponsableComptable := 'Rabia Daulat'; //JX-AUD du 02/07/2013
+                                 Gtxt_TÇlComptabilitÇ := '01 74 54 18 31';//JX-AUD du 02/07/2013
+
+                               END;
+
+                               IF (COMPANYNAME = 'VSCT') THEN
+                               BEGIN
+                                 Gtxt_ResponsableComptable := 'StÇphanie RABEMANANTSOA';
+                                 Gtxt_TÇlComptabilitÇ := '01 74 54 13 87';
+                               END;
+
+                               IF (COMPANYNAME = 'VFEC') THEN //VSC GROUPE
+                               BEGIN
+                                 Gtxt_ResponsableComptable := 'Rabia DAULAT';
+                                 Gtxt_TÇlComptabilitÇ := '01 74 54 18 31';
+                               END;
+                               //FIN AJOUT JX-AUD 07/06/2012
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF "Payment Line"."Applies-to ID" = '' THEN
+                                    CurrReport.SKIP
+                                    ;
+                                  IF "Currency Code" = '' THEN
+                                    "Currency Code" := GLSetup."LCY Code";
+
+                                  DraftCounting := DraftCounting + 1;
+                                END;
+
+               CalcFields=Remaining Amount;
+               DataItemLinkReference=Payment Line;
+               DataItemLink=Vendor No.=FIELD(Account No.),
+                            Applies-to ID=FIELD(Applies-to ID) }
+
+    { 1120020;6;Column  ;HeaderText2         ;
+               SourceExpr=HeaderText2 }
+
+    { 1120022;6;Column  ;ABS__Remaining_Amount__;
+               SourceExpr=ABS("Remaining Amount");
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1120060;6;Column  ;PrintCurrencyCode_Control1120060;
+               SourceExpr=PrintCurrencyCode }
+
+    { 1120035;6;Column  ;Vendor_Ledger_Entry__Currency_Code_;
+               SourceExpr="Currency Code" }
+
+    { 1120059;6;Column  ;ABS__Remaining_Amount___Control1120059;
+               SourceExpr=ABS("Remaining Amount");
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1120061;6;Column  ;Vendor_Ledger_Entry__Document_No__;
+               SourceExpr="Document No." }
+
+    { 1120065;6;Column  ;Vendor_Ledger_Entry_Description;
+               SourceExpr=Description }
+
+    { 1120066;6;Column  ;Vendor_Ledger_Entry__External_Document_No__;
+               SourceExpr="External Document No." }
+
+    { 1120067;6;Column  ;Vendor_Ledger_Entry__Posting_Date_;
+               SourceExpr=FORMAT("Posting Date") }
+
+    { 1120068;6;Column  ;Vendor_Ledger_Entry__Due_Date_;
+               SourceExpr=FORMAT("Due Date") }
+
+    { 1120036;6;Column  ;ABS__Remaining_Amount___Control1120036;
+               SourceExpr=ABS("Remaining Amount");
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 1120063;6;Column  ;PrintCurrencyCode_Control1120063;
+               SourceExpr=PrintCurrencyCode }
+
+    { 1170000020;6;Column;Vendor_Ledger_Entry_Entry_No_;
+               SourceExpr="Entry No." }
+
+    { 1170000021;6;Column;Vendor_Ledger_Entry_Vendor_No_;
+               SourceExpr="Vendor No." }
+
+    { 1170000022;6;Column;Vendor_Ledger_Entry_Applies_to_ID;
+               SourceExpr="Applies-to ID" }
+
+    { 1120021;6;Column  ;Vendor_Ledger_Entry__Document_No__Caption;
+               SourceExpr=FIELDCAPTION("Document No.") }
+
+    { 1120026;6;Column  ;Vendor_Ledger_Entry_DescriptionCaption;
+               SourceExpr=FIELDCAPTION(Description) }
+
+    { 1120028;6;Column  ;Vendor_Ledger_Entry__External_Document_No__Caption;
+               SourceExpr=FIELDCAPTION("External Document No.") }
+
+    { 1120030;6;Column  ;Vendor_Ledger_Entry__Posting_Date_Caption;
+               SourceExpr=Vendor_Ledger_Entry__Posting_Date_CaptionLbl }
+
+    { 1120031;6;Column  ;Vendor_Ledger_Entry__Due_Date_Caption;
+               SourceExpr=Vendor_Ledger_Entry__Due_Date_CaptionLbl }
+
+    { 1120034;6;Column  ;ABS__Remaining_Amount___Control1120059Caption;
+               SourceExpr=ABS__Remaining_Amount___Control1120059CaptionLbl }
+
+    { 1120024;6;Column  ;ReportCaption       ;
+               SourceExpr=ReportCaptionLbl }
+
+    { 1120015;6;Column  ;ReportCaption_Control1120015;
+               SourceExpr=ReportCaption_Control1120015Lbl }
+
+    { 1000000006;6;Column;Vendor_Ledger_Entry__Vendor_Ledger_Entry___Document_Date_;
+               SourceExpr="Vendor Ledger Entry"."Document Date" }
+
+    { 1000000008;6;Column;Remaining_Amount__Control1120059;
+               SourceExpr=-"Remaining Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1900000001;0;Container;
+                  ContainerType=ContentArea }
+
+      { 1900000002;1;Group  ;
+                  CaptionML=[ENU=Options;
+                             FRA=Options] }
+
+      { 1120002;2;Field     ;
+                  Name=NumberOfCopies;
+                  CaptionML=[ENU=Number of copies;
+                             FRA=Nombre de copies];
+                  SourceExpr=CopiesNumber }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      CompanyInformation@1120000 : Record 79;
+      GLSetup@1120010 : Record 98;
+      PaymtHeader@1120009 : Record 10865;
+      PaymtLine@1120008 : Record 10866;
+      BankAccountBuffer@1120001 : Record 10869;
+      FormatAddress@1120002 : Codeunit 365;
+      VendAddr@1120003 : ARRAY [8] OF Text[50];
+      CompanyAddr@1120004 : ARRAY [8] OF Text[50];
+      LoopsNumber@1120005 : Integer;
+      CopiesNumber@1120006 : Integer;
+      CopyText@1120007 : Text;
+      DraftAmount@1120012 : Decimal;
+      TotalDraftAmount@1120028 : Decimal;
+      DraftCounting@1120013 : Decimal;
+      TransfertNo@1120016 : Code[20];
+      HeaderText1@1120018 : Text;
+      PostingDate@1120022 : Date;
+      Text000@1120024 : TextConst 'ENU=You must specify a transfer number.;FRA=Vous devez spÇcifier un numÇro de virement.';
+      Text001@1120025 : TextConst 'ENU=COPY;FRA=COPIE';
+      Text002@1120019 : TextConst 'ENU=Draft notice %1;FRA=Avis de virement %1';
+      Text004@1120027 : TextConst 'ENU=A transfer to your bank account %1 (RIB : %2 %3 %4) has been done on %5.;FRA=Un virement sur votre compte bancaire %1 (RIB : %2 %3 %4) a ÇtÇ effectuÇ le %5.';
+      HeaderText2@1120026 : TextConst 'ENU=This transfer is related to these invoices :;FRA=Ce virement est liÇ aux factures suivantes :';
+      OutputNo@1120017 : Integer;
+      Text005@1120029 : TextConst 'ENU=Page %1;FRA=Page %1';
+      Payment_Lines1___No__CaptionLbl@1126984 : TextConst 'ENU=Draft No.;FRA=N¯ virement';
+      PaymtHeader__IBAN__CaptionLbl@1129949 : TextConst '@@@=Do not translate;ENU=IBAN;FRA=N¯ compte international (IBAN)';
+      PaymtHeader__SWIFT_Code__CaptionLbl@1128054 : TextConst 'ENU=SWIFT Code;FRA=Code SWIFT';
+      CompanyInformation__VAT_Registration_No__CaptionLbl@1124122 : TextConst 'ENU=VAT Registration No.;FRA=N¯ identif. intracomm.';
+      CompanyInformation__Fax_No__CaptionLbl@1128309 : TextConst 'ENU=FAX No.;FRA=N¯ TêLêCOPIE';
+      CompanyInformation__Phone_No__CaptionLbl@1126659 : TextConst 'ENU=Phone No.;FRA=N¯ tÇlÇphone';
+      PrintCurrencyCodeCaptionLbl@1127566 : TextConst 'ENU=Currency Code;FRA=Code devise';
+      Vendor_Ledger_Entry__Posting_Date_CaptionLbl@1129079 : TextConst 'ENU=Posting Date;FRA=Date comptabilisation';
+      Vendor_Ledger_Entry__Due_Date_CaptionLbl@1129685 : TextConst 'ENU=Due Date;FRA=Date d''ÇchÇance';
+      ABS__Remaining_Amount___Control1120059CaptionLbl@1127340 : TextConst 'ENU=Amount;FRA=Montant';
+      ReportCaptionLbl@1125274 : TextConst 'ENU=Report;FRA=êtat';
+      ReportCaption_Control1120015Lbl@1129632 : TextConst 'ENU=Report;FRA=êtat';
+      Grec_Vendor@1000000012 : Record 23;
+      Gtxt_Vendor@1000000011 : Text[50];
+      Gdec_Montant@1000000010 : Decimal;
+      Gtxt_IBAN@1000000009 : Text[30];
+      Gtxt_SWIFT@1000000008 : Text[30];
+      Grec_VendorBankAccount@1000000007 : Record 288;
+      Gtxt_ResponsableComptable@1000000006 : Text[30];
+      "Gtxt_TÇlComptabilitÇ"@1000000005 : Text[30];
+      Gdec_DraftAmount@1000000004 : Decimal;
+      Gdec_TotalAmount@1000000003 : Decimal;
+      Payment_Line__Payment_Line___No__CaptionLbl@1000000018 : TextConst 'ENU=Draft No.;FRA=N¯ virement';
+      CodeCaptionLbl@1000000017 : TextConst 'FRA=Code';
+      Vendor_CaptionLbl@1000000016 : TextConst 'ENU="Vendor ";FRA=Fournisseur';
+      STATEMENT_OF_TRANSFERCaptionLbl@1000000015 : TextConst 'ENU=STATEMENT OF TRANSFER;FRA=RELEVE DES VIREMENTS';
+      Invoice_No_CaptionLbl@1000000014 : TextConst 'ENU=Invoice No.;FRA=N¯ de facture';
+      Invoice_DateCaptionLbl@1000000013 : TextConst 'ENU=Invoice Date;FRA=Date de facture';
+      Remaining_Amount__Control1120059CaptionLbl@1000000002 : TextConst 'ENU=Amount;FRA=Montant';
+      Draft_Notice_AmountCaptionLbl@1000000001 : TextConst 'ENU=Draft Notice Amount;FRA=TOTAL';
+      SERVICE_COMPTABLECaptionLbl@1000000000 : TextConst 'ENU=SERVICE COMPTABLE;FRA=Service comptabilitÇ';
+      HeaderTextVN@1000000021 : Text[250];
+      HeaderTextVI@1000000020 : Text[250];
+      HeaderText@1000000019 : Text[250];
+      Text006@1000000025 : TextConst 'ENU=with capital of;FRA=au capital de';
+      Text007@1000000024 : TextConst 'ENU=", ";FRA=", le "';
+      Text008@1000000023 : TextConst 'ENU="Phone : ";FRA="TÇl. : "';
+
+    PROCEDURE PrintCurrencyCode@1120000() : Code[10];
+    BEGIN
+      IF "Payment Lines1"."Currency Code" = '' THEN
+        EXIT(GLSetup."LCY Code");
+
+      EXIT("Payment Lines1"."Currency Code");
+    END;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>973e9163-a33f-4b15-b97b-94811f205d6d</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="Payment_Lines1_No_">
+          <DataField>Payment_Lines1_No_</DataField>
+        </Field>
+        <Field Name="Payment_Lines1_Line_No_">
+          <DataField>Payment_Lines1_Line_No_</DataField>
+        </Field>
+        <Field Name="Vendor_No_">
+          <DataField>Vendor_No_</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer_Customer_No_">
+          <DataField>Bank_Account_Buffer_Customer_No_</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer_Bank_Branch_No_">
+          <DataField>Bank_Account_Buffer_Bank_Branch_No_</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer_Agency_Code">
+          <DataField>Bank_Account_Buffer_Agency_Code</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer_Bank_Account_No_">
+          <DataField>Bank_Account_Buffer_Bank_Account_No_</DataField>
+        </Field>
+        <Field Name="FORMAT_PostingDate_0_4_">
+          <DataField>FORMAT_PostingDate_0_4_</DataField>
+        </Field>
+        <Field Name="Payment_Lines1___No__">
+          <DataField>Payment_Lines1___No__</DataField>
+        </Field>
+        <Field Name="PaymtHeader_IBAN">
+          <DataField>PaymtHeader_IBAN</DataField>
+        </Field>
+        <Field Name="VendAddr_7_">
+          <DataField>VendAddr_7_</DataField>
+        </Field>
+        <Field Name="PaymtHeader_SWIFT_Code">
+          <DataField>PaymtHeader_SWIFT_Code</DataField>
+        </Field>
+        <Field Name="VendAddr_6_">
+          <DataField>VendAddr_6_</DataField>
+        </Field>
+        <Field Name="CompanyInformation__VAT_Registration_No__">
+          <DataField>CompanyInformation__VAT_Registration_No__</DataField>
+        </Field>
+        <Field Name="VendAddr_5_">
+          <DataField>VendAddr_5_</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Fax_No__">
+          <DataField>CompanyInformation__Fax_No__</DataField>
+        </Field>
+        <Field Name="VendAddr_4_">
+          <DataField>VendAddr_4_</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Phone_No__">
+          <DataField>CompanyInformation__Phone_No__</DataField>
+        </Field>
+        <Field Name="VendAddr_3_">
+          <DataField>VendAddr_3_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_6_">
+          <DataField>CompanyAddr_6_</DataField>
+        </Field>
+        <Field Name="VendAddr_2_">
+          <DataField>VendAddr_2_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_5_">
+          <DataField>CompanyAddr_5_</DataField>
+        </Field>
+        <Field Name="VendAddr_1_">
+          <DataField>VendAddr_1_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_4_">
+          <DataField>CompanyAddr_4_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_3_">
+          <DataField>CompanyAddr_3_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_2_">
+          <DataField>CompanyAddr_2_</DataField>
+        </Field>
+        <Field Name="CompanyAddr_1_">
+          <DataField>CompanyAddr_1_</DataField>
+        </Field>
+        <Field Name="STRSUBSTNO__Page__1__FORMAT_CurrReport_PAGENO__">
+          <DataField>STRSUBSTNO__Page__1__FORMAT_CurrReport_PAGENO__</DataField>
+        </Field>
+        <Field Name="STRSUBSTNO_Text002_CopyText_">
+          <DataField>STRSUBSTNO_Text002_CopyText_</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCode">
+          <DataField>PrintCurrencyCode</DataField>
+        </Field>
+        <Field Name="OutputNo">
+          <DataField>OutputNo</DataField>
+        </Field>
+        <Field Name="Vendor__No__">
+          <DataField>Vendor__No__</DataField>
+        </Field>
+        <Field Name="CopyLoop_Number">
+          <DataField>CopyLoop_Number</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer___Agency_Code_">
+          <DataField>Bank_Account_Buffer___Agency_Code_</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer___Customer_No__">
+          <DataField>Bank_Account_Buffer___Customer_No__</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer___Bank_Branch_No__">
+          <DataField>Bank_Account_Buffer___Bank_Branch_No__</DataField>
+        </Field>
+        <Field Name="Bank_Account_Buffer___Bank_Account_No__">
+          <DataField>Bank_Account_Buffer___Bank_Account_No__</DataField>
+        </Field>
+        <Field Name="HeaderText1">
+          <DataField>HeaderText1</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCode_Control1120069">
+          <DataField>PrintCurrencyCode_Control1120069</DataField>
+        </Field>
+        <Field Name="ABS_Amount_">
+          <DataField>ABS_Amount_</DataField>
+        </Field>
+        <Field Name="ABS_Amount_Format">
+          <DataField>ABS_Amount_Format</DataField>
+        </Field>
+        <Field Name="Payment_Line__Due_Date_">
+          <DataField>Payment_Line__Due_Date_</DataField>
+        </Field>
+        <Field Name="PostingDate">
+          <DataField>PostingDate</DataField>
+        </Field>
+        <Field Name="Payment_Line__External_Document_No__">
+          <DataField>Payment_Line__External_Document_No__</DataField>
+        </Field>
+        <Field Name="PaymtHeader__Payment_Class_Name_">
+          <DataField>PaymtHeader__Payment_Class_Name_</DataField>
+        </Field>
+        <Field Name="Payment_Line__Document_No__">
+          <DataField>Payment_Line__Document_No__</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCode_Control1120064">
+          <DataField>PrintCurrencyCode_Control1120064</DataField>
+        </Field>
+        <Field Name="DraftAmount">
+          <DataField>DraftAmount</DataField>
+        </Field>
+        <Field Name="DraftAmountFormat">
+          <DataField>DraftAmountFormat</DataField>
+        </Field>
+        <Field Name="TotalDraftAmount">
+          <DataField>TotalDraftAmount</DataField>
+        </Field>
+        <Field Name="TotalDraftAmountFormat">
+          <DataField>TotalDraftAmountFormat</DataField>
+        </Field>
+        <Field Name="Payment_Line_No_">
+          <DataField>Payment_Line_No_</DataField>
+        </Field>
+        <Field Name="Payment_Line_Line_No_">
+          <DataField>Payment_Line_Line_No_</DataField>
+        </Field>
+        <Field Name="Payment_Line_Payment_Address_Code">
+          <DataField>Payment_Line_Payment_Address_Code</DataField>
+        </Field>
+        <Field Name="Payment_Line_Account_No_">
+          <DataField>Payment_Line_Account_No_</DataField>
+        </Field>
+        <Field Name="Payment_Line_Bank_Branch_No_">
+          <DataField>Payment_Line_Bank_Branch_No_</DataField>
+        </Field>
+        <Field Name="Payment_Line_Agency_Code">
+          <DataField>Payment_Line_Agency_Code</DataField>
+        </Field>
+        <Field Name="Payment_Line_Bank_Account_No_">
+          <DataField>Payment_Line_Bank_Account_No_</DataField>
+        </Field>
+        <Field Name="Payment_Line_Applies_to_ID">
+          <DataField>Payment_Line_Applies_to_ID</DataField>
+        </Field>
+        <Field Name="Payment_Lines1___No__Caption">
+          <DataField>Payment_Lines1___No__Caption</DataField>
+        </Field>
+        <Field Name="PaymtHeader__IBAN__Caption">
+          <DataField>PaymtHeader__IBAN__Caption</DataField>
+        </Field>
+        <Field Name="PaymtHeader__SWIFT_Code__Caption">
+          <DataField>PaymtHeader__SWIFT_Code__Caption</DataField>
+        </Field>
+        <Field Name="CompanyInformation__VAT_Registration_No__Caption">
+          <DataField>CompanyInformation__VAT_Registration_No__Caption</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Fax_No__Caption">
+          <DataField>CompanyInformation__Fax_No__Caption</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Phone_No__Caption">
+          <DataField>CompanyInformation__Phone_No__Caption</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCodeCaption">
+          <DataField>PrintCurrencyCodeCaption</DataField>
+        </Field>
+        <Field Name="Draft_Notice_AmountCaption">
+          <DataField>Draft_Notice_AmountCaption</DataField>
+        </Field>
+        <Field Name="Payment_Line__Payment_Line___No__">
+          <DataField>Payment_Line__Payment_Line___No__</DataField>
+        </Field>
+        <Field Name="Gtxt_Vendor">
+          <DataField>Gtxt_Vendor</DataField>
+        </Field>
+        <Field Name="CompanyInformation_Picture">
+          <DataField>CompanyInformation_Picture</DataField>
+        </Field>
+        <Field Name="Invoice_No_Caption">
+          <DataField>Invoice_No_Caption</DataField>
+        </Field>
+        <Field Name="SERVICE_COMPTABLECaption">
+          <DataField>SERVICE_COMPTABLECaption</DataField>
+        </Field>
+        <Field Name="Invoice_DateCaption">
+          <DataField>Invoice_DateCaption</DataField>
+        </Field>
+        <Field Name="Remaining_Amount__Control1120059Caption">
+          <DataField>Remaining_Amount__Control1120059Caption</DataField>
+        </Field>
+        <Field Name="Gdec_TotalAmount">
+          <DataField>Gdec_TotalAmount</DataField>
+        </Field>
+        <Field Name="Gdec_TotalAmountFormat">
+          <DataField>Gdec_TotalAmountFormat</DataField>
+        </Field>
+        <Field Name="Gtxt_ResponsableComptable">
+          <DataField>Gtxt_ResponsableComptable</DataField>
+        </Field>
+        <Field Name="Gtxt_TÇlComptabilitÇ">
+          <DataField>Gtxt_TÇlComptabilitÇ</DataField>
+        </Field>
+        <Field Name="STATEMENT_OF_TRANSFERCaption">
+          <DataField>STATEMENT_OF_TRANSFERCaption</DataField>
+        </Field>
+        <Field Name="Payment_Line__Payment_Line___No__Caption">
+          <DataField>Payment_Line__Payment_Line___No__Caption</DataField>
+        </Field>
+        <Field Name="CodeCaption">
+          <DataField>CodeCaption</DataField>
+        </Field>
+        <Field Name="Vendor_Caption">
+          <DataField>Vendor_Caption</DataField>
+        </Field>
+        <Field Name="HeaderText">
+          <DataField>HeaderText</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Legal_Form______Text006_____CompanyInformation__Stock_Capital_">
+          <DataField>CompanyInformation__Legal_Form______Text006_____CompanyInformation__Stock_Capital_</DataField>
+        </Field>
+        <Field Name="CompanyInformation_Address_____CompanyInformation__Address_2______CompanyInformation__Post_Code______CompanyInformation_City">
+          <DataField>CompanyInformation_Address_____CompanyInformation__Address_2______CompanyInformation__Post_Code______CompanyInformation_City</DataField>
+        </Field>
+        <Field Name="CompanyInformation__Trade_Register_">
+          <DataField>CompanyInformation__Trade_Register_</DataField>
+        </Field>
+        <Field Name="Text008_CompanyInformation__Phone_No_______FAX_____CompanyInformation__Fax_No__">
+          <DataField>Text008_CompanyInformation__Phone_No_______FAX_____CompanyInformation__Fax_No__</DataField>
+        </Field>
+        <Field Name="HeaderText2">
+          <DataField>HeaderText2</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount__">
+          <DataField>ABS__Remaining_Amount__</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount__Format">
+          <DataField>ABS__Remaining_Amount__Format</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCode_Control1120060">
+          <DataField>PrintCurrencyCode_Control1120060</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Currency_Code_">
+          <DataField>Vendor_Ledger_Entry__Currency_Code_</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount___Control1120059">
+          <DataField>ABS__Remaining_Amount___Control1120059</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount___Control1120059Format">
+          <DataField>ABS__Remaining_Amount___Control1120059Format</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Document_No__">
+          <DataField>Vendor_Ledger_Entry__Document_No__</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Description">
+          <DataField>Vendor_Ledger_Entry_Description</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__External_Document_No__">
+          <DataField>Vendor_Ledger_Entry__External_Document_No__</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Posting_Date_">
+          <DataField>Vendor_Ledger_Entry__Posting_Date_</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Due_Date_">
+          <DataField>Vendor_Ledger_Entry__Due_Date_</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount___Control1120036">
+          <DataField>ABS__Remaining_Amount___Control1120036</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount___Control1120036Format">
+          <DataField>ABS__Remaining_Amount___Control1120036Format</DataField>
+        </Field>
+        <Field Name="PrintCurrencyCode_Control1120063">
+          <DataField>PrintCurrencyCode_Control1120063</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Entry_No_">
+          <DataField>Vendor_Ledger_Entry_Entry_No_</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Vendor_No_">
+          <DataField>Vendor_Ledger_Entry_Vendor_No_</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_Applies_to_ID">
+          <DataField>Vendor_Ledger_Entry_Applies_to_ID</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Document_No__Caption">
+          <DataField>Vendor_Ledger_Entry__Document_No__Caption</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry_DescriptionCaption">
+          <DataField>Vendor_Ledger_Entry_DescriptionCaption</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__External_Document_No__Caption">
+          <DataField>Vendor_Ledger_Entry__External_Document_No__Caption</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Posting_Date_Caption">
+          <DataField>Vendor_Ledger_Entry__Posting_Date_Caption</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Due_Date_Caption">
+          <DataField>Vendor_Ledger_Entry__Due_Date_Caption</DataField>
+        </Field>
+        <Field Name="ABS__Remaining_Amount___Control1120059Caption">
+          <DataField>ABS__Remaining_Amount___Control1120059Caption</DataField>
+        </Field>
+        <Field Name="ReportCaption">
+          <DataField>ReportCaption</DataField>
+        </Field>
+        <Field Name="ReportCaption_Control1120015">
+          <DataField>ReportCaption_Control1120015</DataField>
+        </Field>
+        <Field Name="Vendor_Ledger_Entry__Vendor_Ledger_Entry___Document_Date_">
+          <DataField>Vendor_Ledger_Entry__Vendor_Ledger_Entry___Document_Date_</DataField>
+        </Field>
+        <Field Name="Remaining_Amount__Control1120059">
+          <DataField>Remaining_Amount__Control1120059</DataField>
+        </Field>
+        <Field Name="Remaining_Amount__Control1120059Format">
+          <DataField>Remaining_Amount__Control1120059Format</DataField>
+        </Field>
+      </Fields>
+      <rd:DataSetInfo>
+        <rd:DataSetName>DataSet</rd:DataSetName>
+        <rd:SchemaPath>Report.xsd</rd:SchemaPath>
+        <rd:TableName>Result</rd:TableName>
+      </rd:DataSetInfo>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix1">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>18.28956cm</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>17.20524cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Rectangle Name="Rectangle3">
+                          <ReportItems>
+                            <Rectangle Name="Rectangle2">
+                              <ReportItems>
+                                <Image Name="CompanyInformation_Picture11">
+                                  <Source>Database</Source>
+                                  <Value>=First(Fields!CompanyInformation_Picture.Value, "DataSet_Result")</Value>
+                                  <MIMEType>image/bmp</MIMEType>
+                                  <Top>0.01962cm</Top>
+                                  <Left>0.17867cm</Left>
+                                  <Height>3.5cm</Height>
+                                  <Width>6cm</Width>
+                                  <Style>
+                                    <Border>
+                                      <Style>None</Style>
+                                    </Border>
+                                  </Style>
+                                </Image>
+                                <Textbox Name="VendAddr_7_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!VendAddr_7_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>4.78862cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>1</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_6_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!VendAddr_6_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>4.36562cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>2</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_5_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!VendAddr_5_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>3.94262cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>3</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_4_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!VendAddr_4_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>3.51962cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>4</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_3_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!VendAddr_3_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>3.09662cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>5</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_2_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=Fields!VendAddr_2_.Value</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>2.67362cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>6</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="VendAddr_1_11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=Fields!VendAddr_1_.Value</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                            <FontWeight>Bold</FontWeight>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>2.25062cm</Top>
+                                  <Left>10.13729cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>6.3cm</Width>
+                                  <ZIndex>7</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="STATEMENT_OF_TRANSFERCaption11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!STATEMENT_OF_TRANSFERCaption.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontWeight>Bold</FontWeight>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style>
+                                        <TextAlign>Center</TextAlign>
+                                      </Style>
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>9.91226cm</Top>
+                                  <Left>4.03044cm</Left>
+                                  <Height>0.846cm</Height>
+                                  <Width>11.28571cm</Width>
+                                  <ZIndex>8</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="Vendor_Caption11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!Vendor_Caption.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>6.95126cm</Top>
+                                  <Left>1.03044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>3cm</Width>
+                                  <ZIndex>9</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="CodeCaption11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!CodeCaption.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>7.37426cm</Top>
+                                  <Left>1.03044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>3cm</Width>
+                                  <ZIndex>10</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="Payment_Line__Payment_Line___No__Caption11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!Payment_Line__Payment_Line___No__Caption.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>7.79726cm</Top>
+                                  <Left>1.03044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>3cm</Width>
+                                  <ZIndex>11</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="HeaderText11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!HeaderText.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style />
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>8.64326cm</Top>
+                                  <Left>1.03044cm</Left>
+                                  <Height>0.846cm</Height>
+                                  <Width>16.35cm</Width>
+                                  <ZIndex>12</ZIndex>
+                                  <Style />
+                                </Textbox>
+                                <Textbox Name="Payment_Line__Payment_Line___No__11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!Payment_Line__Payment_Line___No__.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style>
+                                        <TextAlign>Left</TextAlign>
+                                      </Style>
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>7.79726cm</Top>
+                                  <Left>4.18044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>4.2cm</Width>
+                                  <ZIndex>13</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="Payment_Line__Payment_Line___Account_No__11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!Payment_Lines1_Line_No_.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style>
+                                        <TextAlign>Left</TextAlign>
+                                      </Style>
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>7.37426cm</Top>
+                                  <Left>4.18044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>4.2cm</Width>
+                                  <ZIndex>14</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Textbox Name="Gtxt_Vendor11">
+                                  <KeepTogether>true</KeepTogether>
+                                  <Paragraphs>
+                                    <Paragraph>
+                                      <TextRuns>
+                                        <TextRun>
+                                          <Value EvaluationMode="Auto">=First(Fields!Gtxt_Vendor.Value, "DataSet_Result")</Value>
+                                          <Style>
+                                            <FontSize>9pt</FontSize>
+                                          </Style>
+                                        </TextRun>
+                                      </TextRuns>
+                                      <Style>
+                                        <TextAlign>Left</TextAlign>
+                                      </Style>
+                                    </Paragraph>
+                                  </Paragraphs>
+                                  <Top>6.95126cm</Top>
+                                  <Left>4.18044cm</Left>
+                                  <Height>0.423cm</Height>
+                                  <Width>4.2cm</Width>
+                                  <ZIndex>15</ZIndex>
+                                  <Style>
+                                    <VerticalAlign>Middle</VerticalAlign>
+                                  </Style>
+                                </Textbox>
+                                <Tablix Name="Table2">
+                                  <TablixBody>
+                                    <TablixColumns>
+                                      <TablixColumn>
+                                        <Width>5.77297cm</Width>
+                                      </TablixColumn>
+                                      <TablixColumn>
+                                        <Width>4.18565cm</Width>
+                                      </TablixColumn>
+                                      <TablixColumn>
+                                        <Width>3.11975cm</Width>
+                                      </TablixColumn>
+                                      <TablixColumn>
+                                        <Width>5.03252cm</Width>
+                                      </TablixColumn>
+                                    </TablixColumns>
+                                    <TablixRows>
+                                      <TablixRow>
+                                        <Height>1.15736cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox13">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Invoice_No_Caption.Value</Value>
+                                                        <Style>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox5</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox17">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Invoice_DateCaption.Value</Value>
+                                                        <Style>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox6</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox19">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Remaining_Amount__Control1120059Caption.Value</Value>
+                                                        <Style>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox7</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox20">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox8</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                        </TablixCells>
+                                      </TablixRow>
+                                      <TablixRow>
+                                        <Height>0.628cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Vendor_Ledger_Entry__External_Document_No__2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Vendor_Ledger_Entry__External_Document_No__.Value</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Vendor_Ledger_Entry__Vendor_Ledger_Entry___Document_Date_2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Vendor_Ledger_Entry__Vendor_Ledger_Entry___Document_Date_.Value</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                          <Format>d</Format>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Center</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Remaining_Amount__Control1120060">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Remaining_Amount__Control1120059.Value</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                          <Format>=Fields!Remaining_Amount__Control1120059Format.Value</Format>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Vendor_Ledger_Entry__Currency_Code_2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Fields!Vendor_Ledger_Entry__Currency_Code_.Value</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Right</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                  <PaddingTop>2pt</PaddingTop>
+                                                  <PaddingBottom>2pt</PaddingBottom>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                        </TablixCells>
+                                      </TablixRow>
+                                      <TablixRow>
+                                        <Height>0.54041cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Textbox4">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>Textbox3</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Draft_Notice_AmountCaption2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=First(Fields!Draft_Notice_AmountCaption.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Gdec_TotalAmount2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=Sum(Fields!Gdec_TotalAmount.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                          <FontWeight>Bold</FontWeight>
+                                                          <Format>=First(Fields!Gdec_TotalAmountFormat.Value)</Format>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="PrintCurrencyCode2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=First(Fields!PrintCurrencyCode.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                          <FontWeight>Bold</FontWeight>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Right</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                        </TablixCells>
+                                      </TablixRow>
+                                      <TablixRow>
+                                        <Height>0.60499cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox3">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox1</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox21">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox2</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Gtxt_ResponsableComptable2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=First(Fields!Gtxt_ResponsableComptable.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Left</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                              <ColSpan>2</ColSpan>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell />
+                                        </TablixCells>
+                                      </TablixRow>
+                                      <TablixRow>
+                                        <Height>0.60499cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox23">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox9</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox24">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox11</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="SERVICE_COMPTABLECaption2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=First(Fields!SERVICE_COMPTABLECaption.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Left</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                              <ColSpan>2</ColSpan>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell />
+                                        </TablixCells>
+                                      </TablixRow>
+                                      <TablixRow>
+                                        <Height>0.60499cm</Height>
+                                        <TablixCells>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox26">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox15</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="textbox27">
+                                                <CanGrow>true</CanGrow>
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto" />
+                                                        <Style />
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style />
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <rd:DefaultName>textbox16</rd:DefaultName>
+                                                <Style>
+                                                  <PaddingLeft>2pt</PaddingLeft>
+                                                  <PaddingRight>2pt</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell>
+                                            <CellContents>
+                                              <Textbox Name="Gtxt_TÇlComptabilitÇ2">
+                                                <KeepTogether>true</KeepTogether>
+                                                <Paragraphs>
+                                                  <Paragraph>
+                                                    <TextRuns>
+                                                      <TextRun>
+                                                        <Value EvaluationMode="Auto">=First(Fields!Gtxt_TÇlComptabilitÇ.Value)</Value>
+                                                        <Style>
+                                                          <FontSize>9pt</FontSize>
+                                                        </Style>
+                                                      </TextRun>
+                                                    </TextRuns>
+                                                    <Style>
+                                                      <TextAlign>Left</TextAlign>
+                                                    </Style>
+                                                  </Paragraph>
+                                                </Paragraphs>
+                                                <Style>
+                                                  <VerticalAlign>Middle</VerticalAlign>
+                                                  <PaddingLeft>0.075cm</PaddingLeft>
+                                                  <PaddingRight>0.075cm</PaddingRight>
+                                                </Style>
+                                              </Textbox>
+                                              <ColSpan>2</ColSpan>
+                                            </CellContents>
+                                          </TablixCell>
+                                          <TablixCell />
+                                        </TablixCells>
+                                      </TablixRow>
+                                    </TablixRows>
+                                  </TablixBody>
+                                  <TablixColumnHierarchy>
+                                    <TablixMembers>
+                                      <TablixMember />
+                                      <TablixMember />
+                                      <TablixMember />
+                                      <TablixMember />
+                                    </TablixMembers>
+                                  </TablixColumnHierarchy>
+                                  <TablixRowHierarchy>
+                                    <TablixMembers>
+                                      <TablixMember>
+                                        <KeepWithGroup>After</KeepWithGroup>
+                                        <RepeatOnNewPage>true</RepeatOnNewPage>
+                                        <KeepTogether>true</KeepTogether>
+                                      </TablixMember>
+                                      <TablixMember>
+                                        <Group Name="Table1_Group2">
+                                          <GroupExpressions>
+                                            <GroupExpression>=Fields!Vendor_No_.Value</GroupExpression>
+                                            <GroupExpression>=Fields!Payment_Line__Payment_Line___No__.Value</GroupExpression>
+                                            <GroupExpression>=Fields!Payment_Line_Line_No_.Value</GroupExpression>
+                                          </GroupExpressions>
+                                          <DataElementName>Detail</DataElementName>
+                                        </Group>
+                                        <TablixMembers>
+                                          <TablixMember />
+                                        </TablixMembers>
+                                        <DataElementName>Detail_Collection</DataElementName>
+                                        <DataElementOutput>Output</DataElementOutput>
+                                        <KeepTogether>true</KeepTogether>
+                                      </TablixMember>
+                                      <TablixMember>
+                                        <KeepWithGroup>Before</KeepWithGroup>
+                                      </TablixMember>
+                                      <TablixMember>
+                                        <KeepWithGroup>Before</KeepWithGroup>
+                                        <KeepTogether>true</KeepTogether>
+                                      </TablixMember>
+                                      <TablixMember>
+                                        <KeepWithGroup>Before</KeepWithGroup>
+                                        <KeepTogether>true</KeepTogether>
+                                      </TablixMember>
+                                      <TablixMember>
+                                        <KeepWithGroup>Before</KeepWithGroup>
+                                        <KeepTogether>true</KeepTogether>
+                                      </TablixMember>
+                                    </TablixMembers>
+                                  </TablixRowHierarchy>
+                                  <DataSetName>DataSet_Result</DataSetName>
+                                  <Top>11.25654cm</Top>
+                                  <Left>0.17867cm</Left>
+                                  <Height>4.14074cm</Height>
+                                  <Width>18.11089cm</Width>
+                                  <ZIndex>16</ZIndex>
+                                  <Style />
+                                </Tablix>
+                              </ReportItems>
+                              <KeepTogether>true</KeepTogether>
+                              <Top>1.58455cm</Top>
+                              <Height>15.54132cm</Height>
+                              <Width>18.28956cm</Width>
+                              <Style>
+                                <Border>
+                                  <Style>None</Style>
+                                </Border>
+                              </Style>
+                            </Rectangle>
+                          </ReportItems>
+                          <KeepTogether>true</KeepTogether>
+                          <Style>
+                            <Border>
+                              <Style>None</Style>
+                            </Border>
+                          </Style>
+                        </Rectangle>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="DÇtails">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!Payment_Lines1_No_.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!Vendor_No_.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>DataSet_Result</DataSetName>
+            <SortExpressions>
+              <SortExpression>
+                <Value>=Fields!Vendor_No_.Value</Value>
+              </SortExpression>
+            </SortExpressions>
+            <Top>0.15677cm</Top>
+            <Left>0.10266cm</Left>
+            <Height>17.20524cm</Height>
+            <Width>18.28956cm</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>17.36201cm</Height>
+        <Style />
+      </Body>
+      <Width>18.39222cm</Width>
+      <Page>
+        <PageFooter>
+          <Height>1.36686cm</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="CompanyInformation__Legal_Form______Text006_____CompanyInformation__Stock_Capital_">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=First(Fields!CompanyInformation__Legal_Form______Text006_____CompanyInformation__Stock_Capital_.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Height>0.31746cm</Height>
+              <Width>17.46032cm</Width>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+                <PaddingLeft>0.075cm</PaddingLeft>
+                <PaddingRight>0.075cm</PaddingRight>
+              </Style>
+            </Textbox>
+            <Textbox Name="CompanyInformation_Address_____CompanyInformation__Address_2______CompanyInformation__Post_Code______CompanyInformation_City">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=First(Fields!CompanyInformation_Address_____CompanyInformation__Address_2______CompanyInformation__Post_Code______CompanyInformation_City.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.31746cm</Top>
+              <Height>0.31746cm</Height>
+              <Width>17.46032cm</Width>
+              <ZIndex>1</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+                <PaddingLeft>0.075cm</PaddingLeft>
+                <PaddingRight>0.075cm</PaddingRight>
+              </Style>
+            </Textbox>
+            <Textbox Name="textbox10">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=First(Fields!CompanyInformation__Trade_Register_.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.63492cm</Top>
+              <Height>0.31746cm</Height>
+              <Width>17.46032cm</Width>
+              <ZIndex>2</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+                <PaddingLeft>0.075cm</PaddingLeft>
+                <PaddingRight>0.075cm</PaddingRight>
+              </Style>
+            </Textbox>
+            <Textbox Name="textbox12">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value EvaluationMode="Auto">=First(Fields!Text008_CompanyInformation__Phone_No_______FAX_____CompanyInformation__Fax_No__.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Center</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>1.02294cm</Top>
+              <Height>0.31746cm</Height>
+              <Width>17.46032cm</Width>
+              <ZIndex>3</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+                <PaddingLeft>0.075cm</PaddingLeft>
+                <PaddingRight>0.075cm</PaddingRight>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style />
+        </PageFooter>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>19.15cm</PageWidth>
+        <LeftMargin>0.8cm</LeftMargin>
+        <TopMargin>1cm</TopMargin>
+        <BottomMargin>1cm</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Cm</rd:ReportUnitType>
+  <rd:ReportID>bb5e5a97-9183-4ff1-bbb4-860a6003f482</rd:ReportID>
+</Report>
+    END_OF_RDLDATA
+  }
+}
+

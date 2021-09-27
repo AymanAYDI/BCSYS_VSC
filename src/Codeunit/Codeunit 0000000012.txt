@@ -2,9 +2,10 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,PS55174,JX-VSC2.0-XAD,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -97,6 +98,10 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
       Text10800@1120004 : TextConst 'ENU=Not a derogatory line.;FRA=N''est pas une ligne d‚rogatoire.';
       OldTransactionNo@1120006 : Integer;
       DescriptionMustNotBeBlankErr@1030 : TextConst '@@@=%1: Field Omit Default Descr. in Jnl., %2 G/L Account No, %3 Description;ENU=When %1 is selected for %2, %3 must have a value.;FRA=Si %1 est s‚lectionn‚ pour %2, %3 doit avoir une valeur.';
+      Gcode_Utilisateur@1000000003 : Code[50];
+      Grec_Temp@1000000002 : Record 50001;
+      Gdec_UnrealizedAmount@1000000001 : Decimal;
+      Gdec_UnrealizedBase@1000000000 : Decimal;
 
     PROCEDURE GetGLReg@10(VAR NewGLReg@1000 : Record 45);
     BEGIN
@@ -489,6 +494,15 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
         VATEntry."Transaction No." := NextTransactionNo;
         VATEntry."Sales Tax Connection No." := NextConnectionNo;
 
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //VATEntry."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        VATEntry."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
+
         IF "VAT Difference" = 0 THEN
           VATDifferenceLCY := 0
         ELSE
@@ -840,6 +854,15 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
 
         InitVendLedgEntry(GenJnlLine,VendLedgEntry);
 
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //VendLedgEntry."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        VendLedgEntry."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
+
         IF NOT Vend."Block Payment Tolerance" THEN
           CalcPmtTolerancePossible(
             GenJnlLine,VendLedgEntry."Pmt. Discount Date",VendLedgEntry."Pmt. Disc. Tolerance Date",
@@ -848,6 +871,16 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
         TempDtldCVLedgEntryBuf.DELETEALL;
         TempDtldCVLedgEntryBuf.INIT;
         TempDtldCVLedgEntryBuf.CopyFromGenJnlLine(GenJnlLine);
+
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //DtldCVLedgEntryBuf."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        TempDtldCVLedgEntryBuf."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
+
         TempDtldCVLedgEntryBuf."CV Ledger Entry No." := VendLedgEntry."Entry No.";
         CVLedgEntryBuf.CopyFromVendLedgEntry(VendLedgEntry);
         TempDtldCVLedgEntryBuf.InsertDtldCVLedgEntry(TempDtldCVLedgEntryBuf,CVLedgEntryBuf,TRUE);
@@ -1177,7 +1210,15 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
         GLReg."Creation Date" := TODAY;
         GLReg."Source Code" := "Source Code";
         GLReg."Journal Batch Name" := "Journal Batch Name";
-        GLReg."User ID" := USERID;
+
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //GLReg."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        GLReg."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
 
         GetCurrencyExchRate(GenJnlLine);
         TempGLEntryBuf.DELETEALL;
@@ -1330,6 +1371,7 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
     LOCAL PROCEDURE InitGLEntry@3(GenJnlLine@1008 : Record 81;VAR GLEntry@1009 : Record 17;GLAccNo@1000 : Code[20];Amount@1001 : Decimal;AmountAddCurr@1002 : Decimal;UseAmountAddCurr@1003 : Boolean;SystemCreatedEntry@1004 : Boolean);
     VAR
       GLAcc@1007 : Record 15;
+      lVendLedgEntry@1000000000 : Record 25;
     BEGIN
       IF GLAccNo <> '' THEN BEGIN
         GLAcc.GET(GLAccNo);
@@ -1355,6 +1397,43 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
       GLEntry."G/L Account No." := GLAccNo;
       GLEntry."System-Created Entry" := SystemCreatedEntry;
       GLEntry.Amount := Amount;
+
+      //DEBUT MODIF JX-XAD 10/07/2009
+      //GLEntry."User ID" := USERID;
+      IF Grec_Temp.GET(-1) THEN
+        Gcode_Utilisateur := Grec_Temp.Compte
+      ELSE
+        Gcode_Utilisateur := USERID;
+      GLEntry."User ID" := Gcode_Utilisateur;
+      //FIN MODIF JX-XAD 10/07/2009
+
+      //D‚but Modif JX-XAD 22/10/2008
+      GLEntry."Vendor No." := GenJnlLine."Vendor No.";
+      GLEntry."Customer No." := GenJnlLine."Customer No.";   //Ajout JX-XAD 01/10/2010
+      //Fin Modif JX-XAD 22/10/2008
+
+      // JX-VSC4.1-PBD  PREPAID 21/07/2016
+      IF (GenJnlLine."Document Prepaid" <> '') AND (GenJnlLine."Account Type" = GenJnlLine."Account Type"::Vendor) THEN
+       IF GLEntry."Document Type" = GLEntry."Document Type"::Invoice THEN BEGIN
+        lVendLedgEntry.RESET;
+        lVendLedgEntry.SETCURRENTKEY("Vendor No.","Document Type Prepaid","Document Prepaid");
+        lVendLedgEntry.SETRANGE("Vendor No.",GenJnlLine."Account No.");
+        lVendLedgEntry.SETRANGE("Document Type Prepaid",GenJnlLine."Document Type Prepaid");
+        lVendLedgEntry.SETRANGE("Document Prepaid",GenJnlLine."Document Prepaid");
+        IF lVendLedgEntry.FINDFIRST THEN
+         IF lVendLedgEntry.Open THEN BEGIN
+          GenJnlLine."Applies-to Doc. Type" := lVendLedgEntry."Document Type";
+          GenJnlLine."Applies-to Doc. No." := lVendLedgEntry."Document No.";
+          GenJnlLine."Applies-to ID" := GenJnlLine."Document No.";
+          lVendLedgEntry."Applies-to ID" := GenJnlLine."Document No.";
+          lVendLedgEntry.MODIFY;
+         END;
+       END ELSE BEGIN
+        GLEntry."Document Type Prepaid" := GenJnlLine."Document Type Prepaid";
+        GLEntry."Document Prepaid" := GenJnlLine."Document Prepaid";
+       END;
+      //
+
       GLEntry."Additional-Currency Amount" :=
         GLCalcAddCurrency(Amount,AmountAddCurr,GLEntry."Additional-Currency Amount",UseAmountAddCurr,GenJnlLine);
     END;
@@ -3483,13 +3562,19 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
             END;
 
             IF VATPart = 1 THEN BEGIN
-              VATAmount := VATEntry2."Remaining Unrealized Amount";
-              VATBase := VATEntry2."Remaining Unrealized Base";
+
+              //VATAmount := VATEntry2."Remaining Unrealized Amount";//Modif JX-AUD du 15/11/11 origine ligne
+              //VATBase := VATEntry2."Remaining Unrealized Base"; //Modif JX-AUD du 15/11/11  origine ligne
+              VATAmount := VATEntry2."Unrealized Amount";//Modif JX-AUD du 15/11/11
+              VATBase := VATEntry2."Unrealized Base"; //Modif JX-AUD du 15/11/11
               VATAmountAddCurr := VATEntry2."Add.-Curr. Rem. Unreal. Amount";
               VATBaseAddCurr := VATEntry2."Add.-Curr. Rem. Unreal. Base";
             END ELSE BEGIN
-              VATAmount := ROUND(VATEntry2."Remaining Unrealized Amount" * VATPart,GLSetup."Amount Rounding Precision");
-              VATBase := ROUND(VATEntry2."Remaining Unrealized Base" * VATPart,GLSetup."Amount Rounding Precision");
+
+              //VATAmount := ROUND(VATEntry2."Remaining Unrealized Amount" * VATPart);//Modif JX-AUD du 15/11/11 origine ligne
+              //VATBase := ROUND(VATEntry2."Remaining Unrealized Base" * VATPart); //Modif JX-AUD du 15/11/11 origine ligne
+              VATAmount := ROUND(VATEntry2."Unrealized Amount");//Modif JX-AUD du 15/11/11
+              VATBase := ROUND(VATEntry2."Unrealized Base"); //Modif JX-AUD du 15/11/11
               VATAmountAddCurr :=
                 ROUND(
                   VATEntry2."Add.-Curr. Rem. Unreal. Amount" * VATPart,
@@ -5146,6 +5231,31 @@ OBJECT Codeunit 12 Gen. Jnl.-Post Line
     END;
 
     BEGIN
+    {
+
+      Modif JX-XAD 22/10/2008
+      Ajout d'un champ fournisseur dans la feuille de compta et les ‚critures compta
+
+      --------------------------------- VSC1.1 ---------------------------------
+      MODIF JX-XAD 10/07/2009
+      Mise … jour du code utilisateur affect‚ au lieu du USER ID
+      Voir aussi les code unit 22, 90 et 91
+
+      MODIF JX-XAD 16/12/2009 : TVA 2010
+      Ce codeunit est le nouveau codeunit mis … jour par Microsoft (Version list PS55174) pour la TVA 2010
+      Les modifs d‚crites ci-dessus y ont ‚t‚ r‚int‚gr‚es
+
+      --------------------------------- VSC2.0 ---------------------------------
+
+      MODIF JX-XAD 01/10/2010
+      Traitement de la validation du Nø client entre la feuille de compta et les ‚critures compta
+
+      MODIF JX-XAD 18/04/2011
+      Mise … jour Hotfixe 978857 (montant tva incorrect si un avoir a ‚t‚ lettr‚ avec une facture)
+
+      //Modif JX-AUD du 15/11/2011
+      Modification sur le traitement de la TVA
+    }
     END.
   }
 }

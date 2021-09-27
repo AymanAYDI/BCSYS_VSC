@@ -2,9 +2,10 @@ OBJECT Page 6644 Purchase Return Order Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00.01,JX-VSC1.0-XAD;
   }
   PROPERTIES
   {
@@ -14,6 +15,15 @@ OBJECT Page 6644 Purchase Return Order Archive
     SourceTable=Table5109;
     SourceTableView=WHERE(Document Type=CONST(Return Order));
     PageType=Document;
+    OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+               END;
+
     ActionList=ACTIONS
     {
       { 1900000003;0 ;ActionContainer;
@@ -26,7 +36,7 @@ OBJECT Page 6644 Purchase Return Order Archive
                       ShortCutKey=Shift+F7;
                       CaptionML=[ENU=Card;
                                  FRA=Fiche];
-                      RunObject=Page 26;
+                      RunObject=Page 27;
                       RunPageLink=No.=FIELD(Buy-from Vendor No.);
                       Image=EditLines }
       { 120     ;2   ;Action    ;
@@ -265,6 +275,7 @@ OBJECT Page 6644 Purchase Return Order Archive
   {
     VAR
       DocPrint@1000 : Codeunit 229;
+      UserMgt@1000000000 : Codeunit 5700;
 
     LOCAL PROCEDURE PricesIncludingVATOnAfterValid@19009096();
     BEGIN
@@ -272,6 +283,10 @@ OBJECT Page 6644 Purchase Return Order Archive
     END;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+    }
     END.
   }
 }

@@ -2,9 +2,10 @@ OBJECT Page 233 Apply Vendor Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=12/01/16;
+    Time=12:30:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-YOOZ2;
   }
   PROPERTIES
   {
@@ -252,6 +253,10 @@ OBJECT Page 233 Apply Vendor Entries
                 SourceExpr="Posting Date";
                 Editable=FALSE }
 
+    { 1000000002;2;Field  ;
+                SourceExpr="Document Date";
+                Editable=FALSE }
+
     { 4   ;2   ;Field     ;
                 SourceExpr="Document Type";
                 Editable=FALSE;
@@ -271,6 +276,14 @@ OBJECT Page 233 Apply Vendor Entries
 
     { 10  ;2   ;Field     ;
                 SourceExpr=Description;
+                Editable=FALSE }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000001;2;Field  ;
+                ExtendedDatatype=URL;
+                SourceExpr="Yooz Token link";
                 Editable=FALSE }
 
     { 39  ;2   ;Field     ;

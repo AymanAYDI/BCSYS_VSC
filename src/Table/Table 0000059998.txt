@@ -1,0 +1,46 @@
+OBJECT Table 59998 VSCT analytics 2011 FA changes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=03/03/11;
+    Time=14:39:37;
+    Modified=Yes;
+    Version List=JX-VSC2.0-LAB;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=VSCT analytics 2011 FA changes;
+               FRA=VSCT changement analytiques immos 2011];
+  }
+  FIELDS
+  {
+    { 50000;  ;axe1                ;Code20        ;CaptionML=[ENU=axe1;
+                                                              FRA=axe1] }
+    { 50001;  ;axe2                ;Code20        ;CaptionML=[ENU=axe2;
+                                                              FRA=axe2] }
+    { 50002;  ;axe3                ;Code20        ;CaptionML=[ENU=axe3;
+                                                              FRA=axe3] }
+    { 50003;  ;axe4                ;Code20        ;CaptionML=[ENU=axe4;
+                                                              FRA=axe4] }
+    { 50004;  ;new axe1            ;Code20        ;CaptionML=[ENU=newaxe1;
+                                                              FRA=Nouvel axe1] }
+    { 50005;  ;new axe2            ;Code20        ;CaptionML=[ENU=newaxe2;
+                                                              FRA=Nouvel axe2] }
+    { 50006;  ;new axe3            ;Code20        ;CaptionML=[ENU=newaxe3;
+                                                              FRA=Nouvel axe3] }
+  }
+  KEYS
+  {
+    {    ;axe1,axe2,axe3,axe4                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

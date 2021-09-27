@@ -2,9 +2,10 @@ OBJECT Table 124 Purch. Cr. Memo Hdr.
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=04/12/15;
+    Time=11:30:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD,JX-YOOZ2;
   }
   PROPERTIES
   {
@@ -353,6 +354,18 @@ OBJECT Table 124 Purch. Cr. Memo Hdr.
     { 6602;   ;Return Order No. Series;Code10     ;TableRelation="No. Series";
                                                    CaptionML=[ENU=Return Order No. Series;
                                                               FRA=Souches de nø retour] }
+    { 50005;  ;Matricule No.       ;Code20        ;CaptionML=FRA=Code matricule }
+    { 50012;  ;Litige              ;Boolean        }
+    { 50013;  ;BC No.              ;Code20        ;CaptionML=[ENU=BC No.;
+                                                              FRA=Nø BC];
+                                                   Editable=No }
+    { 50014;  ;Yooz No.            ;Code20        ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz];
+                                                   Editable=No }
+    { 50015;  ;Yooz Token link     ;Text250       ;ExtendedDatatype=URL;
+                                                   CaptionML=[ENU=Yooz Token link;
+                                                              FRA=Lien Token Yooz];
+                                                   Editable=No }
   }
   KEYS
   {
@@ -417,6 +430,14 @@ OBJECT Table 124 Purch. Cr. Memo Hdr.
     END;
 
     BEGIN
+    {
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Code Matricule"
+
+      //Modif JX-AUD du 10/07/2013
+      //Ajout du champ Litige
+    }
     END.
   }
 }

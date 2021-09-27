@@ -2,12 +2,14 @@ OBJECT Page 140 Posted Purchase Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=04/12/15;
+    Time=11:30:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-XAD,JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD,YOOZ2;
   }
   PROPERTIES
   {
+    Permissions=TableData 124=rm;
     CaptionML=[ENU=Posted Purchase Credit Memo;
                FRA=Avoir achat enregistr‚];
     InsertAllowed=No;
@@ -15,6 +17,13 @@ OBJECT Page 140 Posted Purchase Credit Memo
     PageType=Document;
     RefreshOnActivate=Yes;
     OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+
                  SetSecurityFilterOnRespCenter;
                END;
 
@@ -65,6 +74,22 @@ OBJECT Page 140 Posted Purchase Credit Memo
                                  PostedApprovalEntries.RUN;
                                END;
                                 }
+      { 1000000000;2 ;ActionGroup;
+                      CaptionML=[ENU=Modify dimension;
+                                 FRA=Modifier axe] }
+      { 1000000001;3 ;Action    ;
+                      CaptionML=[ENU=period;
+                                 FRA=p‚riode];
+                      OnAction=BEGIN
+                                 ModifierAxe.SetPostedCreditMemo(Rec);
+                                 ModifierAxe.RUNMODAL;
+                                 CLEAR(ModifierAxe);
+                               END;
+                                }
+      { 77      ;1   ;ActionGroup;
+                      CaptionML=[ENU=&Line;
+                                 FRA=&Ligne] }
+      { 90      ;2   ;Separator  }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 48      ;1   ;Action    ;
@@ -138,6 +163,10 @@ OBJECT Page 140 Posted Purchase Credit Memo
                 SourceExpr="Buy-from Contact";
                 Editable=FALSE }
 
+    { 1000000004;2;Field  ;
+                SourceExpr="Matricule No.";
+                Editable=FALSE }
+
     { 12  ;2   ;Field     ;
                 SourceExpr="Posting Date";
                 Importance=Promoted;
@@ -171,6 +200,18 @@ OBJECT Page 140 Posted Purchase Credit Memo
     { 20  ;2   ;Field     ;
                 SourceExpr="No. Printed";
                 Editable=FALSE }
+
+    { 1000000006;2;Field  ;
+                SourceExpr=Litige }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="BC No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Yooz Token link" }
 
     { 44  ;1   ;Part      ;
                 Name=PurchCrMemoLines;
@@ -302,8 +343,28 @@ OBJECT Page 140 Posted Purchase Credit Memo
     VAR
       PurchCrMemoHeader@1000 : Record 124;
       ChangeExchangeRate@1001 : Page 511;
+      UserMgt@1000000000 : Codeunit 5700;
+      ModifierAxe@1000000001 : Report 50024;
+      Grec_PurchCrMemoLine@1000000003 : Record 125;
+      ModifierAxesAvoir@1000000002 : Report 50038;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+
+      JX-XAD 05/06/2009
+      Traduction en Anglais
+
+      MODIF JX-XAD 04/05/2010
+      Ajout d'un bouton "Modifier axes analytiques"
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Matricule" et traitement de celui-ci
+
+      //Modif JX-AUD du 10/07/2013
+      //Ajout du champ Litige
+    }
     END.
   }
 }

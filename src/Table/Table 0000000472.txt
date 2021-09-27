@@ -588,20 +588,20 @@ OBJECT Table 472 Job Queue Entry
 
       ActiveSession.SETRANGE("Server Instance ID","User Service Instance ID");
       ActiveSession.SETRANGE("Session ID","User Session ID");
-      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::Background);
+      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::"ArriŠre-plan");
       IF NOT ActiveSession.FINDFIRST THEN
         EXIT(FALSE);
 
       SessionEvent.SETRANGE("Server Instance ID","User Service Instance ID");
       SessionEvent.SETRANGE("Session ID","User Session ID");
-      SessionEvent.SETRANGE("Client Type",SessionEvent."Client Type"::Background);
+      SessionEvent.SETRANGE("Client Type",SessionEvent."Client Type"::"ArriŠre-plan");
       SessionEvent.SETFILTER("Event Datetime",'>=%1',ActiveSession."Login Datetime");
       SessionEvent.SETCURRENTKEY("Event Datetime");
       IF SessionEvent.ISEMPTY THEN
         EXIT(FALSE);
 
       IF SessionEvent.FINDLAST THEN
-        EXIT(SessionEvent."Event Type" IN [SessionEvent."Event Type"::Logon,SessionEvent."Event Type"::Start]);
+        EXIT(SessionEvent."Event Type" IN [SessionEvent."Event Type"::"Se connecter",SessionEvent."Event Type"::D‚marrer]);
       EXIT(FALSE);
     END;
 

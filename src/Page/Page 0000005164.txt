@@ -2,9 +2,10 @@ OBJECT Page 5164 Purchase Quote Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.0-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -14,10 +15,28 @@ OBJECT Page 5164 Purchase Quote Archive
     SourceTable=Table5109;
     SourceTableView=WHERE(Document Type=CONST(Quote));
     PageType=Document;
+    OnOpenPage=BEGIN
+                 //DÇbut Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) liÇs au droit de l'utilisateur courant (voir table des paramätres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+               END;
+
     ActionList=ACTIONS
     {
       { 1900000003;0 ;ActionContainer;
                       ActionContainerType=RelatedInformation }
+      { 1000000001;1 ;ActionGroup;
+                      CaptionML=[ENU=&Quote;
+                                 FRA=&Dem. prix] }
+      { 1000000002;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      RunObject=Page 50019;
+                      RunPageView=SORTING(Initial quote No);
+                      RunPageLink=Initial quote No=FIELD(No.) }
       { 94      ;1   ;ActionGroup;
                       CaptionML=[ENU=Ver&sion;
                                  FRA=Ver&sion];
@@ -26,7 +45,7 @@ OBJECT Page 5164 Purchase Quote Archive
                       ShortCutKey=Shift+F7;
                       CaptionML=[ENU=Card;
                                  FRA=Fiche];
-                      RunObject=Page 26;
+                      RunObject=Page 27;
                       RunPageLink=No.=FIELD(Buy-from Vendor No.);
                       Image=EditLines }
       { 101     ;2   ;Action    ;
@@ -56,6 +75,15 @@ OBJECT Page 5164 Purchase Quote Archive
                       Image=Print;
                       OnAction=BEGIN
                                  DocPrint.PrintPurchHeaderArch(Rec);
+                               END;
+                                }
+      { 1000000000;2 ;Action    ;
+                      CaptionML=FRA=Approbations;
+                      OnAction=VAR
+                                 ApprovalEntries@1000000001 : Page 658;
+                               BEGIN
+                                 ApprovalEntries.Setfilters(DATABASE::"Purchase Header","Document Type","No.");
+                                 ApprovalEntries.RUN;
                                END;
                                 }
     }
@@ -95,6 +123,10 @@ OBJECT Page 5164 Purchase Quote Archive
 
     { 14  ;2   ;Field     ;
                 SourceExpr="Buy-from Contact" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Matricule No.";
+                Editable=FALSE }
 
     { 16  ;2   ;Field     ;
                 SourceExpr="Order Date" }
@@ -275,8 +307,20 @@ OBJECT Page 5164 Purchase Quote Archive
   {
     VAR
       DocPrint@1000 : Codeunit 229;
+      UserMgt@1000000000 : Codeunit 5700;
 
     BEGIN
+    {
+      DÇbut Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) liÇs au droit de l'utilisateur courant (voir table des paramätres utilisateur)
+
+      ------------------------------ V1.2 ---------------------------
+      Modif JX-XAD du 26/02/2010
+      Accäs au contrat depuis le bouton "Dem. Prix"
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Matricule" et traitement de celui-ci
+    }
     END.
   }
 }

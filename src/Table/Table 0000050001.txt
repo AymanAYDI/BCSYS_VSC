@@ -1,0 +1,38 @@
+OBJECT Table 50001 Table temporaire
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29/05/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.0-XAD;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;PiŠce               ;Integer        }
+    { 2   ;   ;Compte              ;Code50         }
+  }
+  KEYS
+  {
+    {    ;PiŠce                                   ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD du 14/10/2008
+      Cette table est utilis‚e dans le cadre de l'‚dition de la synthŠse TVA fournisseurs.
+      Elle est utilis‚e aussi pour sauvegarder temporairement le code utilisateur affect‚ lors de la validation d'un document d'achat :
+        c'est la cl‚ (-1) qui est utilis‚e dans ce cas (voir code unit 90, 91, 12 et 22)
+    }
+    END.
+  }
+}
+

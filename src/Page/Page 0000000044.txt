@@ -2,9 +2,10 @@ OBJECT Page 44 Sales Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00- JX-VSC2.0-AUD-XAD;
   }
   PROPERTIES
   {
@@ -69,7 +70,7 @@ OBJECT Page 44 Sales Credit Memo
                       ShortCutKey=Shift+F7;
                       CaptionML=[ENU=Customer;
                                  FRA=Client];
-                      RunObject=Page 21;
+                      RunObject=Page 22;
                       RunPageLink=No.=FIELD(Sell-to Customer No.);
                       Image=EditLines }
       { 53      ;2   ;Action    ;
@@ -261,8 +262,24 @@ OBJECT Page 44 Sales Credit Memo
                       PromotedIsBig=Yes;
                       Image=PostOrder;
                       PromotedCategory=Process;
-                      OnAction=BEGIN
-                                 Post(CODEUNIT::"Sales-Post (Yes/No)");
+                      OnAction=VAR
+                                 PurchaseHeader@1000000001 : Record 38;
+                                 ApprovalMgt@1000000000 : Codeunit 439;
+                               BEGIN
+                                 //Modif JX-AUD du 13/02/2013
+                                 IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE') THEN
+                                   IF "Sell-to Customer No." = 'ASNCFGLX00' THEN
+                                     IF "External Document No." = '' THEN
+                                       ERROR(Text003);
+
+                                 IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT - RECETTE') THEN
+                                   IF "Sell-to Customer No." = 'ASNCF00000' THEN
+                                     IF "External Document No." = '' THEN
+                                       ERROR(Text003);
+                                 //Fin modif JX-AUD du 13/02/2013
+
+                                 IF ApprovalMgt.PrePostApprovalCheck(Rec,PurchaseHeader) THEN
+                                   Post(CODEUNIT::"Sales-Post (Yes/No)");
                                END;
                                 }
       { 60      ;2   ;Action    ;
@@ -282,8 +299,24 @@ OBJECT Page 44 Sales Credit Memo
                       PromotedIsBig=Yes;
                       Image=PostPrint;
                       PromotedCategory=Process;
-                      OnAction=BEGIN
-                                 Post(CODEUNIT::"Sales-Post + Print");
+                      OnAction=VAR
+                                 PurchaseHeader@1000000001 : Record 38;
+                                 ApprovalMgt@1000000000 : Codeunit 439;
+                               BEGIN
+                                 //Modif JX-AUD du 13/02/2013
+                                 IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE') THEN
+                                   IF "Sell-to Customer No." = 'ASNCFGLX00' THEN
+                                     IF "External Document No." = '' THEN
+                                       ERROR(Text003);
+
+                                 IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT - RECETTE') THEN
+                                   IF "Sell-to Customer No." = 'ASNCF00000' THEN
+                                     IF "External Document No." = '' THEN
+                                       ERROR(Text003);
+                                 //Fin modif JX-AUD du 13/02/2013
+
+                                 IF ApprovalMgt.PrePostApprovalCheck(Rec,PurchaseHeader) THEN
+                                   Post(CODEUNIT::"Sales-Post + Print");
                                END;
                                 }
       { 17      ;2   ;Action    ;
@@ -375,6 +408,12 @@ OBJECT Page 44 Sales Credit Memo
     { 8   ;2   ;Field     ;
                 SourceExpr="Sell-to Contact" }
 
+    { 1000000006;2;Field  ;
+                SourceExpr="Your Reference" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr=Agent }
+
     { 12  ;2   ;Field     ;
                 SourceExpr="Posting Date";
                 Importance=Promoted }
@@ -417,6 +456,9 @@ OBJECT Page 44 Sales Credit Memo
     { 110 ;2   ;Field     ;
                 SourceExpr=Status;
                 Importance=Promoted }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Paying agent" }
 
     { 48  ;1   ;Part      ;
                 Name=SalesLines;
@@ -489,9 +531,6 @@ OBJECT Page 44 Sales Credit Memo
                 SourceExpr="Pmt. Discount Date";
                 Importance=Additional }
 
-    { 142 ;2   ;Field     ;
-                SourceExpr="Payment Method Code" }
-
     { 100 ;2   ;Field     ;
                 SourceExpr="Prices Including VAT";
                 OnValidate=BEGIN
@@ -502,13 +541,9 @@ OBJECT Page 44 Sales Credit Memo
     { 30  ;2   ;Field     ;
                 SourceExpr="VAT Bus. Posting Group" }
 
-    { 146 ;2   ;Field     ;
-                SourceExpr="Credit Card No." }
-
-    { 148 ;2   ;Field     ;
-                CaptionML=[ENU=Cr. Card Number (Last 4 Digits);
-                           FRA=Num‚ro de carte de cr‚dit (4ÿderniers chiffres)];
-                SourceExpr=GetCreditcardNumber }
+    { 1000000004;2;Field  ;
+                SourceExpr="Customer Posting Group";
+                Editable=TRUE }
 
     { 1906801201;1;Group  ;
                 CaptionML=[ENU=Shipping;
@@ -671,6 +706,7 @@ OBJECT Page 44 Sales Credit Memo
       MoveNegSalesLines@1008 : Report 6699;
       ReportPrint@1004 : Codeunit 228;
       UserMgt@1005 : Codeunit 5700;
+      Text003@1000000000 : TextConst 'ENU=Please enter field External Document No.;FRA=Veuillez saisir le champ Nø doc. externe';
       SalesCalcDiscByType@1006 : Codeunit 56;
       JobQueueVisible@1000 : Boolean INDATASET;
       DocNoVisible@1001 : Boolean;
@@ -739,6 +775,19 @@ OBJECT Page 44 Sales Credit Memo
     END;
 
     BEGIN
+    {
+      // ajout AUD du 21/02/2011
+      // ajout des champs mandataire, mandataire payeur, et groupe compta client
+
+      MODIF JX-XAD 20/05/2011
+      Ajout du champ "Votre r‚f‚rence"
+
+      //Modif JX-AUD du 13/02/2013
+      //Modification du bouton Validation-->Valider & Validation-->Valider & Imprimer
+      pour rendre le champ " Nø doc. Ext. " obligatoire pour les clients ci-dessous :
+      o         Pour VSCT  c'est le client ASNCF00000.
+      o         Pour VSC c'est le client ASNCFGLX00
+    }
     END.
   }
 }

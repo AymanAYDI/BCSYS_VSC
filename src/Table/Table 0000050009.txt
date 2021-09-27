@@ -1,0 +1,51 @@
+OBJECT Table 50009 Magnitude correspondence
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Magnitude correspondence;
+               FRA=Correspondance Magnitude];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
+                                                              FRA=Nø ligne] }
+    { 2   ;   ;Rubric              ;Code10        ;CaptionML=[ENU=Rubric;
+                                                              FRA=Rubrique] }
+    { 3   ;   ;Level               ;Integer       ;CaptionML=[ENU=Level;
+                                                              FRA=Niveau] }
+    { 4   ;   ;Account No.         ;Text200       ;CaptionML=[ENU=Account No.;
+                                                              FRA=Nø compte] }
+    { 5   ;   ;Sign                ;Text3         ;CaptionML=[ENU=Sign;
+                                                              FRA=Signe] }
+    { 6   ;   ;Amount              ;Decimal       ;CaptionML=FRA=Montant;
+                                                   DecimalPlaces=2:5 }
+  }
+  KEYS
+  {
+    {    ;Line No.                                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD le 10/09/2010
+      Table de correspondance Magnitude
+
+      //MODIF JX-AUD du 26/10/10
+      //rajout du champ Amount
+    }
+    END.
+  }
+}
+

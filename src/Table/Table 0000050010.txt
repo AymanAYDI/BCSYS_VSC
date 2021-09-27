@@ -1,0 +1,45 @@
+OBJECT Table 50010 Matricule
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Matricule;
+               FRA=Matricule];
+    LookupPageID=Page50025;
+    DrillDownPageID=Page50025;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Matricule No.       ;Text20        ;CaptionML=FRA=Code Matricule }
+    { 2   ;   ;Provider name       ;Text110       ;CaptionML=FRA=Nom prestataire }
+    { 3   ;   ;Provider first name ;Text110       ;CaptionML=FRA=Pr‚nom prestataire }
+    { 4   ;   ;Society code        ;Code50        ;CaptionML=[ENU=Society code;
+                                                              FRA=Code soci‚t‚ sous traitante] }
+  }
+  KEYS
+  {
+    {    ;Matricule No.                           ;Clustered=Yes }
+    {    ;Provider name,Provider first name        }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Matricule No.,Provider name,Provider first name }
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //JX-AUD du 14/02/12 Cr‚ation
+      //JX-AUD du 25/03/14 Modification: Ajout de la colonne "code soci‚t‚ sous-traitante"
+    }
+    END.
+  }
+}
+

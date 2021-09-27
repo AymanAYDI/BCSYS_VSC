@@ -1,0 +1,641 @@
+OBJECT Report 50045 G‚n‚ration des CCA
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/12/17;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Generation of invoices not received;
+               FRA=G‚n‚ration des CCA];
+    ProcessingOnly=Yes;
+    OnInitReport=BEGIN
+                   Gint_Ligne := 0;
+                   Gdec_TotalCharges := 0;
+                   Gdec_TotalProduits := 0;
+                 END;
+
+    OnPreReport=BEGIN
+                  Grec_FeuilleComptaCCA.SETRANGE("Journal Template Name",Grec_FeuilleComptaCCA."Journal Template Name");
+                  Grec_FeuilleComptaCCA.SETRANGE("Journal Batch Name",Grec_FeuilleComptaCCA."Journal Batch Name");
+                  IF (Grec_FeuilleComptaCCA.COUNT > 0) THEN
+                    IF NOT CONFIRM(Text002) THEN
+                      ERROR(Text003);
+                  Grec_FeuilleComptaCCA.DELETEALL;
+                  Grec_FeuilleComptaCCA.LOCKTABLE;
+                  Gcode_NoCCA := Grec_FeuilleComptaCCA."Document No.";
+                  Gcode_CodeJournal := Grec_FeuilleComptaCCA."Source Code";
+
+                  IF Grec_GenJnlBatch.GET(Grec_FeuilleComptaCCA."Journal Template Name",Grec_FeuilleComptaCCA."Journal Batch Name") THEN
+                    IF Grec_GenJnlBatch."No. Series" <> 'CCA' THEN
+                      ERROR(Text001);
+
+                  IF Gcode_ValeurAxe = '' THEN
+                    ERROR(Text004);
+                END;
+
+    OnPostReport=BEGIN
+                     IF Gdec_TotalCharges <> 0 THEN
+                     BEGIN
+                       //***************** Insertion ligne Total des charges comptabilis‚es d'avance  *****************
+                       Grec_FeuilleComptaCCA.INIT;
+
+                       //JX-ABE-08/12/2017
+                       //  Gint_Ligne += 10000;
+                       Gint_Ligne += 100 ;
+                       //Fin modif JX-ABE-08/12/2017
+
+                        Grec_FeuilleComptaCCA."Line No." := Gint_Ligne;
+                       Grec_FeuilleComptaCCA."Document No." := Gcode_NoCCA;
+                       Grec_FeuilleComptaCCA."External Document No." := '';
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Source Code",Gcode_CodeJournal);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Account No.",'48601510');
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Posting Date",Gdate_Compta);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Document Date",0D);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Debit Amount",Gdec_TotalCharges);
+                       //IF Grec_Fournisseur.GET("Buy-from Vendor No.") THEN
+                       //  Grec_FeuilleComptaCCA.Description := PADSTR(Grec_Fournisseur.Name+'-'+Description,50);
+                       //Grec_FeuilleComptaCCA."Vendor No." := '';
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Bus. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Prod. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Bus. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Prod. Posting Group",'');
+                       Grec_FeuilleComptaCCA.INSERT;
+                     END;
+
+                     IF Gdec_TotalProduits <> 0 THEN
+                     BEGIN
+                       //***************** Insertion ligne Total des charges comptabilis‚es d'avance  *****************
+                       Grec_FeuilleComptaCCA.INIT;
+
+                       //JX-ABE-08/12/2017
+                       // Gint_Ligne += 10000;
+                       Gint_Ligne += 100;
+                       //Fin modif-JX-ABE-08/12/2017
+
+                       Grec_FeuilleComptaCCA."Line No." := Gint_Ligne;
+                       Grec_FeuilleComptaCCA."Document No." := Gcode_NoCCA;
+                       Grec_FeuilleComptaCCA."External Document No." := '';
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Source Code",Gcode_CodeJournal);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Account No.",'48701510');
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Posting Date",Gdate_Compta);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Document Date",0D);
+                       Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Credit Amount",Gdec_TotalProduits);
+                       //IF Grec_Fournisseur.GET("Buy-from Vendor No.") THEN
+                       //  Grec_FeuilleComptaCCA.Description := PADSTR(Grec_Fournisseur.Name+'-'+Description,50);
+                       //Grec_FeuilleComptaCCA."Vendor No." := '';
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Bus. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Prod. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Bus. Posting Group",'');
+                       //Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Prod. Posting Group",'');
+                       Grec_FeuilleComptaCCA.INSERT;
+                     END;
+                 END;
+
+  }
+  DATASET
+  {
+    { 2564;    ;DataItem;G/L Entry Charges   ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               //DEBUT MODIF JX-XAD le 07/02/2011
+                               //SETFILTER("Posting Date",'..%2',Gdate_Compta);//filtre sur la data compta
+                               SETFILTER("Posting Date",'%1..%2',Gdate_Debut,Gdate_Compta);//filtre sur la data compta
+                               //FIN MODIF JX-XAD le 07/02/2011
+
+                               SETFILTER("G/L Entry Charges"."G/L Account No.",'6*');//filtre sur les comptes 6*
+
+                               //DEBUT AJOUT JX-XAD 11/05/2011
+                               //IF Gtext_DocExclus <> '' THEN //Modif JX-AUD du 25/11/11
+                               //  SETFILTER("G/L Entry Charges"."Document No.",'<>cca004&<>excca00004');
+                                 //SETFILTER("G/L Entry Charges"."Document No.",Gtext_DocExclus); //Modif JX-AUD du 25/11/11
+                               //Modif JX-AUD du 25/11/11
+
+                               //MESSAGE(RetourneFiltreCCA(Gtext_DocExclus_CCAPremiere, Gtext_DocExclus_CCADerniere)
+                               //+'&' +RetourneFiltreEXCCA(Gtext_DocExclus_EXCCAPremiere,Gtext_DocExclus_EXCCADerniere));
+                               SETFILTER("G/L Entry Charges"."Document No.", RetourneFiltreCCA(Gtext_DocExclus_CCAPremiere, Gtext_DocExclus_CCADerniere)
+                               + RetourneFiltreEXCCA(Gtext_DocExclus_EXCCAPremiere,Gtext_DocExclus_EXCCADerniere));
+                               //Fin modif JX-AUD du 25/11/11
+                               //FIN AJOUT JX-XAD 11/05/2011
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF Amount = 0 THEN
+                                    CurrReport.SKIP;
+
+                                  Ins‚rerCharges();
+                                END;
+                                 }
+
+    { 4426;    ;DataItem;G/L Entry Produits  ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               //DEBUT MODIF JX-XAD le 07/02/2011
+                               //SETFILTER("Posting Date",'..%2',Gdate_Compta);//filtre sur la data compta
+                               SETFILTER("Posting Date",'%1..%2',Gdate_Debut,Gdate_Compta);//filtre sur la data compta
+                               //FIN MODIF JX-XAD le 07/02/2011
+
+                               SETFILTER("G/L Entry Produits"."G/L Account No.",'7*');//filtre sur les comptes 7*
+
+                               //DEBUT AJOUT JX-XAD 11/05/2011 //Modif JX-AUD du 25/11/11
+                               //IF Gtext_DocExclus <> '' THEN
+                               //  SETFILTER("G/L Entry Produits"."Document No.",'<>cca004&<>excca00004');
+                                 //SETFILTER("G/L Entry Produits"."Document No.",Gtext_DocExclus); //Modif JX-AUD du 25/11/11
+                               //Modif JX-AUD du 25/11/11
+                               SETFILTER("G/L Entry Produits"."Document No.", RetourneFiltreCCA(Gtext_DocExclus_CCAPremiere, Gtext_DocExclus_CCADerniere)
+                               + RetourneFiltreEXCCA(Gtext_DocExclus_EXCCAPremiere,Gtext_DocExclus_EXCCADerniere));
+                               //SETFILTER("G/L Entry Produits"."Document No.", RetourneFiltreCCA(Gtext_DocExclus_CCAPremiere, Gtext_DocExclus_CCADerniere));
+                               //SETFILTER("G/L Entry Produits"."Document No.", RetourneFiltreEXCCA(Gtext_DocExclus_EXCCAPremiere,Gtext_DocExclus_EXCCADerniere));
+                               //Fin modif JX-AUD du 25/11/11
+                               //FIN AJOUT JX-XAD 11/05/2011
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF Amount = 0 THEN
+                                    CurrReport.SKIP;
+
+                                  Ins‚rerProduits();
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  ContainerType=ContentArea }
+
+      { 1000000005;1;Group  ;
+                  Name=Options;
+                  GroupType=Group }
+
+      { 1000000001;2;Field  ;
+                  Name=Date de d‚but;
+                  SourceExpr=Gdate_Debut }
+
+      { 1000000002;2;Field  ;
+                  Name=Date de fin (Date Compta.);
+                  SourceExpr=Gdate_Compta }
+
+      { 1000000003;2;Field  ;
+                  Name=P‚riode;
+                  SourceExpr=Gcode_ValeurAxe }
+
+      { 1000000004;1;Group  ;
+                  Name=Filtre Documents Exclus;
+                  GroupType=Group }
+
+      { 1000000006;2;Field  ;
+                  Name=PremiŠre CCA;
+                  SourceExpr=Gtext_DocExclus_CCAPremiere }
+
+      { 1000000007;2;Field  ;
+                  Name=DerniŠre CCA;
+                  SourceExpr=Gtext_DocExclus_CCADerniere }
+
+      { 1000000008;2;Field  ;
+                  Name=PremiŠre EXCCA;
+                  SourceExpr=Gtext_DocExclus_EXCCAPremiere }
+
+      { 1000000009;2;Field  ;
+                  Name=DerniŠre EXCCA;
+                  SourceExpr=Gtext_DocExclus_EXCCADerniere }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gint_Ligne@1000000000 : Integer;
+      Gdec_MontantTTC@1000000002 : Decimal;
+      Gdec_MontantHT@1000000003 : Decimal;
+      "Gdec_MontantFactur‚HT"@1000000004 : Decimal;
+      "Gdec_MontantFactur‚TTC"@1000000005 : Decimal;
+      Gdate_Compta@1000000006 : Date;
+      "Grec_ParamŠtresTVA"@1000000007 : Record 325;
+      Gcode_NoCCA@1000000008 : Code[20];
+      Gcode_CodeJournal@1000000009 : Code[10];
+      Text001@1000000010 : TextConst 'ENU=This sheet is not intended to invoices not received;FRA=Cette feuille n''est pas destin‚e aux CCA.';
+      Text002@1000000011 : TextConst 'ENU=This sheet is not empty.\\All data being entered will be replaced.\\Would you like to continue?;FRA=Cette feuille n''est pas vide.\\Toutes les donn‚es actuellement saises seront remplac‚es.\\Souhaitez-vous tout de mˆme poursuivre ?';
+      Text003@1000000012 : TextConst 'ENU=Operation canceled;FRA=Op‚ration annul‚e';
+      Grec_Fournisseur@1000000013 : Record 23;
+      Grec_Client@1000000038 : Record 18;
+      Grec_Dimension@1000000016 : Record 348;
+      Gcode_CompteTVA@1000000017 : Code[20];
+      "Gcode_CompteG‚n‚ral"@1000000018 : Code[20];
+      Grec_GenJnlBatch@1000000019 : Record 232;
+      "Gint_Ann‚eComptable"@1000000020 : Integer;
+      "Gint_Ann‚eR‚ception"@1000000021 : Integer;
+      Grec_ParamCompa@1000000022 : Record 98;
+      "Gdate_D‚butExerciceComptable"@1000000023 : Date;
+      Grec_EcritureValeur@1000000024 : Record 5802;
+      "Grec_LigneFactAchatEnregistr‚e"@1000000025 : Record 123;
+      "Gbool_Qt‚FactAprŠsDateCompta"@1000000026 : Boolean;
+      Grec_FeuilleComptaCCA@1000000027 : Record 81;
+      Grec_DimensionValue@1000000001 : Record 349;
+      Gcode_AxePeriode@1000000028 : Code[20];
+      Gcode_ValeurAxe@1000000029 : Code[20];
+      Text004@1000000030 : TextConst 'ENU=please fill the ''Periode'' axis;FRA=Veuillez renseigner l''axe p‚riode';
+      Gcode_AxeReception@1000000031 : Code[20];
+      Gcode_AxeFacture@1000000033 : Code[20];
+      Gdec_TotalCharges@1000000032 : Decimal;
+      Gdec_TotalProduits@1000000037 : Decimal;
+      Grec_PurchHeader@1000000034 : Record 38;
+      Gtxt_tiret@1000000035 : Text[1];
+      Grec_SalesHeader@1000000036 : Record 36;
+      Gcode_AxeExpedition@1000000039 : Code[20];
+      Gcode_AxeEcriture@1000000041 : Code[20];
+      Gdate_Debut@1000000043 : Date;
+      Gcode_ExtCCA@1000000044 : Code[20];
+      Gdate_DebutAnneeCompta@1000000045 : Date;
+      Gdate_FinAnneeCompta@1000000047 : Date;
+      Grec_EcritureCompta@1000000046 : Record 17;
+      Grec_NoSeries@1000000048 : Record 309;
+      Gcode_FinEXTCCA@1000000049 : Code[20];
+      Gcode_DebutEXTCCA@1000000050 : Code[20];
+      Gcode_DebutCCA@1000000051 : Code[20];
+      Gcode_FinCCA@1000000052 : Code[20];
+      Gcode_CCA@1000000053 : Code[20];
+      Gtext_DocExclus@1000000054 : Text[250];
+      Gtext_DocExclusFiltre@1000000055 : Text[1024];
+      Gtext_Doc@1000000056 : Text[30];
+      i@1000000057 : Integer;
+      Gtext_ExDocExclus@1000000058 : Text[250];
+      Gtext_DocExclus_CCAPremiere@1000000059 : Text[30];
+      Gtext_DocExclus_CCADerniere@1000000060 : Text[30];
+      Gtext_DocExclus_EXCCAPremiere@1000000061 : Text[30];
+      Gtext_DocExclus_EXCCADerniere@1000000062 : Text[30];
+      Gint_CCAPremiere@1000000063 : Integer;
+      Gint_CCADerniere@1000000064 : Integer;
+      Gint_EXCCAPremiere@1000000065 : Integer;
+      Gint_EXCCADerniere@1000000066 : Integer;
+      Gtext_And@1000000067 : Boolean;
+      GDimSetEntry@1000000014 : Record 480;
+
+    PROCEDURE SetCCAJnlLine@1000000001(FeuilleComptaCCA@1000000000 : Record 81);
+    BEGIN
+      Grec_FeuilleComptaCCA := FeuilleComptaCCA;
+    END;
+
+    PROCEDURE "Ins‚rerCharges"@1000000007();
+    BEGIN
+      WITH "G/L Entry Charges" DO
+      BEGIN
+
+        IF GDimSetEntry.GET("Dimension Set ID",'PERIODE') THEN
+          Gcode_AxeEcriture := GDimSetEntry."Dimension Value Code"
+        ELSE
+          Gcode_AxeEcriture := '';
+
+        IF Gcode_AxeEcriture > Gcode_ValeurAxe THEN
+        BEGIN
+          //***************** Insertion ligne Charges *****************
+          Grec_FeuilleComptaCCA.INIT;
+
+      // JX-ABE-08/12/2017
+      // Gint_Ligne += 10000;
+      Gint_Ligne += 100;
+      // JX-ABE-08/12/2017
+
+          Grec_FeuilleComptaCCA."Line No." := Gint_Ligne;
+          Grec_FeuilleComptaCCA."Document No." := Gcode_NoCCA;
+          Grec_FeuilleComptaCCA."External Document No." := PADSTR("Document No.",20);
+          Grec_FeuilleComptaCCA.VALIDATE("Source Code",Gcode_CodeJournal);
+          Grec_FeuilleComptaCCA.VALIDATE("Account No.","G/L Account No.");
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Posting Date",Gdate_Compta);
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Document Date","Posting Date");
+          IF "Credit Amount" <> 0 THEN
+            Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Debit Amount","Credit Amount")
+          ELSE
+            Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Credit Amount","Debit Amount");
+          Gdec_TotalCharges += Grec_FeuilleComptaCCA."Credit Amount" - Grec_FeuilleComptaCCA."Debit Amount";
+
+          //DEBUT MODIF JX-XAD le 07/02/2011
+          IF "Vendor No." <> '' THEN
+            Grec_FeuilleComptaCCA."Vendor No." := "Vendor No."
+          ELSE
+            Grec_FeuilleComptaCCA."Vendor No." := "G/L Entry Charges"."Source No.";
+          //FIN MODIF JX-XAD le 07/02/2011
+
+          Grec_FeuilleComptaCCA.Description := Description;
+
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Bus. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Prod. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Bus. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Prod. Posting Group",'');
+          Grec_FeuilleComptaCCA."Dimension Set ID" := "Dimension Set ID";
+          Grec_FeuilleComptaCCA.INSERT;
+
+        END;
+
+      END;
+    END;
+
+    PROCEDURE "Ins‚rerProduits"@1000000000();
+    BEGIN
+      WITH "G/L Entry Produits" DO
+      BEGIN
+
+        IF GDimSetEntry.GET("Dimension Set ID",'PERIODE') THEN
+          Gcode_AxeEcriture := GDimSetEntry."Dimension Value Code"
+        ELSE
+          Gcode_AxeEcriture := '';
+
+        IF Gcode_AxeEcriture > Gcode_ValeurAxe THEN
+        BEGIN
+          //***************** Insertion ligne Produit *****************
+          Grec_FeuilleComptaCCA.INIT;
+
+
+          // Gint_Ligne += 10000;
+          //JX-ABE-08/12/2017
+          Gint_Ligne += 100;
+          //Fin-Modif-JX-ABE-08/12/2017
+
+          Grec_FeuilleComptaCCA."Line No." := Gint_Ligne;
+          Grec_FeuilleComptaCCA."Document No." := Gcode_NoCCA;
+          Grec_FeuilleComptaCCA."External Document No." := PADSTR("Document No.",20);
+          Grec_FeuilleComptaCCA.VALIDATE("Source Code",Gcode_CodeJournal);
+          Grec_FeuilleComptaCCA.VALIDATE("Account No.","G/L Account No.");
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Posting Date",Gdate_Compta);
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Document Date","Posting Date");
+          IF "Credit Amount" <> 0 THEN
+            Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Debit Amount","Credit Amount")
+          ELSE
+            Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Credit Amount","Debit Amount");
+          Gdec_TotalProduits += Grec_FeuilleComptaCCA."Debit Amount" - Grec_FeuilleComptaCCA."Credit Amount";
+
+          //DEBUT MODIF JX-XAD le 07/02/2011
+          IF "Customer No." <> '' THEN
+            Grec_FeuilleComptaCCA."Customer No." := "Customer No."
+          ELSE
+            Grec_FeuilleComptaCCA."Customer No." := "Source No.";
+          //FIN MODIF JX-XAD le 07/02/2011
+
+          Grec_FeuilleComptaCCA.Description := Description;
+
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Bus. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."Gen. Prod. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Bus. Posting Group",'');
+          Grec_FeuilleComptaCCA.VALIDATE(Grec_FeuilleComptaCCA."VAT Prod. Posting Group",'');
+          Grec_FeuilleComptaCCA."Dimension Set ID" := "Dimension Set ID";
+          Grec_FeuilleComptaCCA.INSERT;
+
+        END;
+
+      END;
+    END;
+
+    PROCEDURE CalculeExtCCA@1000000004();
+    BEGIN
+      //DEBUT AJOUT JX-XAD 11/05/2011
+      {
+      EVALUATE(Gdate_DebutAnneeCompta,'01/01/'+FORMAT(DATE2DWY(Gdate_Compta,3)));
+      EVALUATE(Gdate_FinAnneeCompta,'31/12/'+FORMAT(DATE2DWY(Gdate_Compta,3)));
+
+      Grec_EcritureCompta.RESET;
+
+      Grec_EcritureCompta.SETFILTER(Grec_EcritureCompta."Posting Date",'>=%1&<=%2',Gdate_DebutAnneeCompta,Gdate_FinAnneeCompta);
+      Grec_EcritureCompta.SETFILTER(Grec_EcritureCompta."Document No.",'EXCCA*');
+      IF Grec_EcritureCompta.FIND('-') THEN
+        Gcode_ExtCCA := Grec_EcritureCompta."Document No."
+      ELSE
+        Gcode_ExtCCA := '';
+
+      RequestOptionsForm.No_ExtCCA.UPDATE;
+      }
+      //FIN AJOUT JX-XAD 11/05/2011
+    END;
+
+    PROCEDURE Init_CCA@1000000002();
+    BEGIN
+      //DEBUT AJOUT JX-XAD 11/05/2011
+
+      Gcode_DebutEXTCCA := '';
+      Gcode_FinEXTCCA := '';
+      IF Grec_NoSeries.GET('EXTCCA',100) THEN
+      BEGIN
+        Gcode_DebutEXTCCA := Grec_NoSeries."Starting No.";
+        Gcode_FinEXTCCA := Grec_NoSeries."Ending No.";
+      END;
+      Gcode_DebutCCA := '';
+      Gcode_FinCCA := '';
+      IF Grec_NoSeries.GET('CCA',100) THEN
+      BEGIN
+        Gcode_DebutCCA := Grec_NoSeries."Starting No.";
+        Gcode_FinCCA := Grec_NoSeries."Ending No.";
+      END;
+
+
+      Grec_EcritureCompta.RESET;
+      Grec_EcritureCompta.SETFILTER(Grec_EcritureCompta."Posting Date",'>=%1&<=%2',Gdate_Debut,Gdate_Compta);
+      Grec_EcritureCompta.SETFILTER(Grec_EcritureCompta."Document No.",COPYSTR(Gcode_DebutCCA,1,4)+'*');
+      IF Grec_EcritureCompta.FIND('+') THEN
+        Gcode_CCA := Grec_EcritureCompta."Document No."
+      ELSE
+        Gcode_CCA := '';
+
+      Grec_EcritureCompta.SETFILTER(Grec_EcritureCompta."Document No.",COPYSTR(Gcode_DebutEXTCCA,1,6)+'*');
+      IF Grec_EcritureCompta.FIND('+') THEN
+        Gcode_ExtCCA := Grec_EcritureCompta."Document No."
+      ELSE
+        Gcode_ExtCCA := '';
+
+      Gtext_ExDocExclus := '<>';
+      IF (Gcode_CCA <> '') THEN
+      BEGIN
+        Gtext_ExDocExclus += Gcode_CCA;
+        IF (Gcode_ExtCCA <> '') THEN
+        BEGIN
+          Gtext_ExDocExclus += '&<>'+Gcode_ExtCCA;
+        END;
+      END ELSE
+        IF (Gcode_ExtCCA <> '') THEN
+        BEGIN
+          Gtext_ExDocExclus += Gcode_ExtCCA;
+        END ELSE
+        BEGIN
+          Gtext_ExDocExclus := '';
+        END;
+
+
+      //RequestOptionsForm.No_CCA.UPDATE; //Modif JX-AUD du 25/11/11
+
+      //FIN AJOUT JX-XAD 11/05/2011
+    END;
+
+    PROCEDURE RetourneFiltreCCA@1000000003(CCAPremiere@1000000000 : Text[30];CCADerniere@1000000001 : Text[30]) FiltreCCA : Text[1024];
+    BEGIN
+      //Modif JX-AUD du 25/11/11
+      //CCAPremiere := COPYSTR(CCAPremiere,4,5);
+      //CCADerniere := COPYSTR(CCADerniere,4,5);
+      FiltreCCA :='';
+      FiltreCCA:='<>';
+      i:=0;
+      Gtext_And := FALSE;
+
+      IF ((CCAPremiere ='') AND (CCADerniere ='')) THEN
+      BEGIN
+        FiltreCCA :='';
+        Gtext_And := FALSE;
+        //CurrReport.BREAK;
+      END ELSE
+      BEGIN
+        IF (EVALUATE(Gint_CCAPremiere,CCAPremiere)) AND (EVALUATE(Gint_CCADerniere,CCADerniere)) THEN
+        BEGIN
+          //MESSAGE(FORMAT(Gint_CCAPremiere) + ' ' +FORMAT(Gint_CCADerniere));
+
+          IF Gint_CCAPremiere < Gint_CCADerniere THEN
+          BEGIN
+            FOR i:=Gint_CCAPremiere TO Gint_CCADerniere DO
+            BEGIN
+              IF NOT (i= Gint_CCADerniere) THEN
+              BEGIN
+                  FiltreCCA += 'CCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '&<>';
+              END ELSE
+                BEGIN
+                  FiltreCCA += 'CCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '';
+                END;
+            END;
+          END;
+
+          IF Gint_CCAPremiere > Gint_CCADerniere THEN
+          BEGIN
+            FOR i:=Gint_CCADerniere TO Gint_CCAPremiere DO
+            BEGIN
+              IF NOT (i= Gint_CCAPremiere) THEN
+              BEGIN
+                  FiltreCCA += 'CCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '&<>';
+              END ELSE
+                BEGIN
+                  FiltreCCA += 'CCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '';
+                END;
+            END;
+          END;
+
+          IF Gint_CCAPremiere = Gint_CCADerniere THEN
+          BEGIN
+            FiltreCCA += 'CCA' + RetourneNbZero(STRLEN(FORMAT(Gint_CCAPremiere))) + FORMAT(Gint_CCAPremiere)+ '';
+          END;
+
+          Gtext_And := TRUE;
+
+        END;
+      END;
+      //Fin modif JX-AUD du 25/11/11
+    END;
+
+    PROCEDURE RetourneFiltreEXCCA@1000000005(EXCCAPremiere@1000000002 : Text[30];EXCCADerniere@1000000003 : Text[30]) FiltreEXCCA : Text[1024];
+    BEGIN
+      //Modif JX-AUD du 25/11/11
+      //EXCCAPremiere := COPYSTR(EXCCAPremiere,6,5);
+      //EXCCADerniere := COPYSTR(EXCCADerniere,6,5);
+      FiltreEXCCA :='';
+      IF Gtext_And = TRUE THEN
+      BEGIN
+        FiltreEXCCA:='&<>';
+      END ELSE
+        FiltreEXCCA:='<>';
+
+      i:=0;
+      IF ((EXCCAPremiere ='') AND (EXCCADerniere ='')) THEN
+      BEGIN
+        FiltreEXCCA :='';
+        //CurrReport.SKIP;
+      END ELSE
+      BEGIN
+        IF (EVALUATE(Gint_EXCCAPremiere,EXCCAPremiere)) AND (EVALUATE(Gint_EXCCADerniere,EXCCADerniere)) THEN
+        BEGIN
+          //MESSAGE(FORMAT(Gint_EXCCAPremiere) + ' ' +FORMAT(Gint_EXCCADerniere));
+          IF Gint_EXCCAPremiere < Gint_EXCCADerniere THEN
+          BEGIN
+            FOR i:=Gint_EXCCAPremiere TO Gint_EXCCADerniere DO
+            BEGIN
+              IF NOT (i= Gint_EXCCADerniere) THEN
+              BEGIN
+                  FiltreEXCCA += 'EXCCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '&<>';
+              END ELSE
+                BEGIN
+                  FiltreEXCCA += 'EXCCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '';
+                END;
+            END;
+          END;
+
+          IF Gint_EXCCAPremiere > Gint_EXCCADerniere THEN
+          BEGIN
+            FOR i:=Gint_EXCCADerniere TO Gint_EXCCAPremiere DO
+            BEGIN
+              IF NOT (i= Gint_EXCCAPremiere) THEN
+              BEGIN
+                  FiltreEXCCA += 'EXCCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '&<>';
+              END ELSE
+                BEGIN
+                  FiltreEXCCA += 'EXCCA' + RetourneNbZero(STRLEN(FORMAT(i))) + FORMAT(i)+ '';
+                END;
+            END;
+          END;
+
+          IF Gint_EXCCAPremiere = Gint_EXCCADerniere THEN
+          BEGIN
+            FiltreEXCCA += 'EXCCA' + RetourneNbZero(STRLEN(FORMAT(Gint_EXCCAPremiere))) + FORMAT(Gint_EXCCAPremiere)+ '';
+          END;
+
+        END;
+      END;
+      //Fin modif JX-AUD du 25/11/11
+    END;
+
+    PROCEDURE RetourneNbZero@1000000006(Gint_Nb@1000000000 : Integer) NbZero : Text[4];
+    BEGIN
+      //Modif JX-AUD du 25/11/11
+      CASE Gint_Nb OF
+      1: NbZero := '0000';
+      2: NbZero := '000';
+      3: NbZero := '00';
+      4: NbZero := '0';
+      5: NbZero := '';
+      END;
+      //Fin modif JX-AUD du 25/11/11
+    END;
+
+    BEGIN
+    {
+      CEATION JX-XAD 23/08/2010
+      G‚n‚ration des CCA (Charges comptabilis‚es d'avance) dans la feuille de comptabilit‚ g‚n‚rale.
+
+      //MODIFICATION AUD DU 03/11/10
+      //Modification de code dans les dataitems existants
+      //rajout des DataItems Purchase Line et Sales Line
+
+      MODIF JX-XAD le 07/02/2011
+      Renseignements des champs Nø Fournisseur et Nø Client
+      Ajout date de d‚but
+
+      MODIF JX-XAD le 11/05/2011
+      On retire les CCA et les extournes CCA du filtre, mais on garde la premiŠre extourne CCA (mais le choix est laiss‚ … l'utilisateur).
+
+      MODIF JX-XAD le 28/06/2011
+      Annulation de l'initialisation du champ : filtre documents exclus. Ajout d'un exemple de filtre. Sauvegarde du contenu du champ.
+
+      //Modif JX-AUD du 25/11/11
+      //Modification du traitement du filtre sur le request form et dans le code
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

@@ -2,8 +2,9 @@ OBJECT Page 658 Approval Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=05/08/15;
     Time=12:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -214,6 +215,9 @@ OBJECT Page 658 Approval Entries
 
     { 8   ;2   ;Field     ;
                 SourceExpr="Document No." }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Vendor Name" }
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Sequence No." }

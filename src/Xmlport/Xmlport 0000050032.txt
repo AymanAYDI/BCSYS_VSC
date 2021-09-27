@@ -1,0 +1,399 @@
+OBJECT XMLport 50032 LISAM (quick) VAT
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/08/16;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=LISAM (quick) VAT;
+               FRA=LISAM (rapide) TVA];
+    Direction=Export;
+    TextEncoding=WINDOWS;
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    TableSeparator=<NewLine>;
+    FileName=LISAMQUICK.CSV;
+  }
+  ELEMENTS
+  {
+    { [{59C5FFA2-002E-4E78-AEBD-3EEE454D0649}];  ;Root                ;Element ;Text     }
+
+    { [{2269A827-CF9F-40E5-9BDB-0680EED05528}];1 ;Header              ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  SourceTableView=SORTING(Field1)
+                                                                  WHERE(Field1=CONST(1));
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             //en tˆte fichier .csv
+                                                                             Gtext_NomChamp := 'Date;Origine;PiŠce;Compte;Libell‚;P‚riode;Axe 1;Axe 2;Axe 3;Axe 4;Conso;D‚bit;Cr‚dit;Solde;Tiers-Contrepartie;Nø doc;Groupe compta. march‚;Montant TVA;Groupe compta. produit TVA';
+                                                                           END;
+                                                                            }
+
+    { [{1FD40231-99D9-4A09-A37D-7F29F55C1067}];2 ;Gtext_NomChamp      ;Element ;Text    ;
+                                                  VariableName=Gtext_NomChamp }
+
+    { [{56F951F9-4281-476F-8DE1-48AC2CB2FD61}];1 ;GLEntry             ;Element ;Table   ;
+                                                  ReqFilterFields=Field4,Field3;
+                                                  SourceTable=Table17;
+                                                  SourceTableView=SORTING(Field1);
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                                                                           Gcode_Axe1 := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                                                                           Gcode_Axe2 := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";
+                                                                           Gcode_Axe3 := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";
+                                                                           Gcode_Axe4 := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";
+                                                                           Gcode_Axe5 := Grecord_GeneralLedgerSetup."Shortcut Dimension 7 Code";
+                                                                           Gcode_Axe6 := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+                                                                           Gcode_Axe7 := Grecord_GeneralLedgerSetup."Shortcut Dimension 9 Code";
+                                                                           Gcode_Axe8 := Grecord_GeneralLedgerSetup."Shortcut Dimension 10 Code";
+                                                                         END;
+                                                                       END;
+
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             WITH "G/L Entry" DO BEGIN
+                                                                               Gtext_Description := CONVERTSTR(Description,';',',');
+                                                                               Gtext_DebitAmount := "Gcu_ANSI-ASCII".Ascii2Ansi(FORMAT("Debit Amount"));
+                                                                               Gtext_CreditAmount := "Gcu_ANSI-ASCII".Ascii2Ansi(FORMAT("Credit Amount"));
+                                                                               Gtext_Amount := "Gcu_ANSI-ASCII".Ascii2Ansi(FORMAT(Amount));
+                                                                               Gtext_VATAmount := "Gcu_ANSI-ASCII".Ascii2Ansi(FORMAT("VAT Amount"));
+
+                                                                               FctRetrieveDim("Dimension Set ID");
+
+                                                                               //Recherche du tiers
+                                                                               Gcode_Tiers := '';
+                                                                               IF "G/L Entry"."Source No." <> '' THEN
+                                                                                 Gcode_Tiers := "G/L Entry"."Source No."
+                                                                               ELSE BEGIN
+                                                                                 IF "G/L Entry"."External Document No." <> '' THEN
+                                                                                 BEGIN
+
+                                                                                //Modif ABE du 20/11/2015
+                                                                                //r‚duction longueur doc extern car 35 et Nø doc achat et ventes 20
+                                                                                // Gtext_ExtDoc := CONVERTSTR("G/L Entry"."External Document No.", '-', ',');
+                                                                                   Gtext_ExtDoc := PADSTR(CONVERTSTR("G/L Entry"."External Document No.", '-', ','),20);
+                                                                                //Fin modif ABE du 20/11/2015
+
+                                                                                   Gtext_ExtDoc := SELECTSTR(1, Gtext_ExtDoc);
+                                                                                   IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Quote,Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_PurchHeader."Buy-from Vendor No."
+                                                                                   ELSE IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Order,Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_PurchHeader."Buy-from Vendor No."
+                                                                                   ELSE IF Grec_SalesHeader.GET(Grec_SalesHeader."Document Type"::Quote,Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_SalesHeader."Sell-to Customer No."
+                                                                                   ELSE IF Grec_SalesHeader.GET(Grec_SalesHeader."Document Type"::Order,Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_SalesHeader."Sell-to Customer No."
+                                                                                   ELSE IF Grec_SalesInvHeader.GET(Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_SalesInvHeader."Sell-to Customer No."
+                                                                                   ELSE IF Grec_PurchInvHeader.GET(Gtext_ExtDoc) THEN
+                                                                                     Gcode_Tiers := Grec_PurchInvHeader."Buy-from Vendor No.";
+                                                                                 END;
+                                                                               END;
+
+                                                                               //Modif JX-AUD du 31/05/11
+
+                                                                               Gtext_Description := CONVERTSTR(Description,';',',');
+
+                                                                               //factures ventes
+                                                                               IF Grec_SalesInvoiceHeader.GET("G/L Entry"."Document No.") THEN BEGIN
+
+                                                                                 IF Grecord_LedgerEntryDimension.GET("Dimension Set ID",'RESERVE') THEN
+                                                                                     Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+
+                                                                                 Grec_SalesInvoiceLine.RESET;
+                                                                                 Grec_SalesInvoiceLine.SETRANGE("Document No.",Grec_SalesInvoiceHeader."No.");
+                                                                                 Grec_SalesInvoiceLine.SETRANGE("Dimension Set ID","Dimension Set ID");
+                                                                                 IF Grec_SalesInvoiceLine.FINDFIRST THEN BEGIN
+                                                                                  Gtext_Description := CONVERTSTR(Grec_SalesInvoiceLine.Description,';',',');
+                                                                                  FctRetrieveDim(Grec_SalesInvoiceLine."Dimension Set ID");
+                                                                                 END ELSE BEGIN
+                                                                                  Grec_SalesInvoiceLine.RESET;
+                                                                                  Grec_SalesInvoiceLine.SETRANGE("Document No.",Grec_SalesInvoiceHeader."No.");
+                                                                                  Grec_SalesInvoiceLine.SETRANGE(Amount,ABS("G/L Entry".Amount));
+                                                                                  IF Grec_SalesInvoiceLine.FINDFIRST THEN BEGIN
+                                                                                   Gtext_Description := CONVERTSTR(Grec_SalesInvoiceLine.Description,';',',');
+                                                                                   FctRetrieveDim(Grec_SalesInvoiceLine."Dimension Set ID");
+                                                                                   IF Grecord_LedgerEntryDimension.GET(Grec_SalesInvoiceLine."Dimension Set ID",'RESERVE') THEN
+                                                                                     Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+                                                                                  END;
+                                                                                 END;
+
+                                                                               END;
+
+                                                                               //avoirs ventes
+                                                                               IF Grec_SalesCrMemoHeader.GET("G/L Entry"."Document No.") THEN BEGIN
+
+                                                                                 IF Grecord_LedgerEntryDimension.GET("Dimension Set ID",'RESERVE') THEN
+                                                                                  Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+
+                                                                                 Grec_SalesCrMemoLine.RESET;
+                                                                                 Grec_SalesCrMemoLine.SETRANGE("Document No.",Grec_SalesCrMemoHeader."No.");
+                                                                                 Grec_SalesCrMemoLine.SETRANGE("Dimension Set ID","Dimension Set ID");
+                                                                                 IF Grec_SalesCrMemoLine.FINDFIRST THEN BEGIN
+                                                                                  Gtext_Description := CONVERTSTR(Grec_SalesCrMemoLine.Description,';',',');
+                                                                                  FctRetrieveDim(Grec_SalesCrMemoLine."Dimension Set ID");
+                                                                                 END ELSE BEGIN
+                                                                                  Grec_SalesCrMemoLine.RESET;
+                                                                                  Grec_SalesCrMemoLine.SETRANGE("Document No.",Grec_SalesCrMemoHeader."No.");
+                                                                                  Grec_SalesCrMemoLine.SETRANGE(Amount,ABS("G/L Entry".Amount));
+                                                                                  IF Grec_SalesCrMemoLine.FINDFIRST THEN BEGIN
+                                                                                   Gtext_Description := CONVERTSTR(Grec_SalesCrMemoLine.Description,';',',');
+                                                                                   FctRetrieveDim(Grec_SalesCrMemoLine."Dimension Set ID");
+                                                                                   IF Grecord_LedgerEntryDimension.GET(Grec_SalesCrMemoLine."Dimension Set ID",'RESERVE') THEN
+                                                                                    Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+                                                                                  END;
+                                                                                 END;
+                                                                               END;
+
+                                                                               //factures achat
+                                                                               IF Grec_PurchInvoiceHeader.GET("G/L Entry"."Document No.") THEN BEGIN
+
+                                                                                 IF Grecord_LedgerEntryDimension.GET("Dimension Set ID",'RESERVE') THEN
+                                                                                     Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+
+                                                                                 Grec_PurchInvoiceLine.RESET;
+                                                                                 Grec_PurchInvoiceLine.SETRANGE("Document No.",Grec_PurchInvoiceHeader."No.");
+                                                                                 Grec_PurchInvoiceLine.SETRANGE("Dimension Set ID","Dimension Set ID");
+                                                                                 IF Grec_PurchInvoiceLine.FINDFIRST THEN BEGIN
+                                                                                  Gtext_Description := CONVERTSTR(Grec_PurchInvoiceLine.Description,';',',');
+                                                                                  FctRetrieveDim(Grec_PurchInvoiceLine."Dimension Set ID");
+                                                                                 END ELSE BEGIN
+                                                                                  Grec_PurchInvoiceLine.RESET;
+                                                                                  Grec_PurchInvoiceLine.SETRANGE("Document No.",Grec_PurchInvoiceHeader."No.");
+                                                                                  Grec_PurchInvoiceLine.SETRANGE(Amount,ABS("G/L Entry".Amount));
+                                                                                  IF Grec_PurchInvoiceLine.FINDFIRST THEN BEGIN
+                                                                                   Gtext_Description := CONVERTSTR(Grec_PurchInvoiceLine.Description,';',',');
+                                                                                   FctRetrieveDim(Grec_PurchInvoiceLine."Dimension Set ID");
+                                                                                   IF Grecord_LedgerEntryDimension.GET(Grec_PurchInvoiceLine."Dimension Set ID",'RESERVE') THEN
+                                                                                     Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+                                                                                  END;
+                                                                                 END;
+
+                                                                               END;
+
+                                                                               //avoirs achat
+                                                                               IF Grec_PurchCrMemoHeader.GET("G/L Entry"."Document No.") THEN BEGIN
+
+                                                                                 IF Grecord_LedgerEntryDimension.GET("Dimension Set ID",'RESERVE') THEN
+                                                                                  Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+
+                                                                                 Grec_PurchCrMemoLine.RESET;
+                                                                                 Grec_PurchCrMemoLine.SETRANGE("Document No.",Grec_PurchCrMemoHeader."No.");
+                                                                                 Grec_PurchCrMemoLine.SETRANGE("Dimension Set ID","Dimension Set ID");
+                                                                                 IF Grec_PurchCrMemoLine.FINDFIRST THEN BEGIN
+                                                                                  Gtext_Description := CONVERTSTR(Grec_PurchCrMemoLine.Description,';',',');
+                                                                                  FctRetrieveDim(Grec_PurchCrMemoLine."Dimension Set ID");
+                                                                                 END ELSE BEGIN
+                                                                                  Grec_PurchCrMemoLine.RESET;
+                                                                                  Grec_PurchCrMemoLine.SETRANGE("Document No.",Grec_PurchCrMemoHeader."No.");
+                                                                                  Grec_PurchCrMemoLine.SETRANGE(Amount,ABS("G/L Entry".Amount));
+                                                                                  IF Grec_PurchCrMemoLine.FINDFIRST THEN BEGIN
+                                                                                   Gtext_Description := CONVERTSTR(Grec_PurchCrMemoLine.Description,';',',');
+                                                                                   FctRetrieveDim(Grec_PurchCrMemoLine."Dimension Set ID");
+                                                                                   IF Grecord_LedgerEntryDimension.GET(Grec_PurchCrMemoLine."Dimension Set ID",'RESERVE') THEN
+                                                                                    Gcode_AxeReserve := Grecord_LedgerEntryDimension."Dimension Value Code";
+                                                                                  END;
+                                                                                 END;
+                                                                               END;
+
+                                                                             END;
+                                                                             //Fin Modif JX-AUD du 31/05/11
+                                                                           END;
+                                                                            }
+
+    { [{D6590BA5-23E4-413A-83BF-AF1D304F7601}];2 ;PostingDate         ;Element ;Field   ;
+                                                  DataType=Date;
+                                                  SourceField=G/L Entry::Posting Date }
+
+    { [{82D37049-D5EE-455F-A681-5FA4E5A39B96}];2 ;SourceCode          ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::Source Code }
+
+    { [{39DB3C1C-0802-4E82-ABE1-2C7BE0FFD04D}];2 ;DocumentNo          ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::Document No. }
+
+    { [{226D61A3-D17E-45B2-AA08-209C73D612E3}];2 ;GLAccount           ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::G/L Account No. }
+
+    { [{A51B04C9-8143-4DCB-8B09-579A521C8571}];2 ;Gtext_Description   ;Element ;Text    ;
+                                                  VariableName=Gtext_Description }
+
+    { [{5787B99F-B1AB-4EFD-BACD-834EBDCE1171}];2 ;Gtext_Axe1          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe1 }
+
+    { [{1994476F-517F-4417-BA7A-AB588A0BD4F4}];2 ;Gtext_Axe2          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe2 }
+
+    { [{B7BCD186-BEFD-497A-AAAD-D95CD161D70C}];2 ;Gtext_Axe3          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe3 }
+
+    { [{139160AC-A6A7-4918-A1B2-20DFE759DB06}];2 ;Gtext_Axe4          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe4 }
+
+    { [{D3FC4622-EA5C-46B4-A274-82CD14BE8F4A}];2 ;Gtext_Axe5          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe5 }
+
+    { [{4918BA65-62E8-4AA2-BA79-9E9F764FBE3E}];2 ;Gtext_Axe6          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe6 }
+
+    { [{09B59190-2306-49C4-9185-3C0AED2B29BE}];2 ;Gtext_DebitAmount   ;Element ;Text    ;
+                                                  VariableName=Gtext_DebitAmount }
+
+    { [{D5034331-DCEC-476A-944D-A2DF9AA4160B}];2 ;Gtext_CreditAmount  ;Element ;Text    ;
+                                                  VariableName=Gtext_CreditAmount }
+
+    { [{1FDC77EB-7464-491C-A49B-0A8561BF405E}];2 ;Gtext_Amount        ;Element ;Text    ;
+                                                  VariableName=Gtext_Amount }
+
+    { [{87DF9409-F139-4BDE-A36D-3886286F3C92}];2 ;Gcode_Tiers         ;Element ;Text    ;
+                                                  VariableName=Gcode_Tiers }
+
+    { [{02D6D557-6D59-403E-A37D-112D257E1FB9}];2 ;ExternalDoc         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::External Document No. }
+
+    { [{4A51E61E-B3B6-42CD-AA1B-F952BBE9878D}];2 ;GenBusPostingGrp    ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::Gen. Bus. Posting Group }
+
+    { [{2D8AC76C-8402-4495-92F0-3587CE656ECB}];2 ;Gtext_VATAmount     ;Element ;Text    ;
+                                                  VariableName=Gtext_VATAmount }
+
+    { [{7FB68CF1-7C57-4D07-8A2D-5B7DB38590BE}];2 ;VatProdPostingGrp   ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=G/L Entry::VAT Prod. Posting Group }
+
+    { [{256C4654-A20C-4B90-8B5A-14CCBB03A8C5}];2 ;Gtext_Axe7          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe7 }
+
+    { [{196D71DA-AE84-4241-B5A8-36EA5ED9991F}];2 ;Gtext_Axe8          ;Element ;Text    ;
+                                                  VariableName=Gtext_Axe8 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      CompanyInfo@1000000039 : Record 79;
+      Grecord_GeneralLedgerSetup@1000000038 : Record 98;
+      Grecord_LedgerEntryDimension@1000000003 : Record 480;
+      Gbool_AfficherEnTete@1000000030 : Boolean;
+      Gunit_LinksBetweenDocument@1000000029 : Codeunit 50004;
+      Gint_NbOrders@1000000027 : Integer;
+      Gcode_Order@1000000026 : ARRAY [100] OF Code[20];
+      i@1000000025 : Integer;
+      Gtext_ExtDoc@1000000023 : Text[50];
+      Grec_PurchHeader@1000000022 : Record 38;
+      Grec_PurchInvHeader@1000000021 : Record 122;
+      Grec_SalesHeader@1000000020 : Record 36;
+      Grec_SalesInvHeader@1000000019 : Record 112;
+      Gcode_Axe1@1000000018 : Code[20];
+      Gcode_Axe2@1000000017 : Code[20];
+      Gcode_Axe3@1000000016 : Code[20];
+      Gcode_Axe4@1000000015 : Code[20];
+      Gcode_Axe5@1000000014 : Code[20];
+      Gcode_Axe6@1000000013 : Code[20];
+      Gcode_Axe7@1000000012 : Code[20];
+      Gcode_Axe8@1000000010 : Code[20];
+      "Gcu_ANSI-ASCII"@1000000011 : Codeunit 50002;
+      Grec_SalesInvoiceHeader@1000000006 : Record 112;
+      Gcode_AxeReserve@1000000004 : Code[20];
+      Grec_SalesInvoiceLine@1000000002 : Record 113;
+      Grec_SalesCrMemoHeader@1000000001 : Record 114;
+      Grec_SalesCrMemoLine@1000000000 : Record 115;
+      Grec_PurchInvoiceHeader@1000000009 : Record 122;
+      Grec_PurchInvoiceLine@1000000008 : Record 123;
+      Grec_PurchCrMemoHeader@1000000007 : Record 124;
+      Grec_PurchCrMemoLine@1000000005 : Record 125;
+
+    LOCAL PROCEDURE FctRetrieveDim@1000000000(piDimSetID@1000000000 : Integer);
+    BEGIN
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe1)
+      THEN BEGIN
+        Gtext_Axe1 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe1 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe2)
+      THEN BEGIN
+        Gtext_Axe2 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe2 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe3)
+      THEN BEGIN
+        Gtext_Axe3 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe3 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe4)
+      THEN BEGIN
+        Gtext_Axe4 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe4 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe5)
+      THEN BEGIN
+        Gtext_Axe5 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe5 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe6)
+      THEN BEGIN
+        Gtext_Axe6 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe6 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe7)
+      THEN BEGIN
+        Gtext_Axe7 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe7 := '';
+      END;
+
+      IF Grecord_LedgerEntryDimension.GET(piDimSetID,Gcode_Axe8)
+      THEN BEGIN
+        Gtext_Axe8 := Grecord_LedgerEntryDimension."Dimension Value Code";
+      END ELSE BEGIN
+        Gtext_Axe8 := '';
+      END;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD du 06/07/2011
+      Dataport repris du XMLport 50021
+      Suppression de la recherche des BC pour les factures dans le but d'acc‚l‚rer le processus
+
+      //Modif du 12/09/14
+      //Ajout des champs Groupe compta. march‚ et Montant TVA
+
+      //Modif ABE du 20/11/2015
+      //r‚duction longueur doc extern car 35 et Nø doc achat et ventes 20
+    }
+    END.
+  }
+}
+

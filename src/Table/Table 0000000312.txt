@@ -2,9 +2,10 @@ OBJECT Table 312 Purchases & Payables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=06/04/16;
+    Time=18:45:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -33,7 +34,7 @@ OBJECT Table 312 Purchases & Payables Setup
                                                               FRA=Nø fournisseur] }
     { 10  ;   ;Quote Nos.          ;Code10        ;TableRelation="No. Series";
                                                    CaptionML=[ENU=Quote Nos.;
-                                                              FRA=Nø demande de prix] }
+                                                              FRA=Nø devis] }
     { 11  ;   ;Order Nos.          ;Code10        ;TableRelation="No. Series";
                                                    AccessByPermission=TableData 120=R;
                                                    CaptionML=[ENU=Order Nos.;
@@ -160,6 +161,23 @@ OBJECT Table 312 Purchases & Payables Setup
     { 6602;   ;Exact Cost Reversing Mandatory;Boolean;
                                                    CaptionML=[ENU=Exact Cost Reversing Mandatory;
                                                               FRA=Co–t retour identique obligatoire] }
+    { 50000;  ;Max. Amount allowed ;Decimal        }
+    { 50010;  ;Entity Code         ;Code20        ;CaptionML=FRA=Code Entit‚ }
+    { 50011;  ;Timing Dimension 0  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 0 dans import Timing }
+    { 50012;  ;Timing Dimension 1  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 1 dans import Timing }
+    { 50013;  ;Timing Dimension 2  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 2 dans import Timing }
+    { 50014;  ;Timing Dimension 3  ;Code20        ;TableRelation=Dimension.Code;
+                                                   CaptionML=FRA=Axe 3 dans import Timing }
+    { 50015;  ;Verify Dim 0 on Purch. Line;Boolean;CaptionML=FRA=V‚rifier Existance Section 0 sur ligne Achat }
+    { 50016;  ;Verify Dim 1 on Purch. Line;Boolean;CaptionML=FRA=V‚rifier Existance Section 1 sur ligne Achat }
+    { 50017;  ;Verify Dim 2 on Purch. Line;Boolean;CaptionML=FRA=V‚rifier Existance Section 2 sur ligne Achat }
+    { 50018;  ;Verify Dim 3 on Purch. Line;Boolean;CaptionML=FRA=V‚rifier Existance Section 3 sur ligne Achat }
+    { 50020;  ;Excel File Vendor Not Created;Text250;
+                                                   CaptionML=FRA=Fichier Excel Mail Fourn. Non Cr‚‚ }
+    { 50030;  ;Mail Invoice Path   ;Text250       ;CaptionML=FRA=Chemin Mail Envoi Facture }
   }
   KEYS
   {
@@ -180,6 +198,11 @@ OBJECT Table 312 Purchases & Payables Setup
     END;
 
     BEGIN
+    {
+
+      //Modif JX-AUD du 25/10/11
+      //Ajout du champ Max. Amount Allowed
+    }
     END.
   }
 }

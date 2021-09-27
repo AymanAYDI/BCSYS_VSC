@@ -2,8 +2,9 @@ OBJECT Codeunit 1233 SEPA DD-Check Line
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=16/07/15;
+    Time=16:15:00;
+    Modified=Yes;
     Version List=NAVW18.00,NAVFR8.00;
   }
   PROPERTIES
@@ -85,7 +86,7 @@ OBJECT Codeunit 1233 SEPA DD-Check Line
               SEPADirectDebitMandate.FIELDCAPTION("Customer Bank Account Code"),SEPADirectDebitMandate.ID)
           ELSE BEGIN
             CustomerBankAccount.GET(Customer."No.",SEPADirectDebitMandate."Customer Bank Account Code");
-            IF CustomerBankAccount."SWIFT Code" = '' THEN
+            IF (CustomerBankAccount."SWIFT Code" = '') AND (CustomerBankAccount."Country/Region Code" <> 'FR') THEN
               AddFieldEmptyError(
                 DirectDebitCollectionEntry,CustomerBankAccount.TABLECAPTION,CustomerBankAccount.FIELDCAPTION("SWIFT Code"),
                 CustomerBankAccount.Code);

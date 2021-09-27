@@ -1,0 +1,57 @@
+OBJECT Report 50091 Update Vat Amounts
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23/07/15;
+    Time=22:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    ProcessingOnly=Yes;
+    OnPreReport=BEGIN
+                  W.OPEN('#1##########');
+                END;
+
+    UseRequestPage=No;
+  }
+  DATASET
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table39;
+               DataItemTableView=SORTING(Document Type,Document No.,Line No.)
+                                 WHERE(Document Type=FILTER(Order|Invoice));
+               OnAfterGetRecord=BEGIN
+                                  W.UPDATE(1,"Document No.");
+                                  UpdateVATAmounts;
+                                  MODIFY;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      W@1000000000 : Dialog;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

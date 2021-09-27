@@ -1,0 +1,66 @@
+OBJECT Report 50092 Draft Notice VSC TEST
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15/07/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC3.0-PBD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Draft Notice 1;
+               FRA=Avis de virement 1];
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table10866;
+               DataItemTableView=SORTING(No.,Account No.,Bank Branch No.,Agency Code,Bank Account No.,Payment Address Code)
+                                 WHERE(Copied To No.=FILTER(''));
+               OnAfterGetRecord=BEGIN
+                                  IF Gprec_Vendor <> "Payment Line"."Account No." THEN BEGIN
+                                   Grec_PayLine.SETRANGE("No.","Payment Line"."No.");
+                                   Grec_PayLine.SETRANGE("Copied To No.",'');
+                                   Grec_PayLine.SETRANGE("Account No.","Payment Line"."Account No.");
+                                   Grec_PayLine.FINDFIRST;
+                                   //REPORT.RUN(50071,FALSE,FALSE,Grec_PayLine);
+                                   REPORT.RUN(50071,TRUE,TRUE,Grec_PayLine);
+                                   Gprec_Vendor := "Payment Line"."Account No.";
+                                  END;
+                                END;
+
+               ReqFilterFields=No.,Account Type,Account No. }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gprec_Vendor@1000000000 : Code[20];
+      Grec_PayLine@1000000001 : Record 10866;
+      i@1000000002 : Integer;
+
+    BEGIN
+    {
+      // JX-VSC3.0-PBD Migration Nav2015
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

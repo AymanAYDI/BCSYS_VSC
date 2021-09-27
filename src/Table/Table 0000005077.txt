@@ -2,8 +2,9 @@ OBJECT Table 5077 Segment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=13/05/15;
     Time=12:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -1300,6 +1301,24 @@ OBJECT Table 5077 Segment Line
         SegLine."Contact Via" := "Contact Via";
         SegLine.MODIFY;
       END;
+    END;
+
+    PROCEDURE CreateMailFromContact@40(VAR Cont@1000 : Record 5050;Email@1001 : Text[80]);
+    BEGIN
+      DELETEALL;
+      INIT;
+      IF Cont.Type = Cont.Type::Person THEN
+        SETRANGE("Contact No.",Cont."No.")
+      ELSE
+        SETRANGE("Contact Company No.",Cont."Company No.");
+      IF Email <> '' THEN
+        "Contact Via" := Email
+      ELSE
+        "Contact Via" := Cont."E-Mail";
+      VALIDATE("Contact No.",Cont."No.");
+      VALIDATE(Date,TODAY);
+
+      StartWizard3;
     END;
 
     BEGIN

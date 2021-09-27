@@ -1,0 +1,77 @@
+OBJECT Report 50049 Export ETAFI
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 5444;    ;DataItem;                    ;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number)
+                                 WHERE(Number=CONST(1));
+               OnAfterGetRecord=BEGIN
+                                  DataportETAFI.SetParameters(Gdate_StartDate,Gdate_EndDate,Gdate_DateIsolation);
+                                  DataportETAFI.RUN;
+                                  CLEAR(DataportETAFI);
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Dates;
+                  ContainerType=ContentArea }
+
+      { 1000000002;1;Field  ;
+                  CaptionML=FRA=Date d‚but;
+                  SourceExpr=Gdate_StartDate }
+
+      { 1000000003;1;Field  ;
+                  CaptionML=FRA=Date fin;
+                  SourceExpr=Gdate_EndDate }
+
+      { 1000000001;1;Field  ;
+                  CaptionML=FRA=Date … isoler;
+                  SourceExpr=Gdate_DateIsolation }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      DataportETAFI@1000000000 : XMLport 50014;
+      Gdate_StartDate@1000000001 : Date;
+      Gdate_EndDate@1000000002 : Date;
+      Gint_Annee0@1000000003 : Integer;
+      Text001@1000000004 : TextConst 'FRA=Erreur ! la date de d‚but est sup‚rieure … la date de fin';
+      Gdate_DateIsolation@1000000005 : Date;
+
+    BEGIN
+    {
+      CREATION JX-XAD 31/08/2010
+      Saisie des des dates de d‚but et de fin, puis lance le dataport ETAFI.
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

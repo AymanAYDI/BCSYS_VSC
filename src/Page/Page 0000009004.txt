@@ -2,8 +2,9 @@ OBJECT Page 9004 Bookkeeper Role Center
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
     Version List=NAVW18.00,NAVFR8.00;
   }
   PROPERTIES
@@ -494,6 +495,12 @@ OBJECT Page 9004 Bookkeeper Role Center
 
     { 1907692008;2;Part   ;
                 PagePartID=Page9150;
+                PartType=Page }
+
+    { 1000000000;2;Part   ;
+                CaptionML=[ENU=Company Picture;
+                           FRA=Soci‚t‚];
+                PagePartID=Page50099;
                 PartType=Page }
 
     { 1900724708;1;Group   }

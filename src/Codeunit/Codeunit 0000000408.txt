@@ -2,15 +2,17 @@ OBJECT Codeunit 408 DimensionManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=10/02/17;
+    Time=14:36:58;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-AUD;
   }
   PROPERTIES
   {
-    Permissions=TableData 80=imd,
+    Permissions=TableData 17=rm,
+                TableData 80=imd,
                 TableData 232=imd,
-                TableData 355=imd;
+                TableData 480=im;
     OnRun=BEGIN
           END;
 
@@ -21,7 +23,7 @@ OBJECT Codeunit 408 DimensionManagement
       Text000@1000 : TextConst 'ENU=Dimensions %1 and %2 can''t be used concurrently.;FRA=Les axes analytiques %1 et %2 ne peuvent pas ˆtre utilis‚s ensemble.';
       Text001@1001 : TextConst 'ENU=Dimension combinations %1 - %2 and %3 - %4 can''t be used concurrently.;FRA=Les croisements analytiques %1 - %2 et %3 - %4 ne peuvent pas ˆtre utilis‚s ensemble.';
       Text002@1002 : TextConst 'ENU=This Shortcut Dimension is not defined in the %1.;FRA=Ce racourci axe n''est pas d‚fini dans les %1.';
-      Text003@1003 : TextConst 'ENU=%1 is not an available %2 for that dimension.;FRA=%1 n''est pas une %2 disponible pour cet axe analytique.';
+      Text003@1003 : TextConst 'ENU=%1 is not an available %2 for that dimension.;FRA=%1 : %2 n''est pas une %3 disponible pour cet axe analytique.';
       Text004@1004 : TextConst 'ENU=Select a %1 for the %2 %3.;FRA=S‚lectionnez un %1 pour le %2 %3.';
       Text005@1005 : TextConst 'ENU=Select a %1 for the %2 %3 for %4 %5.;FRA=S‚lectionnez un %1 pour le %2 %3 pour le %4 %5.';
       Text006@1006 : TextConst 'ENU=Select %1 %2 for the %3 %4.;FRA=S‚lectionez le %1 %2 pour le %3 %4.';
@@ -53,7 +55,7 @@ OBJECT Codeunit 408 DimensionManagement
       DimErr@1023 : Text[250];
       DocDimConsistencyErr@1024 : Text[250];
       HasGotGLSetup@1025 : Boolean;
-      GLSetupShortcutDimCode@1026 : ARRAY [8] OF Code[20];
+      GLSetupShortcutDimCode@1026 : ARRAY [10] OF Code[20];
       DimSetFilterCtr@1036 : Integer;
       LastDimSetIDInFilter@1037 : Integer;
 
@@ -101,6 +103,9 @@ OBJECT Codeunit 408 DimensionManagement
       DimSetEntry.FILTERGROUP(2);
       DimSetEntry.SETRANGE("Dimension Set ID",DimSetID);
       DimSetEntry.FILTERGROUP(0);
+      // Correction bug Dim Set ID
+      BugPatchModify(DimSetID);
+      //
       EditDimSetEntries.SETTABLEVIEW(DimSetEntry);
       EditDimSetEntries.SetFormCaption(NewCaption);
       EditDimSetEntries.RUNMODAL;
@@ -119,6 +124,9 @@ OBJECT Codeunit 408 DimensionManagement
       DimSetEntry.FILTERGROUP(2);
       DimSetEntry.SETRANGE("Dimension Set ID",DimSetID);
       DimSetEntry.FILTERGROUP(0);
+      // Correction bug Dim Set ID
+      BugPatchModify(DimSetID);
+      //
       EditDimSetEntries.SETTABLEVIEW(DimSetEntry);
       EditDimSetEntries.SetFormCaption(NewCaption);
       EditDimSetEntries.RUNMODAL;
@@ -250,6 +258,10 @@ OBJECT Codeunit 408 DimensionManagement
         GLSetupShortcutDimCode[6] := GLSetup."Shortcut Dimension 6 Code";
         GLSetupShortcutDimCode[7] := GLSetup."Shortcut Dimension 7 Code";
         GLSetupShortcutDimCode[8] := GLSetup."Shortcut Dimension 8 Code";
+      //Modif JX-VSC4.0-PBD du 26/01/15
+        GLSetupShortcutDimCode[9] := GLSetup."Shortcut Dimension 9 Code";
+        GLSetupShortcutDimCode[10] := GLSetup."Shortcut Dimension 10 Code";
+      //
         HasGotGLSetup := TRUE;
       END;
     END;
@@ -733,6 +745,7 @@ OBJECT Codeunit 408 DimensionManagement
       DimVal.SETRANGE("Dimension Code",GLSetupShortcutDimCode[FieldNumber]);
       DimVal."Dimension Code" := GLSetupShortcutDimCode[FieldNumber];
       DimVal.Code := ShortcutDimCode;
+      DimVal.SETRANGE(Masked,FALSE);//Modif JX-AUD du 22/02/2013
       IF PAGE.RUNMODAL(0,DimVal) = ACTION::LookupOK THEN BEGIN
         CheckDim(DimVal."Dimension Code");
         CheckDimValue(DimVal."Dimension Code",DimVal.Code);
@@ -757,7 +770,7 @@ OBJECT Codeunit 408 DimensionManagement
             ShortcutDimCode := DimVal.Code
           ELSE
             ERROR(
-              STRSUBSTNO(Text003,
+              STRSUBSTNO(Text003,COMPANYNAME,
                 ShortcutDimCode,DimVal.FIELDCAPTION(Code)));
         END;
       END;
@@ -813,16 +826,21 @@ OBJECT Codeunit 408 DimensionManagement
           DefaultDim.DELETE;
     END;
 
-    PROCEDURE GetShortcutDimensions@129(DimSetID@1000 : Integer;VAR ShortcutDimCode@1004 : ARRAY [8] OF Code[20]);
+    PROCEDURE GetShortcutDimensions@129(DimSetID@1000 : Integer;VAR ShortcutDimCode@1004 : ARRAY [10] OF Code[20]);
     VAR
       i@1006 : Integer;
+      NbMaxArray@1000000000 : Integer;
     BEGIN
       GetGLSetup;
-      FOR i := 3 TO 8 DO BEGIN
+      NbMaxArray := ARRAYLEN(ShortcutDimCode);
+      FOR i := 3 TO NbMaxArray DO BEGIN //Modif JX-VSC4.0-PBD du 26/01/15 Ligne d'origine FOR I:= 3 to 8 DO BEGIN + Var ShortcutDimCode ARRAY [8]
         ShortcutDimCode[i] := '';
         IF GLSetupShortcutDimCode[i] <> '' THEN
-          IF DimSetEntry.GET(DimSetID,GLSetupShortcutDimCode[i]) THEN
+         // Correction bug Dim Set ID
+          IF DimSetEntry.GET(DimSetID,GLSetupShortcutDimCode[i]) THEN BEGIN
             ShortcutDimCode[i] := DimSetEntry."Dimension Value Code";
+            BugPatchShow(DimSetID,DimSetEntry."Dimension Code",ShortcutDimCode[i]);
+          END;
       END;
     END;
 
@@ -1792,7 +1810,179 @@ OBJECT Codeunit 408 DimensionManagement
       TempDimBuf2.DELETEALL;
     END;
 
+    PROCEDURE LookupDimValueCode2@1000000001(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
+    VAR
+      DimVal@1002 : Record 349;
+      GLSetup@1003 : Record 98;
     BEGIN
+      //Modif JX-AUD du 22/02/2013
+      GetGLSetup;
+      IF GLSetupShortcutDimCode[FieldNumber] = '' THEN
+        ERROR(Text002,GLSetup.TABLECAPTION);
+      DimVal.SETRANGE("Dimension Code",GLSetupShortcutDimCode[FieldNumber]);
+      DimVal."Dimension Code" := GLSetupShortcutDimCode[FieldNumber];
+      DimVal.Code := ShortcutDimCode;
+      IF PAGE.RUNMODAL(0,DimVal) = ACTION::LookupOK THEN BEGIN
+        CheckDim(DimVal."Dimension Code");
+        CheckDimValue(DimVal."Dimension Code",DimVal.Code);
+        ShortcutDimCode := DimVal.Code;
+      END;
+      //Modif JX-AUD du 22/02/2013
+    END;
+
+    PROCEDURE UpdateDocDefaultDim2@1000000000(VAR DocDim@1006 : Record 480;TableID@1005 : Integer;DocType@1004 : Option;DocNo@1003 : Code[20];LineNo@1002 : Integer;VAR GlobalDim1Code@1001 : Code[20];VAR GlobalDim2Code@1000 : Code[20]);
+    BEGIN
+      {
+      GetGLSetup;
+      DocDim.SETRANGE("Table ID",TableID);
+      DocDim.SETRANGE("Document Type",DocType);
+      DocDim.SETRANGE("Document No.",DocNo);
+      DocDim.SETRANGE("Line No.",LineNo);
+      DocDim.DELETEALL;
+      GlobalDim1Code := '';
+      GlobalDim2Code := '';
+      IF TempDimBuf2.FIND('-') THEN BEGIN
+        REPEAT
+          DocDim.INIT;
+          DocDim.VALIDATE("Table ID",TableID);
+          DocDim.VALIDATE("Document Type",DocType);
+          DocDim.VALIDATE("Document No.",DocNo);
+          DocDim.VALIDATE("Line No.",LineNo);
+          DocDim."Dimension Code" := TempDimBuf2."Dimension Code";
+          DocDim."Dimension Value Code" := TempDimBuf2."Dimension Value Code";
+          DocDim.INSERT;
+          IF DocDim."Dimension Code" = GLSetupShortcutDimCode[1] THEN
+            GlobalDim1Code := DocDim."Dimension Value Code";
+          IF DocDim."Dimension Code" = GLSetupShortcutDimCode[2] THEN
+            GlobalDim2Code := DocDim."Dimension Value Code";
+        UNTIL TempDimBuf2.NEXT = 0;
+        TempDimBuf2.RESET;
+        TempDimBuf2.DELETEALL;
+      END;
+      }
+    END;
+
+    PROCEDURE SetNewDimIDSpec@1000000003(DimSetID@1000 : Integer;VAR GlobalDimVal1@1006 : Code[20];VAR GlobalDimVal2@1005 : Code[20];DimCode@1000000001 : ARRAY [50] OF Code[20];DimValueCode@1000000002 : ARRAY [50] OF Code[20]) : Integer;
+    VAR
+      EditDimSetEntries@1002 : Page 480;
+      NewDimSetID@1004 : Integer;
+      TempSetEntry@1000000000 : TEMPORARY Record 480;
+      DimValue@1000000003 : Record 349;
+      i@1000000004 : Integer;
+    BEGIN
+      NewDimSetID := DimSetID;
+      DimSetEntry.RESET;
+      DimSetEntry.FILTERGROUP(2);
+      DimSetEntry.SETRANGE("Dimension Set ID",DimSetID);
+      DimSetEntry.FILTERGROUP(0);
+      TempSetEntry.DELETEALL;
+      IF DimSetEntry.FINDFIRST THEN
+       REPEAT
+        TempSetEntry := DimSetEntry;
+        TempSetEntry.INSERT;
+       UNTIL DimSetEntry.NEXT = 0;
+      FOR i := 1 TO 50 DO
+       IF DimCode[i] <> '' THEN BEGIN
+        IF NOT TempSetEntry.GET(DimSetID,DimCode[i]) THEN BEGIN
+         TempSetEntry.INIT;
+         TempSetEntry."Dimension Set ID" := DimSetID;
+         TempSetEntry."Dimension Code" := DimCode[i];
+         TempSetEntry."Dimension Value Code" := DimValueCode[i];
+         TempSetEntry.INSERT;
+        END;
+        IF DimValue.GET(DimCode[i],DimValueCode[i]) THEN
+         TempSetEntry."Dimension Value ID" := DimValue."Dimension Value ID";
+        TempSetEntry.MODIFY;
+       END;
+      NewDimSetID := DimSetEntry.GetDimensionSetID(TempSetEntry);
+      UpdateGlobalDimFromDimSetID(NewDimSetID,GlobalDimVal1,GlobalDimVal2);
+      DimSetEntry.RESET;
+      EXIT(NewDimSetID);
+    END;
+
+    LOCAL PROCEDURE BugPatchModify@1000000002(piSetID@1000000000 : Integer);
+    VAR
+      lDimSetEntry@1000000001 : Record 480;
+      lDimValue@1000000002 : Record 349;
+      lDimValue2@1000000003 : Record 349;
+    BEGIN
+      lDimSetEntry.RESET;
+      lDimSetEntry.SETRANGE("Dimension Set ID",piSetID);
+      IF lDimSetEntry.FINDFIRST THEN
+       REPEAT
+        IF lDimValue.GET(lDimSetEntry."Dimension Code",lDimSetEntry."Dimension Value Code") THEN
+         IF lDimValue."Dimension Value ID" <> lDimSetEntry."Dimension Value ID" THEN BEGIN
+          lDimValue2.RESET;
+          lDimValue2.SETCURRENTKEY("Dimension Value ID");
+          lDimValue2.SETRANGE("Dimension Value ID",lDimSetEntry."Dimension Value ID");
+          IF lDimValue2.FINDFIRST THEN BEGIN
+           lDimSetEntry."Dimension Value Code" := lDimValue2.Code;
+           lDimSetEntry.MODIFY;
+          END;
+         END;
+       UNTIL lDimSetEntry.NEXT = 0;
+      COMMIT;
+    END;
+
+    LOCAL PROCEDURE BugPatchShow@1000000004(piSetID@1000000000 : Integer;piDimCode@1000000005 : Code[20];VAR piDimValue@1000000004 : Code[20]);
+    VAR
+      lDimSetEntry@1000000001 : Record 480;
+      lDimValue@1000000002 : Record 349;
+      lDimValue2@1000000003 : Record 349;
+    BEGIN
+      lDimSetEntry.RESET;
+      lDimSetEntry.SETRANGE("Dimension Set ID",piSetID);
+      lDimSetEntry.SETRANGE("Dimension Code",piDimCode);
+      lDimSetEntry.SETRANGE("Dimension Value Code",piDimValue);
+      IF lDimSetEntry.FINDFIRST THEN
+       REPEAT
+        IF lDimValue.GET(lDimSetEntry."Dimension Code",lDimSetEntry."Dimension Value Code") THEN
+         IF lDimValue."Dimension Value ID" <> lDimSetEntry."Dimension Value ID" THEN BEGIN
+          lDimValue2.RESET;
+          lDimValue2.SETCURRENTKEY("Dimension Value ID");
+          lDimValue2.SETRANGE("Dimension Value ID",lDimSetEntry."Dimension Value ID");
+          IF lDimValue2.FINDFIRST THEN
+           piDimValue := lDimValue2.Code;
+         END;
+       UNTIL lDimSetEntry.NEXT = 0;
+      COMMIT;
+    END;
+
+    PROCEDURE NewDimensionSet@1000000005(DimSetID@1000 : Integer;DimCode@1000000002 : Code[20];DimValueCode@1000000001 : Code[20];NewValueCode@1000000000 : Code[20]) : Integer;
+    VAR
+      TempDimSetEntry@1000000003 : TEMPORARY Record 480;
+      EditDimSetEntries@1002 : Page 480;
+      NewDimSetID@1004 : Integer;
+    BEGIN
+      NewDimSetID := DimSetID;
+      DimSetEntry.RESET;
+      DimSetEntry.SETRANGE("Dimension Set ID",DimSetID);
+      IF DimSetEntry.FINDFIRST THEN
+       REPEAT
+        TempDimSetEntry := DimSetEntry;
+        TempDimSetEntry."Dimension Set ID" := 0;
+        TempDimSetEntry.INSERT;
+        IF TempDimSetEntry."Dimension Code" = DimCode THEN BEGIN
+         TempDimSetEntry.VALIDATE("Dimension Value Code",NewValueCode);
+         TempDimSetEntry.MODIFY;
+        END;
+       UNTIL DimSetEntry.NEXT = 0;
+
+      NewDimSetID := GetDimensionSetID(TempDimSetEntry);
+      DimSetEntry.RESET;
+      EXIT(NewDimSetID);
+    END;
+
+    BEGIN
+    {
+
+      //Modif JX-AUD du 22/02/2013
+      //Duplication fonction LookupDimValueCode en LookupDimValueCode2
+      //Modification de la m‚thode LookupDimValueCode pour trier sur les champs Masqu‚s
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+      Ajout Axes analytique (Shortcut 9 et 10)
+    }
     END.
   }
 }

@@ -144,13 +144,13 @@ OBJECT Table 470 Job Queue
       // the wrong session.
       ActiveSession.SETRANGE("Server Instance ID","Server Instance ID");
       ActiveSession.SETRANGE("Session ID","Session ID");
-      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::Background);
+      ActiveSession.SETRANGE("Client Type",ActiveSession."Client Type"::"ArriŠre-plan");
       IF NOT ActiveSession.FINDFIRST THEN
         EXIT(FALSE);
 
       SessionEvent.SETRANGE("Server Instance ID","Server Instance ID");
       SessionEvent.SETRANGE("Session ID","Session ID");
-      SessionEvent.SETRANGE("Client Type",SessionEvent."Client Type"::Background);
+      SessionEvent.SETRANGE("Client Type",SessionEvent."Client Type"::"ArriŠre-plan");
       SessionEvent.SETFILTER("Event Datetime",'>=%1',ActiveSession."Login Datetime");
       IF SessionEvent.ISEMPTY THEN
         EXIT(FALSE);
@@ -164,7 +164,7 @@ OBJECT Table 470 Job Queue
       // This assumes that the last Session Events are not Logon or Start. Note that in special cases such as when
       // a Service remains offline, the Active Session record is assumed dead and removed after 5mins,
       // but no Session Event records are added to the table (with Event Type 4).
-      EXIT(LastSessionEvent."Event Type" IN [LastSessionEvent."Event Type"::Logon,LastSessionEvent."Event Type"::Start]);
+      EXIT(LastSessionEvent."Event Type" IN [LastSessionEvent."Event Type"::"Se connecter",LastSessionEvent."Event Type"::D‚marrer]);
     END;
 
     PROCEDURE UpdateHeartbeat@3();

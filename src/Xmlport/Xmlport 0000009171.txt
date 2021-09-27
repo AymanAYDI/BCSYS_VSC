@@ -2,8 +2,9 @@ OBJECT XMLport 9171 Import/Export Permission Sets
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=21/07/15;
+    Time=09:31:13;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -17,7 +18,8 @@ OBJECT XMLport 9171 Import/Export Permission Sets
     { [{9AA0C0BD-F3C1-48AD-A2FB-A38EAC807F76}];  ;Root                ;Element ;Text     }
 
     { [{8040A803-A933-4F6A-8F74-82563FC17C1C}];1 ;UserRole            ;Element ;Table   ;
-                                                  SourceTable=Table2000000004 }
+                                                  SourceTable=Table2000000004;
+                                                  AutoUpdate=Yes }
 
     { [{2612CEEB-5154-4A67-8BD3-734A00CA077A}];2 ;RoleID              ;Element ;Field   ;
                                                   DataType=Code;

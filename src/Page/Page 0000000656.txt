@@ -2,9 +2,10 @@ OBJECT Page 656 Approval Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=21/09/15;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.1-LAB;
   }
   PROPERTIES
   {
@@ -135,6 +136,54 @@ OBJECT Page 656 Approval Setup
                                    END;
                                END;
                                 }
+      { 1000000002;2 ;ActionGroup;
+                      CaptionML=FRA=Modäle e-mail approuvÇ }
+      { 1000000003;3 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Import;
+                                 FRA=Importer];
+                      OnAction=BEGIN
+                                 CALCFIELDS("Approved Template");
+                                 IF "Approved Template".HASVALUE THEN
+                                   AppTemplateExists := TRUE;
+
+                                 IF FileMgt.BLOBImport(TempBlob,'*.HTM') = '' THEN
+                                   EXIT;
+
+                                 "Approved Template" := TempBlob.Blob;
+
+                                 IF AppTemplateExists THEN
+                                   IF NOT CONFIRM(Text002,FALSE,FIELDCAPTION("Approved Template")) THEN
+                                     EXIT;
+
+                                 CurrPage.SAVERECORD;
+                               END;
+                                }
+      { 1000000004;3 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Export;
+                                 FRA=Exporter];
+                      OnAction=BEGIN
+                                 CALCFIELDS("Approved Template");
+                                 IF "Approved Template".HASVALUE THEN BEGIN
+                                   TempBlob.Blob := "Approved Template";
+                                   FileMgt.BLOBExport(TempBlob,'*.HTM',TRUE);
+                                 END;
+                               END;
+                                }
+      { 1000000005;3 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Delete;
+                                 FRA=Supprimer];
+                      OnAction=BEGIN
+                                 CALCFIELDS("Approved Template");
+                                 IF "Approved Template".HASVALUE THEN
+                                   IF CONFIRM(Text003,FALSE,FIELDCAPTION("Approved Template")) THEN BEGIN
+                                     CLEAR("Approved Template");
+                                     CurrPage.SAVERECORD;
+                                   END;
+                               END;
+                                }
       { 81      ;1   ;ActionGroup;
                       CaptionML=[ENU=&Overdue;
                                  FRA=êc&hu];
@@ -205,6 +254,9 @@ OBJECT Page 656 Approval Setup
                 CaptionML=[ENU=Notify User about:;
                            FRA=Informer utilisateur Ö propos de :] }
 
+    { 1000000000;3;Field  ;
+                SourceExpr=Approved }
+
     { 9   ;3   ;Field     ;
                 SourceExpr=Approvals }
 
@@ -224,6 +276,98 @@ OBJECT Page 656 Approval Setup
     { 13  ;3   ;Field     ;
                 SourceExpr="Last Run Date";
                 Editable=FALSE }
+
+    { 1904609301;1;Group  ;
+                CaptionML=[ENU=Forms;
+                           FRA=Formulaires] }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Sales Quote";
+                LookupPageID=Objects }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Sales Order";
+                LookupPageID=Objects }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Sales Invoice";
+                LookupPageID=Objects }
+
+    { 1000000012;2;Field  ;
+                SourceExpr="Sales Credit Memo";
+                LookupPageID=Objects }
+
+    { 1000000014;2;Field  ;
+                SourceExpr="Sales Blanket Order";
+                LookupPageID=Objects }
+
+    { 1000000016;2;Field  ;
+                SourceExpr="Sales Return Order";
+                LookupPageID=Objects }
+
+    { 1000000018;2;Field  ;
+                SourceExpr="Purchases Quote";
+                LookupPageID=Objects }
+
+    { 1000000020;2;Field  ;
+                SourceExpr="Purchases Order";
+                LookupPageID=Objects }
+
+    { 1000000022;2;Field  ;
+                SourceExpr="Purchases Invoice";
+                LookupPageID=Objects }
+
+    { 1000000024;2;Field  ;
+                SourceExpr="Purchases Credit Memo";
+                LookupPageID=Objects }
+
+    { 1000000026;2;Field  ;
+                SourceExpr="Purchases Blanket Order";
+                LookupPageID=Objects }
+
+    { 1000000028;2;Field  ;
+                SourceExpr="Purchases Return Order";
+                LookupPageID=Objects }
+
+    { 1901323201;1;Group  ;
+                CaptionML=[ENU=Approved Mails;
+                           FRA=Mails approuvÇs] }
+
+    { 1000000030;2;Field  ;
+                SourceExpr="Sales Quote Yes/No" }
+
+    { 1000000032;2;Field  ;
+                SourceExpr="Sales Order Yes/No" }
+
+    { 1000000034;2;Field  ;
+                SourceExpr="Sales Invoice Yes/No" }
+
+    { 1000000036;2;Field  ;
+                SourceExpr="Sales Credit Memo Yes/No" }
+
+    { 1000000038;2;Field  ;
+                SourceExpr="Sales Blanket Order Yes/No" }
+
+    { 1000000040;2;Field  ;
+                SourceExpr="Sales Return Order Yes/No" }
+
+    { 1000000042;2;Field  ;
+                SourceExpr="Purchases Quote Yes/No" }
+
+    { 1000000044;2;Field  ;
+                SourceExpr="Purchases Order Yes/No" }
+
+    { 1000000046;2;Field  ;
+                SourceExpr="Purchases Invoice Yes/No" }
+
+    { 1000000048;2;Field  ;
+                SourceExpr="Purchases Credit Memo Yes/No" }
+
+    { 1000000050;2;Field  ;
+                SourceExpr="Purchases Blanket Order Yes/No" }
+
+    { 1000000052;2;Field  ;
+                SourceExpr="Purchases Return Order Yes/No" }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
@@ -250,8 +394,13 @@ OBJECT Page 656 Approval Setup
       Text003@1005 : TextConst 'ENU=Do you want to delete the template %1?;FRA=Voulez-vous supprimer le modäle %1 ?';
       AppTemplateExists@1007 : Boolean;
       Text004@1008 : TextConst 'ENU=Do you want to run the overdue check by the %1?;FRA=Voulez-vous exÇcuter la vÇrification des ÇchÇances pour le %1 ?';
+      ApprovedTemplateExits@1000000000 : Boolean;
 
     BEGIN
+    {
+      // modif JX-LAB du 21/04/09
+      // ajout du champ 50000 approuvÇs et de la gestion de modäle e-mail approuvÇ
+    }
     END.
   }
 }

@@ -1,0 +1,267 @@
+OBJECT XMLport 50035 Sales_CR.Memo_Export
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/10/17;
+    Time=15:12:46;
+    Modified=Yes;
+    Version List=JX-ABE-EDI-CEGEDIM;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Sales_Credit.Memo_Export;
+               FRA=Export_Avoirs_ventes];
+    Direction=Export;
+    Encoding=UTF-8;
+  }
+  ELEMENTS
+  {
+    { [{7EF392EF-92C9-4C33-81C9-26C3A8C38FCE}];  ;Root                ;Element ;Text     }
+
+    { [{99FB5507-3ADA-4101-9693-BC4AC9FD6BE3}];1 ;Salescr.MemoHeader  ;Element ;Table   ;
+                                                  ReqFilterFields=Field3,Field20,Field4,Field2;
+                                                  SourceTable=Table114;
+                                                  SourceTableView=SORTING(Field3)
+                                                                  ORDER(Ascending);
+                                                  Export::OnAfterGetRecord=BEGIN
+
+                                                                               GLEntry_G.RESET;
+                                                                               GLEntry_G.SETRANGE(GLEntry_G."Document No.","Sales Cr.Memo Header"."No.");
+                                                                               IF GLEntry_G.FINDSET THEN
+                                                                               TypeDoc := FORMAT(GLEntry_G."Document Type");
+                                                                           END;
+                                                                            }
+
+    { [{3BA400D6-9E95-4B70-8CB7-F17EE9488BAC}];2 ;DocumentNo.         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::No. }
+
+    { [{7BE40583-9FC1-4E62-B914-94921CE06C37}];2 ;TypeDoc             ;Element ;Text    ;
+                                                  VariableName=TypeDoc }
+
+    { [{E2B62C3B-7E81-4BFB-BBA4-DAD82234414E}];2 ;CustNo              ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Customer No. }
+
+    { [{FD23A389-A919-4ABB-ACFC-143E95597E81}];2 ;CustName            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Name }
+
+    { [{446F21B3-EBE0-4D0E-8390-997EDFB549A9}];2 ;CustAddress1        ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Address }
+
+    { [{4715F7CC-5D42-466D-8551-893373925FAE}];2 ;CustAddress2        ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Address 2 }
+
+    { [{C266936A-6B06-49AC-8E6D-C70AB379F0CA}];2 ;CustCity            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to City }
+
+    { [{96AAF198-80D2-4462-A466-221BF76A6BD1}];2 ;CustPostCode        ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Post Code }
+
+    { [{D5C1BD71-21CF-4E82-8D5C-1CF64AA1996A}];2 ;CustCountry         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::Bill-to Country/Region Code }
+
+    { [{4F0A02DE-1DA4-4A34-A215-35727DC609DC}];2 ;YourRef             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Your Reference }
+
+    { [{305DCC1A-5DFA-48D3-87D5-7EF60695D3CC}];2 ;UserMail            ;Element ;Text    ;
+                                                  VariableName=UserMail;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+
+                                                                                 IF UserSetup.GET("Sales Cr.Memo Header"."User ID")THEN
+                                                                                 UserMail := UserSetup."E-Mail";
+
+                                                                                 {
+                                                                                 IF UserSetup.GET("Sales Cr.Memo Header"."User ID") THEN BEGIN
+                                                                                 // Gtext_UserName := UserSetup."User ID";
+                                                                                   UserMail := UserSetup."E-Mail";
+                                                                                 END ELSE BEGIN
+                                                                                 //  Gtext_UserName := '';
+                                                                                   UserMail := '';
+                                                                                 END;
+                                                                                 }
+                                                                               END;
+                                                                                }
+
+    { [{32B22699-74C6-4B7C-9082-7B018564D23F}];2 ;Date                ;Element ;Field   ;
+                                                  DataType=Date;
+                                                  SourceField=Sales Cr.Memo Header::Posting Date }
+
+    { [{672D5076-699E-4368-B738-A87F459CB3AC}];2 ;PostingDescription  ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::Posting Description }
+
+    { [{A76503F6-F535-4F07-9003-C69A85FC8CEE}];2 ;Currency            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::Currency Code }
+
+    { [{5D43A42D-C636-41E4-A344-BA089FA26793}];2 ;HeaderAmount        ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Header::Amount }
+
+    { [{60A80418-9375-4403-88FB-181FEBE4B6C7}];2 ;HeaderAmountWithVAT ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Header::Amount Including VAT }
+
+    { [{92F9C734-0903-4FDA-8402-433384886539}];2 ;VATAMOUNTheader     ;Element ;Text    ;
+                                                  VariableName=VATAMOUNTheader;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+                                                                                 VATAMOUNTheader := FORMAT("Sales Cr.Memo Header"."Amount Including VAT"-"Sales Cr.Memo Header".Amount);
+                                                                               END;
+                                                                                }
+
+    { [{F8D330CC-BB97-46FB-9A0D-9BBFB18842FB}];2 ;CustVATRegistration ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Header::VAT Registration No. }
+
+    { [{4F51D013-9C5F-40E1-B83E-BBFCD6D87136}];2 ;ExternalNo.         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Header::External Document No. }
+
+    { [{456FEA98-EF27-47F9-935E-06A3E58BAE92}];2 ;SalesCr.MemoLine    ;Element ;Table   ;
+                                                  SourceTable=Table115;
+                                                  SourceTableView=SORTING(Field3,Field4)
+                                                                  ORDER(Ascending);
+                                                  LinkFields=Field3=FIELD(Field3);
+                                                  LinkTable=Sales Cr.Memo Header }
+
+    { [{EB7B0C97-94E6-468D-9C3C-8FABE06FEDFB}];3 ;LineDocumentNo.     ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Line::Document No. }
+
+    { [{D12B9B56-F8F4-4F35-8E4E-76E59C2B57E6}];3 ;LineLineNo.         ;Element ;Field   ;
+                                                  DataType=Integer;
+                                                  SourceField=Sales Cr.Memo Line::Line No. }
+
+    { [{C48BB300-5798-4770-85B6-C5D82ED5350F}];3 ;LineType            ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Sales Cr.Memo Line::Type }
+
+    { [{049629CA-6F54-4AC8-954A-F339B2FAB629}];3 ;LineNo.             ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Line::No. }
+
+    { [{5FA7B015-601E-404C-BD12-550DD51928A9}];3 ;LineDescription     ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Line::Description }
+
+    { [{50C99DF3-8EC5-4E17-8D0C-6E6F8DAB70D1}];3 ;LineQuantity        ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Quantity }
+
+    { [{DF998DD2-8F95-4C47-B1E0-8806C4B76681}];3 ;LineUnit            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Cr.Memo Line::Unit of Measure }
+
+    { [{E77DEE41-9F1C-4220-B92E-7A93D9AF1C74}];3 ;LineUnitPrice       ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Unit Price }
+
+    { [{461B23A7-BB29-439F-91D2-43185F8DD583}];3 ;LineVAT             ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::VAT % }
+
+    { [{0C62EE12-4445-4D19-AF8B-A687B75AA8DA}];3 ;LineDiscountPercent ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Line Discount % }
+
+    { [{DE22D260-8343-47C0-9690-E9DB69947A81}];3 ;LineDiscountAmount  ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Line Discount Amount }
+
+    { [{4F87EDA4-2FBA-4480-BD0C-06CCD6205105}];3 ;LineAmount          ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Amount }
+
+    { [{0E374549-3B62-4939-9073-42BCEC08A2FB}];3 ;LineAmountWithVAT   ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Cr.Memo Line::Amount Including VAT }
+
+    { [{C9A082C3-EFB8-4FC5-9180-4075432B5EFD}];3 ;VATAMOUNTline       ;Element ;Text    ;
+                                                  VariableName=VATAMOUNTline;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+                                                                                 VATAMOUNTline:=FORMAT ("Sales Cr.Memo Line"."Amount Including VAT"-"Sales Cr.Memo Line".Amount);
+                                                                               END;
+                                                                                }
+
+    { [{6D99130F-5D89-4160-A55A-C7FB233FAAE3}];3 ;LineCustomerVAT     ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Line::VAT Bus. Posting Group }
+
+    { [{1CC0F31C-8BCB-46B1-B9E2-3A66F458DF40}];3 ;LineProductVAT      ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Cr.Memo Line::VAT Prod. Posting Group }
+
+    { [{A1D51B16-FFC9-4909-AF85-3F144CD11F1A}];2 ;CompanyInformation  ;Element ;Table   ;
+                                                  SourceTable=Table79 }
+
+    { [{DF4157AB-8237-484E-833C-E89D5622CD2C}];3 ;Name                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Name }
+
+    { [{1860754A-748C-4D9C-99DB-6851BA4DE039}];3 ;Adress              ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Address }
+
+    { [{CEDDCEA1-38E4-4C65-B6C2-CFA1EACC1FAC}];3 ;Adress2             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Address 2 }
+
+    { [{C1B38836-26D5-49E5-8780-F98B933B24B1}];3 ;PostCode            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::Post Code }
+
+    { [{8F3A7FF0-467F-4BD1-AF88-27A71EEBBCC2}];3 ;City                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::City }
+
+    { [{55349B78-3874-447A-8038-D9334A87DB4E}];3 ;CountryPays_Region  ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::Country/Region Code }
+
+    { [{3CA1751B-3B22-4BA7-9301-48C8D7923EED}];3 ;VATRegistaration    ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::VAT Registration No. }
+
+    { [{BC58E7C4-7757-4443-96E4-021315440204}];3 ;IBAN                ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::IBAN }
+
+    { [{B37031FF-FD99-4BE7-95E7-20798E75C4A8}];3 ;RegistrationNo.     ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Registration No. }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      GLEntry_G@1000000000 : Record 17;
+      UserSetup@1000000001 : Record 91;
+
+    BEGIN
+    END.
+  }
+}
+

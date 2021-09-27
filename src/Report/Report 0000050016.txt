@@ -1,0 +1,279 @@
+OBJECT Report 50016 G‚n‚ration des FNP
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/05/20;
+    Time=15:25:07;
+    Modified=Yes;
+    Version List=JX-VSC1.0-XAD,JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Generation of invoices not received;
+               FRA=G‚n‚ration des FNP];
+    ProcessingOnly=Yes;
+    OnPreReport=BEGIN
+                  Grec_FeuilleComptaFNP.SETRANGE("Journal Template Name",Grec_FeuilleComptaFNP."Journal Template Name");
+                  Grec_FeuilleComptaFNP.SETRANGE("Journal Batch Name",Grec_FeuilleComptaFNP."Journal Batch Name");
+                  IF (Grec_FeuilleComptaFNP.COUNT > 0) THEN
+                    IF NOT CONFIRM(Text002) THEN
+                      ERROR(Text003);
+                  Grec_FeuilleComptaFNP.DELETEALL;
+                  Grec_FeuilleComptaFNP.LOCKTABLE;
+                  Gcode_NoFNP := Grec_FeuilleComptaFNP."Document No.";
+                  Gcode_CodeJournal := Grec_FeuilleComptaFNP."Source Code";
+
+                  IF Grec_GenJnlBatch.GET(Grec_FeuilleComptaFNP."Journal Template Name",Grec_FeuilleComptaFNP."Journal Batch Name") THEN
+                    IF Grec_GenJnlBatch."No. Series" <> 'FNP' THEN
+                      ERROR(Text001);
+
+                  //BCSYS 180520 - Copy filter CCA
+                  IF Gcode_ValeurAxe = '' THEN
+                    ERROR(Text004);
+                END;
+
+  }
+  DATASET
+  {
+    { 3042;    ;DataItem;                    ;
+               DataItemTable=Table121;
+               DataItemTableView=SORTING(Document No.,Line No.);
+               OnPreDataItem=BEGIN
+                               SETFILTER("Posting Date",'<=%1',Gdate_Compta);
+
+
+                               Gint_Ligne := 0;
+
+                               //********************* Recherche de l'ann‚e comptable en cours *********************
+                               //D‚but MOFIF JX-XAD 27/04/2010
+                               {
+                               Grec_ParamCompa.RESET;
+                               IF Grec_ParamCompa.FIND('-') THEN BEGIN
+                                 Grec_ParamCompa.CALCFIELDS(Grec_ParamCompa."Posting Allowed From");
+                                 Gdate_D‚butExerciceComptable := Grec_ParamCompa."Posting Allowed From";
+                                 IF NOT EVALUATE(Gint_Ann‚eComptable,FORMAT(Gdate_D‚butExerciceComptable,4,'<Year,4>')) THEN
+                                   EVALUATE(Gint_Ann‚eComptable,FORMAT(WORKDATE,4,'<Year,4>'));
+                               END;
+                               }
+                               EVALUATE(Gint_Ann‚eComptable,FORMAT(WORKDATE,4,'<Year,4>'));
+                               //Fin MOFIF JX-XAD 27/04/2010
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  //BCSYS 180520 - Copy filter CCA
+                                  IF GDimSetEntry.GET("Dimension Set ID",'PERIODE') THEN
+                                    Gcode_AxeEcriture := GDimSetEntry."Dimension Value Code"
+                                  ELSE
+                                    Gcode_AxeEcriture := '';
+
+                                  IF Gcode_AxeEcriture <= Gcode_ValeurAxe THEN
+                                  BEGIN
+                                  //Fin BCSYS 180520
+
+                                    //********************* Traitement des r‚ceptions non factur‚es *******************************************
+                                    IF ("Qty. Rcd. Not Invoiced" <> 0) THEN
+                                    BEGIN
+                                      Gdec_MontantTTC := "Qty. Rcd. Not Invoiced" * "Direct Unit Cost";
+                                      Gdec_MontantTTC += (Gdec_MontantTTC * "VAT %" / 100);
+                                      Gdec_MontantHT := "Qty. Rcd. Not Invoiced" * "Direct Unit Cost";
+                                      Ins‚rerR‚ception();
+                                    END;
+
+                                    //********************* Traitement des r‚ceptions factur‚es aprŠs la date de compta ***********************
+                                    Grec_EcritureValeur.RESET;
+                                    Grec_EcritureValeur.SETFILTER(Grec_EcritureValeur."Item Ledger Entry No.",'%1',"Purch. Rcpt. Line"."Item Rcpt. Entry No.");
+                                    Grec_EcritureValeur.SETFILTER(Grec_EcritureValeur."Invoiced Quantity",'<>%1',0);
+                                    Grec_EcritureValeur.SETFILTER(Grec_EcritureValeur."Document Type",'%1',Grec_EcritureValeur."Document Type"::"Purchase Invoice");
+                                    Grec_EcritureValeur.SETFILTER(Grec_EcritureValeur."Posting Date",'>%1',Gdate_Compta);
+                                    IF Grec_EcritureValeur.FIND('-') THEN
+                                    REPEAT
+                                      IF Grec_LigneFactAchatEnregistr‚e.GET(Grec_EcritureValeur."Document No.",Grec_EcritureValeur."Document Line No.") THEN
+                                      BEGIN
+                                        Gdec_MontantHT := Grec_LigneFactAchatEnregistr‚e.Amount;
+                                        Gdec_MontantTTC := Grec_LigneFactAchatEnregistr‚e."Amount Including VAT";
+                                        Ins‚rerR‚ception();
+                                      END;
+                                    UNTIL Grec_EcritureValeur.NEXT = 0;
+                                  END;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Options;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  Name=Date de comptabilisation :;
+                  SourceExpr=Gdate_Compta }
+
+      { 1000000002;1;Field  ;
+                  Name=P‚riode;
+                  SourceExpr=Gcode_ValeurAxe }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gint_Ligne@1000000000 : Integer;
+      Grec_FeuilleComptaFNP@1000000001 : Record 81;
+      Gdec_MontantTTC@1000000002 : Decimal;
+      Gdec_MontantHT@1000000003 : Decimal;
+      "Gdec_MontantFactur‚HT"@1000000004 : Decimal;
+      "Gdec_MontantFactur‚TTC"@1000000005 : Decimal;
+      Gdate_Compta@1000000006 : Date;
+      "Grec_ParamŠtresTVA"@1000000007 : Record 325;
+      Gcode_NoFNP@1000000008 : Code[20];
+      Gcode_CodeJournal@1000000009 : Code[10];
+      Text001@1000000010 : TextConst 'ENU=This sheet is not intended to invoices not received;FRA=Cette feuille n''est pas destin‚e aux FNP.';
+      Text002@1000000011 : TextConst 'ENU=This sheet is not empty.\\All data being entered will be replaced.\\Would you like to continue?;FRA=Cette feuille n''est pas vide.\\Toutes les donn‚es actuellement saises seront remplac‚es.\\Souhaitez-vous tout de mˆme poursuivre ?';
+      Text003@1000000012 : TextConst 'ENU=Operation canceled;FRA=Op‚ration annul‚e';
+      Grec_Fournisseur@1000000013 : Record 23;
+      Grec_Dimension@1000000016 : Record 348;
+      Gcode_CompteTVA@1000000017 : Code[20];
+      "Gcode_CompteG‚n‚ral"@1000000018 : Code[20];
+      Grec_GenJnlBatch@1000000019 : Record 232;
+      "Gint_Ann‚eComptable"@1000000020 : Integer;
+      "Gint_Ann‚eR‚ception"@1000000021 : Integer;
+      Grec_ParamCompa@1000000022 : Record 98;
+      "Gdate_D‚butExerciceComptable"@1000000023 : Date;
+      Grec_EcritureValeur@1000000024 : Record 5802;
+      "Grec_LigneFactAchatEnregistr‚e"@1000000025 : Record 123;
+      "Gbool_Qt‚FactAprŠsDateCompta"@1000000026 : Boolean;
+      Grec_DimSetEntry@1000000014 : Record 480;
+      Gcode_ValeurAxe@1000000015 : Code[20];
+      GDimSetEntry@1000000027 : Record 480;
+      Gcode_AxeEcriture@1000000028 : Code[20];
+      Text004@1000000029 : TextConst 'ENU=please fill the ''Periode'' axis;FRA=Veuillez renseigner l''axe p‚riode';
+
+    PROCEDURE SetFNPJnlLine@1000000000(FeuilleComptaFNP@1000000000 : Record 81);
+    BEGIN
+      Grec_FeuilleComptaFNP := FeuilleComptaFNP;
+    END;
+
+    PROCEDURE "Ins‚rerR‚ception"@1000000006();
+    BEGIN
+      WITH "Purch. Rcpt. Line" DO
+      BEGIN
+        //***************** Initialisation suivant le cas type article ou immobilisation *****************
+        IF (Type = Type::Item) OR ((Type = Type::"G/L Account") AND (COPYSTR("Gen. Prod. Posting Group",1,1) = '6')) THEN
+        BEGIN
+          Gcode_CompteG‚n‚ral := '40800001';
+          Gcode_CompteTVA := '44586100'
+        END ELSE
+          IF (Type = Type::"Fixed Asset") OR ((Type = Type::"G/L Account") AND (COPYSTR("Gen. Prod. Posting Group",1,1) = '2')) THEN
+        BEGIN
+          Gcode_CompteG‚n‚ral := '40840001';
+          Gcode_CompteTVA := '44586400';
+        END;
+
+        //***************** Insertion ligne CREDIT *****************
+        Grec_FeuilleComptaFNP.INIT;
+        Gint_Ligne += 10000;
+        Grec_FeuilleComptaFNP."Line No." := Gint_Ligne;
+        Grec_FeuilleComptaFNP."Document No." := Gcode_NoFNP;
+        Grec_FeuilleComptaFNP."External Document No." := PADSTR("Order No." + '-' + "Document No.",20);
+        Grec_FeuilleComptaFNP.VALIDATE("Source Code",Gcode_CodeJournal);
+        Grec_FeuilleComptaFNP.VALIDATE("Account No.",Gcode_CompteG‚n‚ral);
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Posting Date",Gdate_Compta);
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Document Date","Posting Date");
+        Grec_FeuilleComptaFNP.VALIDATE("Credit Amount",Gdec_MontantTTC);
+        IF Grec_Fournisseur.GET("Buy-from Vendor No.") THEN
+          Grec_FeuilleComptaFNP.Description := PADSTR(Grec_Fournisseur.Name+'-'+Description,50);
+        Grec_FeuilleComptaFNP."Vendor No." := "Purch. Rcpt. Line"."Buy-from Vendor No.";
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Bus. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Prod. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Bus. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Prod. Posting Group",'');
+      //  Ins‚r‚rAnalytique();   Modification NAv 2015
+        Grec_FeuilleComptaFNP."Dimension Set ID" := "Dimension Set ID";
+        Grec_FeuilleComptaFNP.INSERT;
+
+        //***************** Insertion ligne DEBIT *****************
+        Gint_Ligne += 10000;
+        Grec_FeuilleComptaFNP."Line No." := Gint_Ligne;
+        Grec_FeuilleComptaFNP."Document No." := Gcode_NoFNP;
+        Grec_FeuilleComptaFNP."External Document No." := PADSTR("Order No." + '-' + "Document No.",20);
+        Grec_FeuilleComptaFNP.VALIDATE("Source Code",Gcode_CodeJournal);
+        Grec_FeuilleComptaFNP.VALIDATE("Account No.","Gen. Prod. Posting Group");
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Posting Date",Gdate_Compta);
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Document Date","Posting Date");
+        Grec_FeuilleComptaFNP.VALIDATE("Debit Amount",Gdec_MontantHT);
+        IF Grec_Fournisseur.GET("Buy-from Vendor No.") THEN
+          Grec_FeuilleComptaFNP.Description := PADSTR(Grec_Fournisseur.Name+'-'+Description,50);
+        Grec_FeuilleComptaFNP."Vendor No." := "Buy-from Vendor No.";
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Bus. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Prod. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Bus. Posting Group",'');
+        Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Prod. Posting Group",'');
+      //  Ins‚r‚rAnalytique();   Modification NAv 2015
+        Grec_FeuilleComptaFNP."Dimension Set ID" := "Dimension Set ID";
+        Grec_FeuilleComptaFNP.INSERT;
+
+        //***************** Insertion ligne TVA si montant non nul *****************
+        IF ((Gdec_MontantTTC-Gdec_MontantHT) <> 0) THEN
+        BEGIN
+          Gint_Ligne += 10000;
+          Grec_FeuilleComptaFNP."Line No." := Gint_Ligne;
+          Grec_FeuilleComptaFNP."Document No." := Gcode_NoFNP;
+          Grec_FeuilleComptaFNP."External Document No." := PADSTR("Order No." + '-' + "Document No.",20);
+          Grec_FeuilleComptaFNP.VALIDATE("Source Code",Gcode_CodeJournal);
+          Grec_FeuilleComptaFNP.VALIDATE("Account No.",Gcode_CompteTVA);
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Posting Date",Gdate_Compta);
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Document Date","Posting Date");
+          Grec_FeuilleComptaFNP.VALIDATE("Debit Amount",Gdec_MontantTTC-Gdec_MontantHT);
+          IF Grec_Fournisseur.GET("Buy-from Vendor No.") THEN
+            Grec_FeuilleComptaFNP.Description := PADSTR(Grec_Fournisseur.Name+'-'+Description,50);
+          Grec_FeuilleComptaFNP."Vendor No." := "Buy-from Vendor No.";
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Bus. Posting Group",'');
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."Gen. Prod. Posting Group",'');
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Bus. Posting Group",'');
+          Grec_FeuilleComptaFNP.VALIDATE(Grec_FeuilleComptaFNP."VAT Prod. Posting Group",'');
+      //  Ins‚r‚rAnalytique();   Modification NAv 2015
+          Grec_FeuilleComptaFNP."Dimension Set ID" := "Dimension Set ID";
+          Grec_FeuilleComptaFNP.INSERT;
+        END;
+        //Gcode_NoFNP := INCSTR(Gcode_NoFNP);
+      END;
+    END;
+
+    BEGIN
+    {
+      CEATION JX-XAD 16/10/2008
+      G‚n‚ration des FNP dans la feuille de comptabilit‚ g‚n‚rale.
+
+      JX-XAD 05/06/2009
+      Traduction en Anglais
+
+      ------------------------------------- V1.2 -------------------------------------
+
+      MOFIF JX-XAD 27/04/2010
+      Correction dans le traitement de l'axe PERIODE
+
+      MODIF JX-XAD 18/06/2010
+      Annulation du traitement concernant l'axe p‚riode
+
+      MODIF JX-XAD 15/04/2011
+      Traitement soci‚t‚ VFEC
+
+      //Modif JX-AUD du 25/02/2013
+      //Modification fonction analytique
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

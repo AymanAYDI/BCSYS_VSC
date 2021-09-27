@@ -1,0 +1,132 @@
+OBJECT XMLport 50030 Import Purchase Receipt
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/03/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    OnPostXMLport=BEGIN
+                    MESSAGE('L''import est termin‚');
+                  END;
+
+    Format=Variable Text;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{07155A66-6699-4422-A5B8-DE5169D29278}];  ;Root                ;Element ;Text     }
+
+    { [{67331778-3B16-4B24-A9FF-00C6BEF41F02}];1 ;ImportRecept        ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Gint_CompteurLigne +=1;
+                                                                                 IF Gint_CompteurLigne > 1 THEN
+                                                                                 BEGIN
+                                                                                   //recherche de la commande
+                                                                                   IF Grec_PurchHeader.GET(Grec_PurchHeader."Document Type"::Order, Gcode_OrderNo) THEN
+                                                                                   BEGIN
+                                                                                      EVALUATE(Gint_LineNo,Gtext_LineNo);
+                                                                                     //recherche si la ligne de la commande existe
+                                                                                     IF Grec_PurchLine.GET(Grec_PurchHeader."Document Type"::Order,Gcode_OrderNo,Gint_LineNo)  THEN
+                                                                                     BEGIN
+                                                                                       IF NOT (Grec_PurchLine."Quantity Received" <> 0) THEN
+                                                                                       BEGIN
+
+                                                                                       IF Grec_PurchLine.Type <> Grec_PurchLine.Type::Item THEN
+                                                                                         ERROR(STRSUBSTNO(Text004,Gcode_OrderNo,Gint_LineNo));
+
+                                                                                        //si le statut est lanc‚, il faut rouvrir la commande
+                                                                                        IF Grec_PurchHeader.Status = Grec_PurchHeader.Status::Released THEN
+                                                                                        BEGIN
+                                                                                           ReleasePurchDoc.PerformManualReopen(Grec_PurchHeader);
+                                                                                        END;
+
+                                                                                        //mettre toutes les quantit‚s … recevoir … 0 si la commande a plusieurs lignes
+                                                                                        Grec_PurchLine2.SETFILTER(Grec_PurchLine2."Document Type",FORMAT(Grec_PurchLine2."Document Type"::Order));
+                                                                                        IF Grec_PurchLine2.FIND('-') THEN
+                                                                                        REPEAT
+                                                                                           IF NOT (Grec_PurchLine2."Quantity Received" <> 0) THEN
+                                                                                           BEGIN
+                                                                                             Grec_PurchLine2.VALIDATE("Qty. to Receive",0);
+                                                                                             Grec_PurchLine2.MODIFY;
+                                                                                           END;
+                                                                                        UNTIL Grec_PurchLine2.NEXT =0;
+
+                                                                                        //modification de la quantit‚ de la ligne
+                                                                                        Grec_PurchLine.GET(Grec_PurchHeader."Document Type"::Order,Gcode_OrderNo,Gint_LineNo);
+                                                                                        EVALUATE(Grec_PurchLine.Quantity,FORMAT(Gdec_Quantity));
+                                                                                        Grec_PurchLine.VALIDATE(Quantity,Grec_PurchLine.Quantity);
+                                                                                        Grec_PurchLine.MODIFY;
+
+                                                                                        //changement de la date de comptabilisation afin de permettre la r‚ception automatique
+                                                                                        Grec_PurchHeader."Posting Date" := TODAY;
+                                                                                        Grec_PurchHeader.VALIDATE(Grec_PurchHeader.Receive, TRUE);
+                                                                                        Grec_PurchHeader.MODIFY;
+
+                                                                                       //r‚ception automatique
+                                                                                        CODEUNIT.RUN(CODEUNIT::"Purch.-Post",Grec_PurchHeader);
+
+                                                                                       END ELSE
+                                                                                         //ERROR(STRSUBSTNO(Text003,Gcode_OrderNo,Gint_LineNo));
+                                                                                          //ou mettre ici un message non bloquant disant que cette ligne ne sera
+                                                                                         //pas prise en compte, et le fichier en cas d'erreur sur une des ligne pourra ˆtre repasser.
+                                                                                         MESSAGE(STRSUBSTNO(Text003,Gcode_OrderNo,Gint_LineNo));
+
+                                                                                     END ELSE
+                                                                                       ERROR(STRSUBSTNO(Text002,Gcode_OrderNo,Gint_LineNo));
+                                                                                   END ELSE
+                                                                                     ERROR(STRSUBSTNO(Text001,Gcode_OrderNo));
+
+                                                                                 END;
+                                                                               END;
+                                                                                }
+
+    { [{E8732336-8A56-4B62-A6BE-022C9BFB9C77}];2 ;Gcode_OrderNo       ;Element ;Text     }
+
+    { [{3D056DCE-8618-4241-9C92-03464A40EFE5}];2 ;Gtext_LineNo        ;Element ;Text     }
+
+    { [{B7876BA9-08EA-465B-878B-F9DCE7DEF29F}];2 ;Gdec_Quantity       ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Gint_LineNo@1000000007 : Decimal;
+      Grec_PurchHeader@1000000005 : Record 38;
+      Grec_PurchLine@1000000004 : Record 39;
+      Gint_CompteurLigne@1000000003 : Integer;
+      Grec_PurchLine2@1000000002 : Record 39;
+      ReleasePurchDoc@1000000001 : Codeunit 415;
+      "Gcu_ANSI-ASCII"@1000000000 : Codeunit 50002;
+      Text001@1000000013 : TextConst 'FRA=Erreur import: Impossible de trouver la commande %1';
+      Text002@1000000012 : TextConst 'FRA=Erreur import: Impossible de trouver la ligne %2 de la commande %1';
+      Text003@1000000011 : TextConst 'FRA="Attention : La ligne %2 de la commande %1 a d‚j… ‚t‚ re‡ue, elle ne sera pas prise en compte "';
+      Text004@1000000010 : TextConst 'FRA=Erreur import: La ligne %2 de la commande %1 n''est pas une ligne de type Article';
+
+    BEGIN
+    END.
+  }
+}
+

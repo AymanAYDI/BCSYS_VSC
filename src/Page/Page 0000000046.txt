@@ -2,8 +2,9 @@ OBJECT Page 46 Sales Order Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
-    Time=12:00:00;
+    Date=27/05/16;
+    Time=10:20:50;
+    Modified=Yes;
     Version List=NAVW18.00.00.39663;
   }
   PROPERTIES
@@ -314,6 +315,7 @@ OBJECT Page 46 Sales Order Subform
 
     { 2   ;2   ;Field     ;
                 SourceExpr=Type;
+                Visible=FALSE;
                 OnValidate=BEGIN
                              TypeOnAfterValidate;
                              NoOnAfterValidate;
@@ -327,6 +329,7 @@ OBJECT Page 46 Sales Order Subform
 
     { 4   ;2   ;Field     ;
                 SourceExpr="No.";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              ShowShortcutDimCode(ShortcutDimCode);
                              NoOnAfterValidate;
@@ -396,6 +399,19 @@ OBJECT Page 46 Sales Order Subform
                 SourceExpr=Description;
                 QuickEntry=FALSE }
 
+    { 1000000000;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
+
     { 26  ;2   ;Field     ;
                 SourceExpr="Drop Shipment";
                 Visible=FALSE }
@@ -410,6 +426,7 @@ OBJECT Page 46 Sales Order Subform
 
     { 42  ;2   ;Field     ;
                 SourceExpr="Location Code";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              LocationCodeOnAfterValidate;
                            END;
@@ -455,6 +472,7 @@ OBJECT Page 46 Sales Order Subform
     { 48  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Reserved Quantity";
+                Visible=FALSE;
                 QuickEntry=FALSE }
 
     { 44  ;2   ;Field     ;
@@ -510,6 +528,7 @@ OBJECT Page 46 Sales Order Subform
     { 16  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Discount %";
+                Visible=False;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -594,6 +613,7 @@ OBJECT Page 46 Sales Order Subform
     { 5800;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. to Assign";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -605,6 +625,7 @@ OBJECT Page 46 Sales Order Subform
     { 102 ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. Assigned";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -623,6 +644,7 @@ OBJECT Page 46 Sales Order Subform
 
     { 86  ;2   ;Field     ;
                 SourceExpr="Planned Delivery Date";
+                Visible=FALSE;
                 QuickEntry=FALSE }
 
     { 88  ;2   ;Field     ;
@@ -630,6 +652,7 @@ OBJECT Page 46 Sales Order Subform
 
     { 100 ;2   ;Field     ;
                 SourceExpr="Shipment Date";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              ShipmentDateOnAfterValidate;
                            END;
@@ -708,6 +731,16 @@ OBJECT Page 46 Sales Order Subform
                 SourceExpr="Appl.-to Item Entry";
                 Visible=FALSE }
 
+    { 146 ;2   ;Field     ;
+                SourceExpr="Document No.";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 148 ;2   ;Field     ;
+                SourceExpr="Line No.";
+                Visible=FALSE;
+                Editable=FALSE }
+
     { 32  ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 1 Code";
                 Visible=FALSE }
@@ -745,7 +778,7 @@ OBJECT Page 46 Sales Order Subform
     { 304 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[5];
                 CaptionClass='1,2,5';
-                Visible=FALSE;
+                Visible=True;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(5,ShortcutDimCode[5]);
                            END;
@@ -794,15 +827,19 @@ OBJECT Page 46 Sales Order Subform
                          END;
                           }
 
-    { 146 ;2   ;Field     ;
-                SourceExpr="Document No.";
+    { 1000000001;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
                 Visible=FALSE;
-                Editable=FALSE }
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
 
-    { 148 ;2   ;Field     ;
-                SourceExpr="Line No.";
-                Visible=FALSE;
-                Editable=FALSE }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
 
     { 51  ;1   ;Group     ;
                 GroupType=Group }
@@ -901,7 +938,7 @@ OBJECT Page 46 Sales Order Subform
       SalesCalcDiscByType@1008 : Codeunit 56;
       DocumentTotals@1007 : Codeunit 57;
       VATAmount@1005 : Decimal;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       Text001@1004 : TextConst 'ENU=You cannot use the Explode BOM function because a prepayment of the sales order has been invoiced.;FRA=Vous ne pouvez pas utiliser la fonction êclater nomenclature car un acompte de la commande vente a ÇtÇ facturÇ.';
       ItemPanelVisible@19014573 : Boolean INDATASET;
       TypeChosen@1018 : Boolean;
@@ -1165,6 +1202,9 @@ OBJECT Page 46 Sales Order Subform
     END;
 
     BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

@@ -2,8 +2,9 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
+    Date=22/07/15;
+    Time=19:00:00;
+    Modified=Yes;
     Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
   }
   PROPERTIES
@@ -48,6 +49,7 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
       Text10801@1120002 : TextConst 'ENU=Simulation journals only work with G/L accounts.;FRA=Les journaux de simulation ne fonctionnent qu''avec des comptes g‚n‚raux.';
       SalesDocAlreadyExistsErr@1026 : TextConst '@@@="%1 = Document Type; %2 = Document No.";ENU=Sales %1 %2 already exists.;FRA=Le document %1 vente %2 existe d‚j….';
       PurchDocAlreadyExistsErr@1025 : TextConst '@@@="%1 = Document Type; %2 = Document No.";ENU=Purchase %1 %2 already exists.;FRA=Le document %1 achat %2 existe d‚j….';
+      GenJnlTemplate2@1000000000 : Record 80;
 
     PROCEDURE RunCheck@4(VAR GenJnlLine@1000 : Record 81);
     VAR
@@ -380,14 +382,21 @@ OBJECT Codeunit 11 Gen. Jnl.-Check Line
         No[4] := "Salespers./Purch. Code";
         TableID[5] := DATABASE::Campaign;
         No[5] := "Campaign No.";
-        IF NOT DimMgt.CheckDimValuePosting(TableID,No,"Dimension Set ID") THEN
-          IF "Line No." <> 0 THEN
-            ERROR(
-              Text012,
-              TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
-              DimMgt.GetDimValuePostingErr)
-          ELSE
-            ERROR(DimMgt.GetDimValuePostingErr);
+
+        IF GenJnlTemplate2.GET(GenJnlLine."Journal Template Name") THEN   //MODIF JOH1.0 du 18/03/2015
+         IF NOT (GenJnlTemplate2.Type = GenJnlTemplate2.Type::Payments) THEN //MODIF JOH1.0 du 18/03/2015
+          IF NOT (GenJnlTemplate2.Type = GenJnlTemplate2.Type::"Cash Receipts") THEN  //MODIF JOH1.0 du 18/03/2015
+          BEGIN //MODIF JOH1.0 du 18/03/2015
+
+           IF NOT DimMgt.CheckDimValuePosting(TableID,No,"Dimension Set ID") THEN
+             IF "Line No." <> 0 THEN
+               ERROR(
+                 Text012,
+                 TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
+                 DimMgt.GetDimValuePostingErr)
+             ELSE
+               ERROR(DimMgt.GetDimValuePostingErr);
+          END;//MODIF JOH1.0 du 18/03/2015
       END;
 
       IF CostAccSetup.GET THEN

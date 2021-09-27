@@ -1,0 +1,75 @@
+OBJECT Page 50055 Vendor Doc. Payment
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/08/16;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=JX-VSC4.1-PBD;
+  }
+  PROPERTIES
+  {
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table38;
+    PageType=Card;
+    OnAfterGetRecord=BEGIN
+                       CALCFIELDS("Amount Including VAT");
+                       AmountToPay := "Amount Including VAT" - "Amount Prepaid";
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Paiement Document Fournisseur;
+                GroupType=Group }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Document Type" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="No." }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Pay-to Vendor No." }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Total Amount" }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Total Amount Incl. VAT" }
+
+    { 1000000009;2;Field  ;
+                Name=Montant … Payer;
+                SourceExpr=AmountToPay;
+                Style=Unfavorable;
+                StyleExpr=TRUE }
+
+    { 1000000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1000000008;1;Part   ;
+                PagePartID=Page9096;
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      AmountToPay@1000000000 : Decimal;
+
+    PROCEDURE ReturnAmount@1000000000() : Decimal;
+    BEGIN
+      EXIT(AmountToPay);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

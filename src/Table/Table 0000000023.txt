@@ -2,15 +2,33 @@ OBJECT Table 23 Vendor
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=18/11/15;
+    Time=18:54:50;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,JX-VSC1.0-LAB-XAD;
   }
   PROPERTIES
   {
     Permissions=TableData 25=r;
     DataCaptionFields=No.,Name;
-    OnInsert=BEGIN
+    OnInsert=VAR
+               Lrec_VendorBankAccount@1000000000 : Record 288;
+             BEGIN
+
+               //DEBUT MODIF JX-XAD 07/06/2011
+               Lrec_VendorBankAccount.RESET;
+               Lrec_VendorBankAccount.SETFILTER(Lrec_VendorBankAccount."Vendor No.","No.");
+               IF Lrec_VendorBankAccount.COUNT = 0 THEN
+               BEGIN
+                 Lrec_VendorBankAccount.INIT;
+                 Lrec_VendorBankAccount."Vendor No." := "No.";
+                 Lrec_VendorBankAccount.VALIDATE(Lrec_VendorBankAccount.Code,'1');
+                 Lrec_VendorBankAccount.INSERT;
+                 IF "Default Bank Account Code" = '' THEN
+                   VALIDATE("Default Bank Account Code",'1');
+               END;
+               //FIN MODIF JX-XAD 07/06/2011
+
                IF "No." = '' THEN BEGIN
                  PurchSetup.GET;
                  PurchSetup.TESTFIELD("Vendor Nos.");
@@ -53,7 +71,7 @@ OBJECT Table 23 Vendor
                THEN BEGIN
                  MODIFY;
                  UpdateContFromVend.OnModify(Rec);
-                 FIND;
+               //  FIND;
                END;
              END;
 
@@ -151,6 +169,11 @@ OBJECT Table 23 Vendor
                                                                 END;
                                                                 IF "Invoice Disc. Code" = '' THEN
                                                                   "Invoice Disc. Code" := "No.";
+
+                                                                // Migration 2015 (Propri‚t‚ Maxlength … 10 sur le formulaire)
+                                                                IF STRLEN("No.") > 10 THEN
+                                                                 ERROR(Text50000);
+                                                                //
                                                               END;
 
                                                    CaptionML=[ENU=No.;
@@ -1068,6 +1091,11 @@ OBJECT Table 23 Vendor
                                                    CaptionML=[ENU=Payment in progress (LCY);
                                                               FRA=RŠglement en cours DS];
                                                    Editable=No }
+    { 50000;  ;Registration No.    ;Code15        ;CaptionML=[ENU=Registration No.;
+                                                              FRA=Nø SIRET/Immat.] }
+    { 50010;  ;Default Bank Account Code;Code10   ;TableRelation="Vendor Bank Account".Code WHERE (Vendor No.=FIELD(No.));
+                                                   CaptionML=[ENU=Default Bank Account Code;
+                                                              FRA=Code compte bancaire par d‚faut] }
   }
   KEYS
   {
@@ -1118,6 +1146,7 @@ OBJECT Table 23 Vendor
       Text009@1027 : TextConst 'ENU=Reconciling IC transactions may be difficult if you change IC Partner Code because this %1 has ledger entries in a fiscal year that has not yet been closed.\ Do you still want to change the IC Partner Code?;FRA=Le rapprochement des transactions IC risque de poser problŠme si vous modifiez le code partenaire IC car ce/cette %1 comporte des ‚critures comptables appartenant … un exercice comptable qui n''a pas encore ‚t‚ cl“tur‚.\ Souhaitez-vous quand mˆme modifier le code partenaire IC ?';
       Text010@1026 : TextConst 'ENU=You cannot change the contents of the %1 field because this %2 has one or more open ledger entries.;FRA=Vous ne pouvez pas modifier la valeur du champ %1 car ce/cette %2 comporte une ou plusieurs ‚critures comptables ouvertes.';
       Text011@1004 : TextConst 'ENU=Before you can use Online Map, you must fill in the Online Map Setup window.\See Setting Up Online Map in Help.;FRA=Avant de pouvoir utiliser Online Map, vous devez compl‚ter la fenˆtre Configuration Online Map.\Consultez la section Configuration d''Online Map dans l''Aide.';
+      Text50000@1000000000 : TextConst 'FRA=La longueur maximum du code fournisseur est de 10 caractŠres';
 
     PROCEDURE AssistEdit@2(OldVend@1000 : Record 23) : Boolean;
     VAR
@@ -1285,6 +1314,16 @@ OBJECT Table 23 Vendor
     END;
 
     BEGIN
+    {
+
+      //Ajout LAB du 04/11/08
+      //Ajout du champ 50000 Nø SIRET/Immat.
+
+      MODIF JX-XAD 07/06/2011
+      Lors de la cr‚ation d'une fiche fournisseur, un fiche bancaire de code '1' est cr‚‚e ainsi que le code bancaire par d‚faut
+
+      // JX-ABE-18/11/2015 OnModdify() Mettre en commentaire le Find
+    }
     END.
   }
 }

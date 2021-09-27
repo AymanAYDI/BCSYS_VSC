@@ -1,0 +1,61 @@
+OBJECT Page 50053 Mail Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=21/07/16;
+    Time=07:00:00;
+    Modified=Yes;
+    Version List=JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table50016;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1000000004;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000005;1 ;Action    ;
+                      CaptionML=FRA=Modifier Mail Type;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=MailSetup;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 NavPad@1000000000 : Codeunit 50009;
+                               BEGIN
+                                 NavPad.EditMailText(Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Mail Type" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr=Subject }
+
+  }
+  CODE
+  {
+    VAR
+      TextAide1@1000000000 : TextConst 'FRA=Syntaxe des champs de table :';
+      TextAide2@1000000001 : TextConst 'FRA=<NOFOUR> : Code fournisseur';
+      TextAide3@1000000002 : TextConst 'FRA=<NOMFOUR> : Nom du fournisseur';
+      TextAide4@1000000003 : TextConst 'FRA=<NOFAC> : No de facture';
+      TextAide5@1000000004 : TextConst 'FRA=<DATEFAC> : Date de facture';
+
+    BEGIN
+    END.
+  }
+}
+

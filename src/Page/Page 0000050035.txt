@@ -1,0 +1,137 @@
+OBJECT Page 50035 Modification d‚signation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 113=rm,
+                TableData 115=rm;
+    CaptionML=[ENU=Modify description;
+               FRA=Modification d‚signation];
+    SourceTable=Table2000000026;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 IF Rec.GET(Gcode_LineNo)THEN ;
+               END;
+
+    OnClosePage=BEGIN
+                  CurrPage.CLOSE;
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000001;1 ;Action    ;
+                      CaptionML=[ENU=Ok;
+                                 FRA=Ok];
+                      Promoted=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+
+                                 //TEST sur le type de document Text001: Facture Text003 : Avoir
+                                 IF Gtext_TypeDocument = Text001 THEN
+                                 BEGIN
+                                   IF Grec_SalesInvLine.GET(Gcode_DocumentNo,Gcode_LineNo) THEN
+                                   BEGIN
+                                     Grec_SalesInvLine.Description := Gtext_Designation;
+                                     Grec_SalesInvLine.MODIFY;
+                                     CurrPage.CLOSE;
+                                   END;
+                                 END;
+
+                                 IF Gtext_TypeDocument = Text003 THEN
+                                 BEGIN
+                                   IF Grec_SalesCrMemoLine.GET(Gcode_DocumentNo,Gcode_LineNo) THEN
+                                   BEGIN
+                                     Grec_SalesCrMemoLine.Description := Gtext_Designation;
+                                     Grec_SalesCrMemoLine.MODIFY;
+                                     CurrPage.CLOSE;
+                                   END;
+                                 END;
+                               END;
+                                }
+      { 1000000000;1 ;Action    ;
+                      CaptionML=[ENU=Cancel;
+                                 FRA=Annuler];
+                      Promoted=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group      }
+
+    { 1000000002;2;Field  ;
+                CaptionClass=FORMAT (Gtext_TypeDocument +' : '+Gcode_DocumentNo+'          '+Gtext_No+'  '+Gcode_ItemNo);
+                Style=Standard;
+                StyleExpr=TRUE }
+
+    { 1000000004;2;Field  ;
+                Name=Designation;
+                CaptionML=[ENU=Description;
+                           FRA=D‚signation];
+                SourceExpr=Gtext_Designation }
+
+  }
+  CODE
+  {
+    VAR
+      Gcode_DocumentNo@1000000000 : Code[20];
+      Gcode_LineNo@1000000001 : Integer;
+      Gcode_ItemNo@1000000002 : Code[20];
+      Text002@1000000003 : TextConst 'ENU=No.;FRA=Nø :';
+      Gtext_Designation@1000000005 : Text[50];
+      Grec_SalesInvLine@1000000006 : Record 113;
+      Grec_SalesCrMemoLine@1000000007 : Record 115;
+      Text003@1000000009 : TextConst 'ENU=Credit Memo;FRA=Avoir';
+      Gtext_TypeDocument@1000000010 : Text[30];
+      Text001@1000000004 : TextConst 'ENU=Invoice;FRA=Facture';
+      Gtext_No@1000000008 : Text[10];
+
+    PROCEDURE SetPostedInvoice@1000000000(Prec_SalesInvLine@1000000000 : Record 113);
+    BEGIN
+      Gcode_DocumentNo := Prec_SalesInvLine."Document No.";
+      Gcode_LineNo := Prec_SalesInvLine."Line No.";
+      Gcode_ItemNo := Prec_SalesInvLine."No.";
+      Gtext_Designation := Prec_SalesInvLine.Description;
+      Gtext_TypeDocument := Text001;
+      Gtext_No := Text002;
+      IF Gcode_ItemNo = '' THEN Gtext_No :='';
+    END;
+
+    PROCEDURE SetPostedCreditMemo@1000000001(Prec_SalesCrMemoLine@1000000000 : Record 115);
+    BEGIN
+      Gcode_DocumentNo := Prec_SalesCrMemoLine."Document No.";
+      Gcode_LineNo := Prec_SalesCrMemoLine."Line No.";
+      Gcode_ItemNo := Prec_SalesCrMemoLine."No.";
+      Gtext_Designation := Prec_SalesCrMemoLine.Description;
+      Gtext_TypeDocument := Text003;
+      Gtext_No := Text002;
+      IF Gcode_ItemNo = '' THEN Gtext_No :=''
+    END;
+
+    BEGIN
+    {
+      //CREATION du 25/04/2011 JX-AUD
+      //Modification d‚signation pour les documents facture et avoir enregistr‚s
+
+      //JX-AUD du 30/04/2013
+      //Ajout des permissions de modification pour les tables 113 & 115 dans les propri‚t‚s du formulaire
+    }
+    END.
+  }
+}
+

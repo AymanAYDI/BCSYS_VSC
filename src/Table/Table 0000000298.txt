@@ -2,9 +2,10 @@ OBJECT Table 298 Issued Reminder Line
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-VSC2.0-XAD;
   }
   PROPERTIES
   {
@@ -145,6 +146,10 @@ OBJECT Table 298 Issued Reminder Line
     { 101 ;   ;System-Created Entry;Boolean       ;CaptionML=[ENU=System-Created Entry;
                                                               FRA=êcriture systäme];
                                                    Editable=No }
+    { 50000;  ;Agent               ;Code20        ;CaptionML=[ENU=Agent;
+                                                              FRA=Mandataire] }
+    { 50001;  ;Paying agent        ;Boolean       ;CaptionML=[ENU=Paying agent;
+                                                              FRA=Mandataire payeur] }
   }
   KEYS
   {
@@ -178,6 +183,11 @@ OBJECT Table 298 Issued Reminder Line
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 03/09/2010
+      Ajout des champs 50000 (Agent) et 50001 (Paying agent)
+    }
     END.
   }
 }

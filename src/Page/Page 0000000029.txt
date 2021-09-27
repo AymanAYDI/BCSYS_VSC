@@ -2,9 +2,10 @@ OBJECT Page 29 Vendor Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-XAD,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -15,6 +16,15 @@ OBJECT Page 29 Vendor Ledger Entries
     SourceTable=Table25;
     DataCaptionFields=Vendor No.;
     PageType=List;
+    OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 16/09/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 16/09/2008
+               END;
+
     OnAfterGetRecord=BEGIN
                        StyleTxt := SetStyle;
                      END;
@@ -178,6 +188,9 @@ OBJECT Page 29 Vendor Ledger Entries
                 Editable=FALSE;
                 StyleExpr=StyleTxt }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="Transaction No." }
+
     { 51  ;2   ;Field     ;
                 SourceExpr="External Document No.";
                 Editable=FALSE }
@@ -267,6 +280,12 @@ OBJECT Page 29 Vendor Ledger Entries
                 SourceExpr="Due Date";
                 StyleExpr=StyleTxt }
 
+    { 1000000004;2;Field  ;
+                SourceExpr="Document Type Prepaid" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Document Prepaid" }
+
     { 18  ;2   ;Field     ;
                 SourceExpr="Pmt. Discount Date" }
 
@@ -316,9 +335,18 @@ OBJECT Page 29 Vendor Ledger Entries
                 SourceExpr="Reversed Entry No.";
                 Visible=FALSE }
 
+    { 1000000002;2;Field  ;
+                SourceExpr="Closed by Entry No." }
+
     { 30  ;2   ;Field     ;
                 SourceExpr="Entry No.";
                 Editable=FALSE }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Yooz Token link" }
 
     { 290 ;2   ;Field     ;
                 SourceExpr="Exported to Payment File" }
@@ -341,9 +369,14 @@ OBJECT Page 29 Vendor Ledger Entries
   {
     VAR
       Navigate@1000 : Page 344;
+      UserMgt@1000000000 : Codeunit 5700;
       StyleTxt@1001 : Text;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 16/09/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+    }
     END.
   }
 }

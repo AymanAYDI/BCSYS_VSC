@@ -2,9 +2,10 @@ OBJECT Page 54 Purchase Order Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00.01,JX-VSC1.0-LAB;
   }
   PROPERTIES
   {
@@ -225,7 +226,12 @@ OBJECT Page 54 Purchase Order Subform
                 ContainerType=ContentArea }
 
     { 1   ;1   ;Group     ;
+                Name=Tableaulignes;
                 GroupType=Repeater }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Line No.";
+                Visible=FALSE }
 
     { 2   ;2   ;Field     ;
                 SourceExpr=Type;
@@ -285,14 +291,6 @@ OBJECT Page 54 Purchase Order Subform
                 SourceExpr=Nonstock;
                 Visible=FALSE }
 
-    { 14  ;2   ;Field     ;
-                SourceExpr="VAT Prod. Posting Group";
-                Visible=FALSE;
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-                            }
-
     { 6   ;2   ;Field     ;
                 SourceExpr=Description }
 
@@ -305,7 +303,8 @@ OBJECT Page 54 Purchase Order Subform
                 Visible=FALSE }
 
     { 74  ;2   ;Field     ;
-                SourceExpr="Location Code" }
+                SourceExpr="Location Code";
+                Visible=FALSE }
 
     { 102 ;2   ;Field     ;
                 SourceExpr="Bin Code";
@@ -322,15 +321,12 @@ OBJECT Page 54 Purchase Order Subform
 
     { 42  ;2   ;Field     ;
                 BlankZero=Yes;
-                SourceExpr="Reserved Quantity" }
-
-    { 9   ;2   ;Field     ;
-                BlankZero=Yes;
-                SourceExpr="Job Remaining Qty.";
+                SourceExpr="Reserved Quantity";
                 Visible=FALSE }
 
     { 36  ;2   ;Field     ;
                 SourceExpr="Unit of Measure Code";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -338,7 +334,8 @@ OBJECT Page 54 Purchase Order Subform
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Unit of Measure";
-                Visible=FALSE;
+                Visible=TRUE;
+                Editable=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -389,6 +386,7 @@ OBJECT Page 54 Purchase Order Subform
     { 16  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Discount %";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -465,6 +463,7 @@ OBJECT Page 54 Purchase Order Subform
     { 66  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. to Assign";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -475,6 +474,7 @@ OBJECT Page 54 Purchase Order Subform
     { 54  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. Assigned";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -488,10 +488,6 @@ OBJECT Page 54 Purchase Order Subform
 
     { 128 ;2   ;Field     ;
                 SourceExpr="Job Task No.";
-                Visible=FALSE }
-
-    { 7   ;2   ;Field     ;
-                SourceExpr="Job Planning Line No.";
                 Visible=FALSE }
 
     { 130 ;2   ;Field     ;
@@ -534,27 +530,6 @@ OBJECT Page 54 Purchase Order Subform
                 SourceExpr="Job Line Disc. Amount (LCY)";
                 Visible=FALSE }
 
-    { 34  ;2   ;Field     ;
-                SourceExpr="Requested Receipt Date";
-                Visible=FALSE }
-
-    { 90  ;2   ;Field     ;
-                SourceExpr="Promised Receipt Date";
-                Visible=FALSE }
-
-    { 92  ;2   ;Field     ;
-                SourceExpr="Planned Receipt Date" }
-
-    { 100 ;2   ;Field     ;
-                SourceExpr="Expected Receipt Date" }
-
-    { 94  ;2   ;Field     ;
-                SourceExpr="Order Date" }
-
-    { 96  ;2   ;Field     ;
-                SourceExpr="Lead Time Calculation";
-                Visible=FALSE }
-
     { 84  ;2   ;Field     ;
                 SourceExpr="Planning Flexibility";
                 Visible=FALSE }
@@ -579,6 +554,15 @@ OBJECT Page 54 Purchase Order Subform
                 SourceExpr=Finished;
                 Visible=FALSE }
 
+    { 9   ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Job Remaining Qty.";
+                Visible=FALSE }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr="Job Planning Line No.";
+                Visible=FALSE }
+
     { 38  ;2   ;Field     ;
                 SourceExpr="Whse. Outstanding Qty. (Base)";
                 Visible=FALSE }
@@ -587,13 +571,10 @@ OBJECT Page 54 Purchase Order Subform
                 SourceExpr="Inbound Whse. Handling Time";
                 Visible=FALSE }
 
-    { 46  ;2   ;Field     ;
-                SourceExpr="Blanket Order No.";
-                Visible=FALSE }
-
-    { 48  ;2   ;Field     ;
-                SourceExpr="Blanket Order Line No.";
-                Visible=FALSE }
+    { 1000000002;2;Field  ;
+                SourceExpr="Document No.";
+                Visible=FALSE;
+                Editable=FALSE }
 
     { 52  ;2   ;Field     ;
                 SourceExpr="Appl.-to Item Entry";
@@ -610,7 +591,7 @@ OBJECT Page 54 Purchase Order Subform
     { 300 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[3];
                 CaptionClass='1,2,3';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(3,ShortcutDimCode[3]);
                            END;
@@ -623,7 +604,7 @@ OBJECT Page 54 Purchase Order Subform
     { 302 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[4];
                 CaptionClass='1,2,4';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(4,ShortcutDimCode[4]);
                            END;
@@ -636,7 +617,7 @@ OBJECT Page 54 Purchase Order Subform
     { 304 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[5];
                 CaptionClass='1,2,5';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(5,ShortcutDimCode[5]);
                            END;
@@ -649,7 +630,7 @@ OBJECT Page 54 Purchase Order Subform
     { 306 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[6];
                 CaptionClass='1,2,6';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(6,ShortcutDimCode[6]);
                            END;
@@ -675,7 +656,7 @@ OBJECT Page 54 Purchase Order Subform
     { 310 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[8];
                 CaptionClass='1,2,8';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(8,ShortcutDimCode[8]);
                            END;
@@ -685,40 +666,78 @@ OBJECT Page 54 Purchase Order Subform
                          END;
                           }
 
-    { 43  ;1   ;Group     ;
-                GroupType=Group }
+    { 1000000013;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
 
-    { 37  ;2   ;Group     ;
-                GroupType=Group }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
 
-    { 35  ;3   ;Field     ;
-                Name=Invoice Discount Amount;
-                CaptionML=[ENU=Invoice Discount Amount;
-                           FRA=Montant remise facture];
-                SourceExpr=TotalPurchaseLine."Inv. Discount Amount";
-                AutoFormatType=1;
-                Editable=InvDiscAmountEditable;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled;
-                OnValidate=VAR
-                             PurchaseHeader@1000 : Record 38;
-                           BEGIN
-                             PurchaseHeader.GET("Document Type","Document No.");
-                             PurchCalcDiscByType.ApplyInvDiscBasedOnAmt(TotalPurchaseLine."Inv. Discount Amount",PurchaseHeader);
-                             CurrPage.UPDATE(FALSE);
+    { 1000000012;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="Requested Receipt Date";
+                Visible=FALSE }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Promised Receipt Date";
+                Visible=FALSE }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Planned Receipt Date";
+                Visible=FALSE }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Expected Receipt Date";
+                Visible=FALSE }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Order Date";
+                Visible=FALSE }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Lead Time Calculation";
+                Visible=FALSE }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="VAT Prod. Posting Group";
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
                            END;
                             }
 
-    { 33  ;3   ;Field     ;
-                Name=Invoice Disc. Pct.;
-                CaptionML=[ENU=Invoice Discount %;
-                           FRA=% remise facture];
-                DecimalPlaces=0:2;
-                SourceExpr=PurchCalcDiscByType.GetVendInvoiceDiscountPct(Rec);
-                Visible=TRUE;
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+    { 1000000003;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group" }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Blanket Order No.";
+                Visible=FALSE }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Blanket Order Line No.";
+                Visible=FALSE }
+
+    { 43  ;1   ;Group     ;
+                GroupType=Group }
 
     { 19  ;2   ;Group     ;
                 GroupType=Group }
@@ -783,7 +802,7 @@ OBJECT Page 54 Purchase Order Subform
       Text001@1007 : TextConst 'ENU=You cannot use the Explode BOM function because a prepayment of the purchase order has been invoiced.;FRA=Vous ne pouvez pas utiliser la fonction êclater nomenclature car un acompte de la commande achat a ÇtÇ facturÇ.';
       PurchCalcDiscByType@1010 : Codeunit 66;
       DocumentTotals@1017 : Codeunit 57;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       UpdateAllowedVar@1000 : Boolean;
       VATAmount@1018 : Decimal;
       InvDiscAmountEditable@1016 : Boolean;
@@ -909,6 +928,15 @@ OBJECT Page 54 Purchase Order Subform
     END;
 
     BEGIN
+    {
+      Modif JX-LAB du 18/09/2008
+      Mise en visible des champs analytiques
+
+      Modif JX-LAB du 30/10/2008
+      Personalisation des colonnes visibles
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

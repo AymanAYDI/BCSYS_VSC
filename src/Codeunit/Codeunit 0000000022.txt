@@ -2,9 +2,10 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
+    Date=21/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00.00.38798,NAVFR8.00.00.38798;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,NAVFR8.00.00.38798,JX-VSC1.0-XAD;
   }
   PROPERTIES
   {
@@ -123,6 +124,8 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
       Text031@1093 : TextConst '@@@="%2 = Lot No. %3 = Serial No. Both are tracking numbers.";ENU=You cannot invoice the item %1 with item tracking number %2 %3 in this purchase order before the associated sales order %4 has been invoiced.;FRA=Vous ne pouvez pas facturer l''article %1 avec le num‚ro de tra‡abilit‚ %2 %3 dans cette commande achat avant que la commande vente associ‚e %4 ne soit factur‚e.';
       Text032@1094 : TextConst 'ENU=You cannot invoice item %1 in this purchase order before the associated sales order %2 has been invoiced.;FRA=Vous ne pouvez pas facturer l''article %1 dans cette commande achat avant que la commande vente associ‚e %2 ne soit factur‚e.';
       Text033@1040 : TextConst 'ENU=Quantity must be -1, 0 or 1 when Serial No. is stated.;FRA=La quantit‚ doit ˆtre -1, 0 ou 1 lorsqu''un nø de s‚rie est indiqu‚.';
+      Grec_Temp@1000000001 : Record 50001;
+      Gcode_Utilisateur@1000000000 : Code[50];
 
     PROCEDURE RunWithCheck@13(VAR ItemJnlLine2@1000 : Record 83);
     BEGIN
@@ -857,7 +860,16 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
         ValueEntry."Document Line No." := "Document Line No.";
         ValueEntry."Document Date" := "Document Date";
         ValueEntry."External Document No." := "External Document No.";
-        ValueEntry."User ID" := USERID;
+
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //ValueEntry."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        ValueEntry."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
+
         ValueEntry."Source Code" := "Source Code";
         ValueEntry."Reason Code" := "Reason Code";
         ValueEntry."Journal Batch Name" := "Journal Batch Name";
@@ -1956,7 +1968,16 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
           ItemReg."Creation Date" := TODAY;
           ItemReg."Source Code" := "Source Code";
           ItemReg."Journal Batch Name" := "Journal Batch Name";
-          ItemReg."User ID" := USERID;
+
+          //DEBUT MODIF JX-XAD 10/07/2009
+          //ItemReg."User ID" := USERID;
+          IF Grec_Temp.GET(-1) THEN
+            Gcode_Utilisateur := Grec_Temp.Compte
+          ELSE
+            Gcode_Utilisateur := USERID;
+          ItemReg."User ID" := Gcode_Utilisateur;
+          //FIN MODIF JX-XAD 10/07/2009
+
           ItemReg.INSERT;
         END ELSE BEGIN
           IF ((ItemLedgEntryNo < ItemReg."From Entry No.") AND (ItemLedgEntryNo <> 0)) OR
@@ -2253,7 +2274,16 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
         ValueEntry."Location Code" := ItemLedgEntry."Location Code";
         ValueEntry."Variant Code" := ItemLedgEntry."Variant Code";
         ValueEntry."Journal Batch Name" := "Journal Batch Name";
-        ValueEntry."User ID" := USERID;
+
+        //DEBUT MODIF JX-XAD 10/07/2009
+        //ValueEntry."User ID" := USERID;
+        IF Grec_Temp.GET(-1) THEN
+          Gcode_Utilisateur := Grec_Temp.Compte
+        ELSE
+          Gcode_Utilisateur := USERID;
+        ValueEntry."User ID" := Gcode_Utilisateur;
+        //FIN MODIF JX-XAD 10/07/2009
+
         ValueEntry."Drop Shipment" := "Drop Shipment";
         ValueEntry."Reason Code" := "Reason Code";
         ValueEntry."Return Reason Code" := "Return Reason Code";
@@ -4789,6 +4819,12 @@ OBJECT Codeunit 22 Item Jnl.-Post Line
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 10/07/2009
+      Mise … jour du code utilisateur affect‚ au lieu du USER ID pour les documents enregistr‚s
+      Voir aussi les code unit 12, 90 et 91
+    }
     END.
   }
 }

@@ -2,9 +2,10 @@ OBJECT Codeunit 440 Approvals Mgt Notification
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=21/09/15;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC1.1-LAB,JX-VSC1.3-XAD;
   }
   PROPERTIES
   {
@@ -55,6 +56,13 @@ OBJECT Codeunit 440 Approvals Mgt Notification
       MailCreated@1006 : Boolean;
       OpenBracketTok@1025 : TextConst '@@@={Locked};ENU=(;FRA=(';
       CloseBracketTok@1027 : TextConst '@@@={Locked};ENU=);FRA=)';
+      Text50000@1000000003 : TextConst 'ENU=Approved;FRA=Approuv‚';
+      Text50001@1000000002 : TextConst 'ENU=has been approved.;FRA=a ‚t‚ approuv‚.';
+      Text50002@1000000001 : TextConst 'ENU=To view the approved document, please use the following link:;FRA=Pour afficher le document approuv‚, utilisez le lien suivant :';
+      Text50003@1000000000 : TextConst 'FRA=Vous avez d‚pass‚ le d‚lai de validation de vos documents dans NAVISION.    <br>Merci de bien vouloir faire le n‚cessaire pour valider dans les plus brefs d‚lais (sauf problŠme … nous remonter).<br>    Nous sommes tenus … un paiement r‚gulier de nos fournisseurs, dans un d‚lai qui ne doit d‚passer les 60 jours.<br> <br>Pour afficher vos documents pour approbation, utilisez le lien suivant :';
+      gRecAppSetup@1000000004 : Record 452;
+      TemplateFile@1000000005 : File;
+      Ligne@1000000006 : Text;
 
     PROCEDURE SendSalesApprovalsMail@1(SalesHeader@1000 : Record 36;ApprovalEntry@1001 : Record 454);
     BEGIN
@@ -504,12 +512,22 @@ OBJECT Codeunit 440 Approvals Mgt Notification
           END ELSE
             Body := Body + InSReadChar;
           CASE CharNo OF
-            '1':
-              Body := '';
-            '2':
-              Body := STRSUBSTNO(Body,Text004);
-            '5':
-              Body := STRSUBSTNO(Body,GetApprovalEntriesWinUri);
+      // Modif JX-LAB du 05/10/09
+      // Modification du message pour email approbations ‚chues
+
+      //      '1': Body := STRSUBSTNO(Body,Text004);
+            '1': Body := STRSUBSTNO(Body,Text50003);
+
+      // Fin Modif JX-LAB du 05/10/09
+
+            '2': Body := STRSUBSTNO(Body,APPLICATIONPATH);
+
+      // Modif JX-LAB du 05/10/09
+      // Modification du message pour email approbations ‚chues
+
+            '5': Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+
+      // Fin Modif JX-LAB du 05/10/09
             '19':
               Body := STRSUBSTNO(Body,GetApprovalEntriesWebUri);
             '20':
@@ -607,7 +625,7 @@ OBJECT Codeunit 440 Approvals Mgt Notification
       END;
     END;
 
-    PROCEDURE FillSalesTemplate@14(VAR Body@1000 : Text;FieldNo@1001 : Text[30];Header@1002 : Record 36;AppEntry@1003 : Record 454;CalledFrom@1004 : 'Approve,Cancel,Reject,Delegate');
+    PROCEDURE FillSalesTemplate@14(VAR Body@1000 : Text;FieldNo@1001 : Text[30];Header@1002 : Record 36;AppEntry@1003 : Record 454;CalledFrom@1004 : 'Approve,Cancel,Reject,Delegate,Approved');
     BEGIN
       CASE FieldNo OF
         '1':
@@ -624,12 +642,91 @@ OBJECT Codeunit 440 Approvals Mgt Notification
               Body := STRSUBSTNO(Body,Text016);
             CalledFrom::Delegate:
               Body := STRSUBSTNO(Body,Text020);
+
+            // Modif JX-LAB du 21/04/09
+            // Gestion des mails d'approbation descendants (Approuv²s)
+
+            CalledFrom::Approved: Body := STRSUBSTNO(Body,Text50001);   //MODIF JX-XAD 05/08/2010 suite migration
+
+            // Fin modif JX-LAB du 21/04/09
+
           END;
         '4':
+         BEGIN
           IF CalledFrom IN [CalledFrom::Approve,CalledFrom::Cancel,CalledFrom::Reject,CalledFrom::Delegate] THEN
             Body := '';
-        '5':
-          Body := STRSUBSTNO(Body,GetApprovalEntriesWinUri);
+
+         // Modif JX-LAB du 21/04/09
+         // Gestion des mails d'approbation descendants (Approuv‚s)
+
+          IF CalledFrom = CalledFrom::Approved THEN
+            Body := STRSUBSTNO(Body,Text50002);   //MODIF JX-XAD 05/08/2010 suite migration
+
+         // Fin modif JX-LAB du 21/04/09
+
+         END;
+
+         // Modif JX-LAB du 21/04/09
+         // Gestion des mails d'approbation descendants (Approuv‚s)
+
+         //'5':
+         //Body := STRSUBSTNO(Body,GetApprovalEntriesWinUri);
+
+         '5': CASE CalledFrom OF
+             CalledFrom::Approve: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+             CalledFrom::Cancel: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+             CalledFrom::Reject:
+               BEGIN
+                 gRecAppSetup.FIND('-');
+                 IF Header."Document Type" = Header."Document Type"::Quote THEN
+                   Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 41, Header))
+                 ELSE
+                   IF Header."Document Type" = Header."Document Type"::Order THEN
+                     Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 42, Header))
+                   ELSE
+                     IF Header."Document Type" = Header."Document Type"::Invoice THEN
+                       Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 43, Header))
+                     ELSE
+                       IF Header."Document Type" = Header."Document Type"::"Credit Memo" THEN
+                         Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 44, Header))
+                       ELSE
+                         IF Header."Document Type" = Header."Document Type"::"Blanket Order" THEN
+                           Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 507, Header))
+                         ELSE
+                           IF Header."Document Type" = Header."Document Type"::"Return Order" THEN
+                             Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 6630, Header))
+               END;
+             CalledFrom::Delegate: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+
+             //DEBUT MODIF JX-XAD 05/08/2010 suite migration (approved n'existe plus)
+
+             CalledFrom::Approved:
+               BEGIN
+                 gRecAppSetup.FIND('-');
+                 IF Header."Document Type" = Header."Document Type"::Quote THEN
+                   Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 41, Header))
+                 ELSE
+                   IF Header."Document Type" = Header."Document Type"::Order THEN
+                     Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 42, Header))
+                   ELSE
+                     IF Header."Document Type" = Header."Document Type"::Invoice THEN
+                       Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 43, Header))
+                     ELSE
+                       IF Header."Document Type" = Header."Document Type"::"Credit Memo" THEN
+                         Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 44, Header))
+                       ELSE
+                         IF Header."Document Type" = Header."Document Type"::"Blanket Order" THEN
+                           Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 507, Header))
+                         ELSE
+                           IF Header."Document Type" = Header."Document Type"::"Return Order" THEN
+                             Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 6630, Header))
+               END;
+
+             //FIN MODIF JX-XAD 05/08/2010
+
+           END;
+
+       // Fin modif JX-LAB du 21/04/09
         '6':
           Body := STRSUBSTNO(Body,Text004);
         '7':
@@ -667,7 +764,7 @@ OBJECT Codeunit 440 Approvals Mgt Notification
       END;
     END;
 
-    PROCEDURE FillPurchaseTemplate@15(VAR Body@1000 : Text;FieldNo@1001 : Text[30];Header@1002 : Record 38;AppEntry@1003 : Record 454;CalledFrom@1004 : 'Approve,Cancel,Reject,Delegate');
+    PROCEDURE FillPurchaseTemplate@15(VAR Body@1000 : Text;FieldNo@1001 : Text[30];Header@1002 : Record 38;AppEntry@1003 : Record 454;CalledFrom@1004 : 'Approve,Cancel,Reject,Delegate,Approved');
     BEGIN
       CASE FieldNo OF
         '1':
@@ -684,12 +781,93 @@ OBJECT Codeunit 440 Approvals Mgt Notification
               Body := STRSUBSTNO(Body,Text016);
             CalledFrom::Delegate:
               Body := STRSUBSTNO(Body,Text020);
+
+      // Modif JX-LAB du 21/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+
+            CalledFrom::Approved:
+              Body := STRSUBSTNO(Body,Text50001);   //MODIF JX-XAD 05/08/2010 suite migration
+
+      // Fin modif JX-LAB du 21/04/09
+
           END;
         '4':
+         BEGIN
           IF CalledFrom IN [CalledFrom::Approve,CalledFrom::Cancel,CalledFrom::Reject,CalledFrom::Delegate] THEN
             Body := '';
-        '5':
-          Body := STRSUBSTNO(Body,GetApprovalEntriesWinUri);
+
+      // Modif JX-LAB du 21/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+
+
+          IF CalledFrom = CalledFrom::Approved THEN
+            Body := STRSUBSTNO(Body,Text50002);   //MODIF JX-XAD 05/08/2010 suite migration
+
+      // Fin modif JX-LAB du 21/04/09
+
+         END;
+
+      // Modif JX-LAB du 21/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+
+      //  '5':
+      //    Body := STRSUBSTNO(Body,GetApprovalEntriesWinUri);
+
+        '5': CASE CalledFrom OF
+              CalledFrom::Approve: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+              CalledFrom::Cancel: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+              CalledFrom::Reject:
+              BEGIN
+                gRecAppSetup.FIND('-');
+                IF Header."Document Type" = Header."Document Type"::Quote THEN
+                  Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, Header))
+                ELSE
+                  IF Header."Document Type" = Header."Document Type"::Order THEN
+                    Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50, Header))
+                  ELSE
+                    IF Header."Document Type" = Header."Document Type"::Invoice THEN
+                      Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, Header))
+                    ELSE
+                      IF Header."Document Type" = Header."Document Type"::"Credit Memo" THEN
+                        Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 52, Header))
+                      ELSE
+                        IF Header."Document Type" = Header."Document Type"::"Blanket Order" THEN
+                          Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 509, Header))
+                        ELSE
+                          IF Header."Document Type" = Header."Document Type"::"Return Order" THEN
+                            Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 6640, Header))
+              END;
+              CalledFrom::Delegate: Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 658));
+
+            //DEBUT MODIF JX-XAD 05/08/2010 suite migration (Approved n'existe plus)
+
+              CalledFrom::Approved:
+              BEGIN
+                gRecAppSetup.FIND('-');
+                IF Header."Document Type" = Header."Document Type"::Quote THEN
+                  Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, Header))
+                ELSE
+                  IF Header."Document Type" = Header."Document Type"::Order THEN
+                    Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50, Header))
+                  ELSE
+                    IF Header."Document Type" = Header."Document Type"::Invoice THEN
+                      Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, Header))
+                    ELSE
+                      IF Header."Document Type" = Header."Document Type"::"Credit Memo" THEN
+                        Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 52, Header))
+                      ELSE
+                        IF Header."Document Type" = Header."Document Type"::"Blanket Order" THEN
+                          Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 509, Header))
+                        ELSE
+                          IF Header."Document Type" = Header."Document Type"::"Return Order" THEN
+                            Body := STRSUBSTNO(Body,GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 6640, Header))
+              END;
+
+            //FIN MODIF JX-XAD 05/08/2010
+
+          END;
+
+      // Fin modif JX-LAB du 21/04/09
         '6':
           Body := STRSUBSTNO(Body,Text004);
         '7':
@@ -853,7 +1031,119 @@ OBJECT Codeunit 440 Approvals Mgt Notification
       EXIT(GETURL(CLIENTTYPE::Web,COMPANYNAME,OBJECTTYPE::Page,PAGE::"Approval Entries"));
     END;
 
+    PROCEDURE SendSalesApprovedMail@1000000001(SalesHeader@1000000000 : Record 36;ApprovalEntry@1000000001 : Record 454);
     BEGIN
+      SetApprovedTemplate(ApprovalEntry);
+      Subject := STRSUBSTNO(Text007,Text50000);
+      Body := Text013;
+
+      SMTP.CreateMessage(SenderName,FromUser,SenderAddress,Subject,Body,TRUE);
+      Body := '';
+
+      WHILE InStreamTemplate.EOS = FALSE DO BEGIN
+        InStreamTemplate.READTEXT(InSReadChar,1);
+        IF InSReadChar = '%' THEN BEGIN
+          SMTP.AppendBody(Body);
+          Body := InSReadChar;
+          IF InStreamTemplate.READTEXT(InSReadChar,1) <> 0 THEN;
+          IF (InSReadChar >= '0') AND (InSReadChar <= '9') THEN BEGIN
+            Body := Body + '1';
+            CharNo := InSReadChar;
+            WHILE (InSReadChar >= '0') AND (InSReadChar <= '9') DO BEGIN
+              IF InStreamTemplate.READTEXT(InSReadChar,1) <> 0 THEN;
+              IF (InSReadChar >= '0') AND (InSReadChar <= '9') THEN
+                CharNo := CharNo + InSReadChar;
+            END;
+          END ELSE
+            Body := Body + InSReadChar;
+          FillSalesTemplate(Body,CharNo,SalesHeader,ApprovalEntry,4);
+          SMTP.AppendBody(Body);
+          Body := InSReadChar;
+        END ELSE BEGIN
+          Body := Body + InSReadChar;
+          I := I + 1;
+          IF I = 500 THEN BEGIN
+            SMTP.AppendBody(Body);
+            Body := '';
+            I := 0;
+          END;
+        END;
+      END;
+      SMTP.AppendBody(Body);
+      SMTP.Send;
+    END;
+
+    PROCEDURE SendPurchaseApprovedMail@1000000000(PurchaseHeader@1000000000 : Record 38;ApprovalEntry@1000000001 : Record 454);
+    BEGIN
+      SetApprovedTemplate(ApprovalEntry);
+      Subject := STRSUBSTNO(Text007,Text50000);
+      Body := Text013;
+
+      SMTP.CreateMessage(SenderName,FromUser,SenderAddress,Subject,Body,TRUE);
+      Body := '';
+
+      WHILE InStreamTemplate.EOS = FALSE DO BEGIN
+        InStreamTemplate.READTEXT(InSReadChar,1);
+        IF InSReadChar = '%' THEN BEGIN
+          SMTP.AppendBody(Body);
+          Body := InSReadChar;
+          IF InStreamTemplate.READTEXT(InSReadChar,1) <> 0 THEN;
+          IF (InSReadChar >= '0') AND (InSReadChar <= '9') THEN BEGIN
+            Body := Body + '1';
+            CharNo := InSReadChar;
+            WHILE (InSReadChar >= '0') AND (InSReadChar <= '9') DO BEGIN
+              IF InStreamTemplate.READTEXT(InSReadChar,1) <> 0 THEN;
+              IF (InSReadChar >= '0') AND (InSReadChar <= '9') THEN
+                CharNo := CharNo + InSReadChar;
+            END;
+          END ELSE
+            Body := Body + InSReadChar;
+          FillPurchaseTemplate(Body,CharNo,PurchaseHeader,ApprovalEntry,4);
+          SMTP.AppendBody(Body);
+          Body := InSReadChar;
+        END ELSE BEGIN
+          Body := Body + InSReadChar;
+          I := I + 1;
+          IF I = 1500 THEN BEGIN
+            SMTP.AppendBody(Body);
+            Body := '';
+            I := 0;
+          END;
+        END;
+      END;
+      SMTP.AppendBody(Body);
+      SMTP.Send;
+    END;
+
+    PROCEDURE SetApprovedTemplate@1000000002(AppEntry@1000000000 : Record 454);
+    BEGIN
+      AppSetup.GET;
+      AppSetup.CALCFIELDS("Approved Template");
+      IF NOT AppSetup."Approved Template".HASVALUE THEN
+        ERROR(Text040);
+      AppSetup."Approved Template".CREATEINSTREAM(InStreamTemplate);
+      SenderName := COMPANYNAME;
+      CLEAR(SenderAddress);
+      CLEAR(Recipient);
+      GetEmailAddress(AppEntry);
+    END;
+
+    BEGIN
+    {
+
+      // Modif JX-LAB du 21/04/09
+      // Gestion des mails d'approbation descendants (Approuv‚s)
+      // et cr‚ation de 2 fonctions : SendSalesApprovedMail et SendPurchaseApprovedMail
+
+      // Modif JX-LAB du 05/10/09
+      // Modification du message pour email approbations ‚chues
+
+      //MODIF JX-XAD 05/08/2010
+      //Suite … la migration, l'option Approved n'existe plus
+
+      //MODIF JX-AUD 18/11/10
+      //Ajout de l'OptionString::Approved pour la variable CalledFrom et enlevement des commentaires de la modif de JX-XAD du 05/08/2010
+    }
     END.
   }
 }

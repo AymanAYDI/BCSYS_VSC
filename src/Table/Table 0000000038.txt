@@ -2,9 +2,10 @@ OBJECT Table 38 Purchase Header
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=17/10/18;
+    Time=16:43:03;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-VSC1.0-XAD,JX-VSC1.1-XAD-LAB,JX-VSC1.2-XAD,JX-VSC2.0-AUD,JX-VSC4.0-PBD,JX-YOOZ2,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -12,6 +13,18 @@ OBJECT Table 38 Purchase Header
     OnInsert=BEGIN
                IF NOT SkipInitialization THEN
                  InitInsert;
+
+               IF NOT Gbool_ImportGroupInvoice THEN  //JX-AUD du 06/05/14
+               BEGIN //JX-AUD du 06/05/14
+               // D‚but modif JX-XAD du 06/06/2008
+               // Assignation automatique de l'ID Utilisateur … la cr‚ation de documents achat.
+               Rec.VALIDATE(Rec."Assigned User ID",USERID);
+               // Fin modif JX-XAD du 06/06/2008
+               // D‚but ajout JX-XAD du 19/11/2008
+               Rec.VALIDATE(Rec."Original user",USERID);
+               Rec.VALIDATE(Rec."Creation date",TODAY);
+               // Fin ajout JX-XAD du 19/11/2008
+               END;//JX-AUD du 06/05/14
 
                IF GETFILTER("Buy-from Vendor No.") <> '' THEN
                  IF GETRANGEMIN("Buy-from Vendor No.") = GETRANGEMAX("Buy-from Vendor No.") THEN
@@ -153,6 +166,12 @@ OBJECT Table 38 Purchase Header
                                                                       PurchSetup.GET;
                                                                       "No. Series" := xRec."No. Series";
                                                                       InitRecord;
+
+                                                                      // D‚but ajout JX-XAD du 24/06/2009
+                                                                      IF xRec."Assigned User ID" <> '' THEN
+                                                                        "Assigned User ID" := xRec."Assigned User ID";
+                                                                      // Fin ajout JX-XAD du 24/06/2009
+
                                                                       IF xRec."Receiving No." <> '' THEN BEGIN
                                                                         "Receiving No. Series" := xRec."Receiving No. Series";
                                                                         "Receiving No." := xRec."Receiving No.";
@@ -524,7 +543,12 @@ OBJECT Table 38 Purchase Header
                                                                   "Prepmt. Cr. Memo No.","Prepmt. Cr. Memo No. Series",
                                                                   FIELDCAPTION("Prepmt. Cr. Memo No."),FIELDCAPTION("Prepmt. Cr. Memo No. Series"));
 
-                                                                VALIDATE("Document Date","Posting Date");
+                                                                // Modif LAB du 17/09/2009
+                                                                // Non modification de la date de document en fonction de la date comptable.
+
+                                                                //VALIDATE("Document Date","Posting Date");
+
+                                                                // Fin Modif LAB du 17/09/2009
 
                                                                 IF ("Document Type" IN ["Document Type"::Invoice,"Document Type"::"Credit Memo"]) AND
                                                                    NOT ("Posting Date" = xRec."Posting Date")
@@ -1893,6 +1917,107 @@ OBJECT Table 38 Purchase Header
 
                                                    CaptionML=[ENU=Assigned User ID;
                                                               FRA=Code utilisateur affect‚] }
+    { 50000;  ;Lines Amount        ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line"."Line Amount" WHERE (Document Type=FIELD(Document Type),
+                                                                                                        Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Montant des lignes;
+                                                   Editable=No;
+                                                   AutoFormatExpr="Currency Code" }
+    { 50001;  ;Original user       ;Code50        ;TableRelation="User Setup";
+                                                   CaptionML=[ENU=Original user;
+                                                              FRA=Utilisateur initial];
+                                                   Editable=Yes }
+    { 50002;  ;Creation date       ;Date          ;CaptionML=[ENU=Creation date;
+                                                              FRA=Date de cr‚ation];
+                                                   Editable=Yes }
+    { 50003;  ;Invoice receipt date;Date          ;CaptionML=[ENU=Invoice receipt date;
+                                                              FRA=Date r‚ception facture] }
+    { 50005;  ;Matricule No.       ;Code20        ;TableRelation=Matricule;
+                                                   OnValidate=BEGIN
+                                                                //Modif JX-AUD du 17/02/2012
+                                                                TESTFIELD(Status,Status::Open);
+                                                                IF "Matricule No." <> xRec."Matricule No." THEN
+                                                                  UpdatePurchLines(FIELDCAPTION("Matricule No."));
+
+                                                                //mise … jour des champs Nom prestataire et Pr‚nom prestataire du contrat
+                                                                IF Grec_Matricule.GET("Matricule No.") THEN
+                                                                BEGIN
+                                                                  IF  Grec_Contract.GET("Quote No.") OR Grec_Contract.GET("No.")  THEN
+                                                                  BEGIN
+                                                                    Grec_Contract."Nom prestataire" := Grec_Matricule."Provider name";
+                                                                    Grec_Contract."Pr‚nom prestataire" := Grec_Matricule."Provider first name";
+                                                                    Grec_Contract.MODIFY;
+                                                                  END;
+                                                                END;
+                                                                //Fin modif JX-AUD du 17/02/2012
+                                                              END;
+
+                                                   CaptionML=FRA=Code matricule }
+    { 50006;  ;Free comment        ;Text50        ;CaptionML=[ENU=Free comment;
+                                                              FRA=Commentaire libre] }
+    { 50007;  ;Status Code         ;Code30        ;TableRelation="FAP Status";
+                                                   OnValidate=BEGIN
+                                                                //Modif JX-AUD du 25/02/2013
+                                                                IF Grec_QualificationFAP.GET("Status Code") THEN
+                                                                  "Status description" := Grec_QualificationFAP."Description status";
+                                                                //Fin Modif JX-AUD du 25/02/2013
+                                                              END;
+
+                                                   CaptionML=[ENU=Qualification Code;
+                                                              FRA=Code statut] }
+    { 50008;  ;Status description  ;Text50        ;CaptionML=[ENU=Qualification Description;
+                                                              FRA=Libell‚ statut] }
+    { 50009;  ;Register amount     ;Decimal       ;CaptionML=FRA=Montant … enregistrer }
+    { 50010;  ;Import              ;Boolean       ;CaptionML=[ENU=Import;
+                                                              FRA=Import] }
+    { 50011;  ;Import Vendor Email ;Text250       ;CaptionML=[ENU=Import vendor email;
+                                                              FRA=Email import fournisseur] }
+    { 50012;  ;Litige              ;Boolean        }
+    { 50013;  ;BC No.              ;Code20        ;CaptionML=[ENU=BC No.;
+                                                              FRA=Nø BC];
+                                                   Editable=No }
+    { 50014;  ;Yooz No.            ;Code20        ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz];
+                                                   Editable=No }
+    { 50015;  ;Yooz Token link     ;Text250       ;ExtendedDatatype=URL;
+                                                   CaptionML=[ENU=Yooz Token link;
+                                                              FRA=Lien Token Yooz];
+                                                   Editable=No }
+    { 50016;  ;Total Amount        ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line"."Line Amount" WHERE (Document Type=FIELD(Document Type),
+                                                                                                        Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Total HT;
+                                                   Editable=No }
+    { 50017;  ;Total Amount Incl. VAT;Decimal     ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line"."Amount Including VAT" WHERE (Document Type=FIELD(Document Type),
+                                                                                                                 Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Total TTC;
+                                                   Editable=No }
+    { 50018;  ;Receipt Status      ;Option        ;CaptionML=FRA=Statut r‚ception;
+                                                   OptionCaptionML=[ENU=" ,Not receive,Partially receive,Receive";
+                                                                    FRA=" ,Non r‚ceptionn‚e,Partiellement r‚ceptionn‚e,R‚ceptionn‚e"];
+                                                   OptionString=[ ,Not receive,Partially receive,Receive] }
+    { 50019;  ;Total Quantity      ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line".Quantity WHERE (Document Type=FIELD(Document Type),
+                                                                                                   Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Total Quantit‚;
+                                                   DecimalPlaces=0:2;
+                                                   Editable=No }
+    { 50020;  ;Total Quantity Received;Decimal    ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line"."Quantity Received" WHERE (Document Type=FIELD(Document Type),
+                                                                                                              Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Total Quantit‚ re‡ue;
+                                                   DecimalPlaces=0:2;
+                                                   Editable=No }
+    { 50030;  ;Document Prepaid    ;Boolean       ;CaptionML=FRA=Document Pr‚Pay‚ }
+    { 50031;  ;Amount Prepaid      ;Decimal       ;CaptionML=FRA=Montant Pr‚Pay‚ }
+    { 50032;  ;Document Type Prepaid;Option       ;CaptionML=FRA=Type Document Pr‚pay‚;
+                                                   OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50033;  ;Document No. Prepaid;Code20        ;CaptionML=FRA=Nø Document Pr‚pay‚ }
+    { 50034;  ;Free comment CDG    ;Text50        ;CaptionML=[ENU=Free comment;
+                                                              FRA=Commentaire libre CDG] }
   }
   KEYS
   {
@@ -1902,6 +2027,7 @@ OBJECT Table 38 Purchase Header
     {    ;Document Type,Pay-to Vendor No.          }
     {    ;Buy-from Vendor No.                      }
     {    ;Incoming Document Entry No.              }
+    {    ;Document Type,Assigned User ID,Receipt Status }
   }
   FIELDGROUPS
   {
@@ -2008,6 +2134,10 @@ OBJECT Table 38 Purchase Header
       Text053@1095 : TextConst 'ENU=There are unposted prepayment amounts on the document of type %1 with the number %2.;FRA=Il existe des montants acompte non valid‚s sur le document de type %1 portant le num‚ro %2.';
       Text054@1096 : TextConst 'ENU=There are unpaid prepayment invoices that are related to the document of type %1 with the number %2.;FRA=Il existe des factures d''acompte impay‚es li‚es au document de type %1 portant le num‚ro %2.';
       ChangeCurrencyQst@1073 : TextConst 'ENU=If you change %1, the existing purchase lines will be deleted and new purchase lines based on the new information in the header will be created. You may need to update the price information manually.\\Do you want to change %1?;FRA=Si vous modifiez %1, les lignes achat existantes seront supprim‚es et de nouvelles lignes achat bas‚es sur les nouvelles informations de l''en-tˆte seront cr‚‚es. Vous devrez peut-ˆtre mettre … jour les informations de prix manuellement.\\Voulez-vous modifier %1ÿ?';
+      Grec_Contract@1000000003 : Record 50008;
+      Grec_Matricule@1000000002 : Record 50010;
+      Grec_QualificationFAP@1000000001 : Record 50011;
+      Gbool_ImportGroupInvoice@1000000000 : Boolean;
 
     LOCAL PROCEDURE InitInsert@41();
     BEGIN
@@ -2627,6 +2757,12 @@ OBJECT Table 38 Purchase Header
           FIELDCAPTION("Inbound Whse. Handling Time"):
             IF UpdateConfirmed AND (PurchLine."No." <> '') THEN
               PurchLine.VALIDATE("Inbound Whse. Handling Time","Inbound Whse. Handling Time");
+
+          //Modif JX-AUD du 17/02/2012 //MAJ code matricule
+          FIELDCAPTION("Matricule No."):
+            PurchLine.VALIDATE("Matricule No.","Matricule No.");
+          //Fin modif JX-AUD du 17/02/2012
+
         END;
         PurchLine.MODIFY(TRUE);
         ReservePurchLine.VerifyChange(PurchLine,xPurchLine);
@@ -3297,7 +3433,104 @@ OBJECT Table 38 Purchase Header
       EXIT(NOT PurchLine.ISEMPTY);
     END;
 
+    PROCEDURE SetCompany@1000000000(NameSociety@1000000000 : Text[30]);
     BEGIN
+      //MODIF JX-AUD du 12/05/14
+      PurchSetup.CHANGECOMPANY(NameSociety);
+      GLSetup.CHANGECOMPANY(NameSociety);
+      GLAcc.CHANGECOMPANY(NameSociety);
+      PurchLine.CHANGECOMPANY(NameSociety);
+      xPurchLine.CHANGECOMPANY(NameSociety);
+      VendLedgEntry.CHANGECOMPANY(NameSociety);
+      Vend.CHANGECOMPANY(NameSociety);
+      PaymentTerms.CHANGECOMPANY(NameSociety);
+      PaymentMethod.CHANGECOMPANY(NameSociety);
+      CurrExchRate.CHANGECOMPANY(NameSociety);
+      PurchHeader.CHANGECOMPANY(NameSociety);
+      PurchCommentLine.CHANGECOMPANY(NameSociety);
+      ShipToAddr.CHANGECOMPANY(NameSociety);
+      Cust.CHANGECOMPANY(NameSociety);
+      CompanyInfo.CHANGECOMPANY(NameSociety);
+      PostCode.CHANGECOMPANY(NameSociety);
+      OrderAddr.CHANGECOMPANY(NameSociety);
+      BankAcc.CHANGECOMPANY(NameSociety);
+      PurchRcptHeader.CHANGECOMPANY(NameSociety);
+      PurchInvHeader.CHANGECOMPANY(NameSociety);
+      PurchCrMemoHeader.CHANGECOMPANY(NameSociety);
+      ReturnShptHeader.CHANGECOMPANY(NameSociety);
+      PurchInvHeaderPrepmt.CHANGECOMPANY(NameSociety);
+      PurchCrMemoHeaderPrepmt.CHANGECOMPANY(NameSociety);
+      GenBusPostingGrp.CHANGECOMPANY(NameSociety);
+      GenJnILine.CHANGECOMPANY(NameSociety);
+      RespCenter.CHANGECOMPANY(NameSociety);
+      Location.CHANGECOMPANY(NameSociety);
+      WhseRequest.CHANGECOMPANY(NameSociety);
+      InvtSetup.CHANGECOMPANY(NameSociety);
+      Grec_Contract.CHANGECOMPANY(NameSociety);
+      Grec_Matricule.CHANGECOMPANY(NameSociety);
+      Grec_QualificationFAP.CHANGECOMPANY(NameSociety);
+      Gbool_ImportGroupInvoice := TRUE;
+      //FIN MODIF JX-AUD du 12/05/14
+    END;
+
+    PROCEDURE SendToPostingOk@1000000001(PostingCodeunitID@1000 : Integer);
+    BEGIN
+      // Migration Nav 2015 : Facture d‚j… v‚rifier par le sp‚cifique
+      CODEUNIT.RUN(PostingCodeunitID,Rec);
+    END;
+
+    BEGIN
+    {
+      // modif JX-XAD du 06/06/2008
+      // Assignation automatique de l'ID Utilisateur … la cr‚ation de documents achat.
+
+      // modif JX-XAD du 14/10/2008
+      // Ajout d'un champ 50000 (flowfield) permettant de connaitre le montant total des lignes du document d'achat
+      // quelque soit ce document et son statut
+
+      ----------------------- V1.1 -----------------------
+
+      // ajout JX-XAD du 24/06/2009
+      // Correction bug : lors de la suppression d'un fournisseur en en-tˆte d'un document d'achat,
+      // le code utilisateur affect‚ ne doit pas ˆtre supprim‚
+
+      // Modif LAB du 17/09/2009
+      // Non modification de la date de document en fonction de la date comptable.
+
+      ----------------------- V1.2 -----------------------
+
+      Ajout JX-XAD le 19/11/2009
+      Ajout des champs :
+      - Original user
+      - Creation date
+      - Invoice receipt date
+      Renseigner Original user et Creation date
+
+      //Modif JX-AUD du 14/02/2012
+      //Ajout du champ "Code Matricule"
+
+      //Modif JX-AUD du 23/04/2013
+      //Ajout du champ Commentaire libre
+      //Ajout du champ Code statut + code
+      //Ajout du champ Libell‚ statut
+      //Ajout du champ Montant … enregistrer
+
+      //JX-AUD du 01/07/2013
+      //Ajout du champ Litige
+
+      //JX-AUD du 06/05/2014
+      //Fonction SetCompany
+      //Modification de code
+
+      //JX-AUD du 24/02/2015
+      Ajout des champs NøBC, Nø Yooz, Lien token Yooz
+
+      // JX-VSC4.0-PBD du 24/06/15
+      Ajout champs Total Amount, Total incl. VAT, Total Quantity, Total Quantity Received, Receipt Status
+
+      // JX-VSC-ABE-Modif du 17/10/18
+      Ajout le champs Commentaire libre CDG (type text de 50 caractŠres)
+    }
     END.
   }
 }

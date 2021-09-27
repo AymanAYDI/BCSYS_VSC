@@ -2,9 +2,10 @@ OBJECT Page 27 Vendor List
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368;
+    Date=18/10/19;
+    Time=11:23:02;
+    Modified=Yes;
+    Version List=NAVW16.00.01,JX-VSC1.1-LAB,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -30,6 +31,16 @@ OBJECT Page 27 Vendor List
                       CaptionML=[ENU=Ven&dor;
                                  FRA=Fo&urnisseur];
                       Image=Vendor }
+      { 17      ;2   ;Action    ;
+                      ShortCutKey=Shift+F5;
+                      CaptionML=[ENU=Card;
+                                 FRA=Fiche];
+                      RunObject=Page 26;
+                      RunPageLink=No.=FIELD(No.),
+                                  Date Filter=FIELD(Date Filter),
+                                  Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                                  Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter);
+                      Image=EditLines }
       { 44      ;2   ;ActionGroup;
                       CaptionML=[ENU=Dimensions;
                                  FRA=Axes analytiques];
@@ -240,15 +251,16 @@ OBJECT Page 27 Vendor List
                       RunObject=Page 509;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=BlanketOrder;
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1901469405;1 ;Action    ;
                       CaptionML=[ENU=Purchase Quote;
-                                 FRA=Demande de prix];
+                                 FRA=Devis];
                       RunObject=Page 49;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
-                      Promoted=No;
+                      Promoted=Yes;
                       Image=Quote;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -258,6 +270,7 @@ OBJECT Page 27 Vendor List
                       RunObject=Page 51;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=Yes;
+                      Visible=FALSE;
                       Image=Invoice;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -267,6 +280,7 @@ OBJECT Page 27 Vendor List
                       RunObject=Page 50;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=Yes;
+                      Visible=FALSE;
                       Image=Document;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -276,6 +290,7 @@ OBJECT Page 27 Vendor List
                       RunObject=Page 52;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=CreditMemo;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -285,6 +300,7 @@ OBJECT Page 27 Vendor List
                       RunObject=Page 6640;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=ReturnOrder;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -449,11 +465,26 @@ OBJECT Page 27 Vendor List
     { 4   ;2   ;Field     ;
                 SourceExpr=Name }
 
+    { 1000000010;2;Field  ;
+                SourceExpr="Registration No." }
+
     { 41  ;2   ;Field     ;
                 SourceExpr="Responsibility Center" }
 
     { 59  ;2   ;Field     ;
                 SourceExpr="Location Code" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr=Address;
+                Visible=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Address 2";
+                Visible=FALSE }
+
+    { 1000000004;2;Field  ;
+                SourceExpr=City;
+                Visible=FALSE }
 
     { 29  ;2   ;Field     ;
                 SourceExpr="Post Code";
@@ -505,24 +536,30 @@ OBJECT Page 27 Vendor List
                 SourceExpr="Currency Code";
                 Visible=FALSE }
 
-    { 47  ;2   ;Field     ;
-                SourceExpr="Language Code";
-                Visible=FALSE }
-
-    { 12  ;2   ;Field     ;
-                SourceExpr="Search Name" }
-
     { 1102601000;2;Field  ;
                 SourceExpr=Blocked;
+                Visible=FALSE }
+
+    { 47  ;2   ;Field     ;
+                SourceExpr="Language Code";
                 Visible=FALSE }
 
     { 1102601002;2;Field  ;
                 SourceExpr="Last Date Modified";
                 Visible=FALSE }
 
+    { 1000000006;2;Field  ;
+                SourceExpr=Balance }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Net Change" }
+
     { 1102601004;2;Field  ;
                 SourceExpr="Application Method";
                 Visible=FALSE }
+
+    { 12  ;2   ;Field     ;
+                SourceExpr="Search Name" }
 
     { 1102601006;2;Field  ;
                 Name=Location Code2;
@@ -540,6 +577,10 @@ OBJECT Page 27 Vendor List
     { 1102601012;2;Field  ;
                 SourceExpr="Base Calendar Code";
                 Visible=FALSE }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="E-Mail";
+                Visible=False }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
@@ -638,6 +679,16 @@ OBJECT Page 27 Vendor List
     END;
 
     BEGIN
+    {
+      // Modif LAB du 17/09/2009
+      // Ajout du champ solde
+
+      // Modif AUD du 07/06/2012
+      // Ajout du champ solde p‚riode
+
+      //Modif JX-AUD du 19/11/13
+      //Ajout du Nø Siret
+    }
     END.
   }
 }

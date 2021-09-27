@@ -2,9 +2,10 @@ OBJECT Page 119 User Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
+    Date=22/05/15;
     Time=12:00:00;
-    Version List=NAVW17.00;
+    Modified=Yes;
+    Version List=NAVW14.00,JX-VSC1.0-XAD,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -12,6 +13,66 @@ OBJECT Page 119 User Setup
                FRA=ParamŠtres utilisateur];
     SourceTable=Table91;
     PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1000000004;1 ;ActionGroup;
+                      CaptionML=FRA=&Signature }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=FRA=G‚rer la signature;
+                      RunObject=Page 50040;
+                      RunPageLink=User ID=FIELD(User ID);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Default;
+                      PromotedCategory=Process }
+      { 1000000007;2 ;Action    ;
+                      CaptionML=[ENU=Delete;
+                                 FRA=Supprimer la signature];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Delete;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                   IF CONFIRM(Text002,FALSE) THEN BEGIN
+                                     CLEAR(Rec.Picture);
+                                     CurrPage.SAVERECORD;
+                                   END;
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000015;1 ;Action    ;
+                      CaptionML=[ENU=Duplication/Deletion user;
+                                 FRA=&Duplication/Suppression utilisateur];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyFromChartOfAccounts;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-AUD 07/04/2014
+                                 GForm_Duplicating.initialiser(Gopt_TypeFiche::User,"User ID",'');
+                                 GForm_Duplicating.RUNMODAL;
+                                 CLEAR(GForm_Duplicating);
+                                 //DEBUT MODIF JX-AUD 07/04/2014
+                               END;
+                                }
+      { 1000000014;1 ;Action    ;
+                      CaptionML=[ENU=Apply validation period;
+                                 FRA=&Appliquer p‚riodes validation];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Apply;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //MODIF JX- AUD du 28/03/14
+                                 IF CONFIRM(STRSUBSTNO(Text003,"Allow Posting From","Allow Posting To")) THEN
+                                   Gcu_DuplicatingRecords.CopierPeriodesValidation("Allow Posting From", "Allow Posting To");
+                                 //Fin MODIF JX- AUD du 28/03/14
+                               END;
+                                }
+    }
   }
   CONTROLS
   {
@@ -30,9 +91,6 @@ OBJECT Page 119 User Setup
     { 6   ;2   ;Field     ;
                 SourceExpr="Allow Posting To" }
 
-    { 8   ;2   ;Field     ;
-                SourceExpr="Register Time" }
-
     { 15  ;2   ;Field     ;
                 SourceExpr="Sales Resp. Ctr. Filter" }
 
@@ -41,6 +99,32 @@ OBJECT Page 119 User Setup
 
     { 21  ;2   ;Field     ;
                 SourceExpr="Service Resp. Ctr. Filter" }
+
+    { 1000000000;2;Field  ;
+                CaptionML=[ENU=Access rights to purchase documents;
+                           FRA=Droits accŠs doc. achat];
+                SourceExpr="Droits accŠs doc. achat" }
+
+    { 1000000002;2;Field  ;
+                CaptionML=[ENU=Service;
+                           FRA=Service];
+                SourceExpr=Service }
+
+    { 1000000012;2;Field  ;
+                CaptionML=FRA=Nom (signature);
+                SourceExpr=Nom }
+
+    { 1000000010;2;Field  ;
+                CaptionML=FRA=Fonction (signature);
+                SourceExpr=Fonction }
+
+    { 1000000008;2;Field  ;
+                CaptionML=FRA=Signature (image bmp);
+                SourceExpr=Picture }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Register Time";
+                Visible=FALSE }
 
     { 3   ;2   ;Field     ;
                 SourceExpr="Time Sheet Admin." }
@@ -61,8 +145,27 @@ OBJECT Page 119 User Setup
   }
   CODE
   {
+    VAR
+      PictureExists@1000000000 : Boolean;
+      Text001@1000000001 : TextConst 'ENU=Do you want to replace the existing picture?;FRA=Souhaitez-vous remplacer l''image existante ?';
+      Text002@1000000002 : TextConst 'ENU=Do you want to delete the picture?;FRA=Souhaitez-vous supprimer l''image ?';
+      Gcu_DuplicatingRecords@1000000003 : Codeunit 50000;
+      Text003@1000000004 : TextConst 'FRA="Souhaitez-vous vraiment valider \\""D‚but p‚riode validation"" = %1 \ ""Fin p‚riode validation"" = %2 \\ sur tous les utilisateurs et sur les soci‚t‚s ?\\Un message de confirmation va apparaŒtre pour chacune des soci‚t‚s"';
+      GForm_Duplicating@1000000005 : Page 50013;
+      Gopt_TypeFiche@1000000006 : ',Vendor,G/L Account,Item,VendorBankAccount,User';
 
     BEGIN
+    {
+      Modif JX-XAD du 13/06/2008
+      Ajout de deux champs : "Droits accŠs doc. achat" et service
+      Voir la documentation au niveau de la table 91 (User Setup) pour plus de pr‚cisions.
+
+      //MODIF JX- AUD du 28/03/14
+      //Ajout du bouton "Appliquer p‚riodes validation" + traitement du code
+
+      //MODIF JX-AUD du 07/04/14
+      //Ajout du bouton Duplication/Suppression utilisateur
+    }
     END.
   }
 }

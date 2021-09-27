@@ -2,8 +2,9 @@ OBJECT Table 480 Dimension Set Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
+    Date=23/09/15;
     Time=12:00:00;
+    Modified=Yes;
     Version List=NAVW17.00;
   }
   PROPERTIES
@@ -13,8 +14,15 @@ OBJECT Table 480 Dimension Set Entry
     OnInsert=BEGIN
                IF DimVal.GET("Dimension Code","Dimension Value Code") THEN
                  "Dimension Value ID" := DimVal."Dimension Value ID"
-               ELSE
-                 "Dimension Value ID" := 0;
+               ELSE BEGIN
+                DimVal.INIT;
+                DimVal.VALIDATE("Dimension Code","Dimension Code");
+                DimVal.VALIDATE(Code,"Dimension Value Code");
+                DimVal.VALIDATE("Dimension Value Type",DimVal."Dimension Value Type"::Standard);
+                DimVal.INSERT(TRUE);
+                DimVal.GET("Dimension Code","Dimension Value Code");
+                "Dimension Value ID" := DimVal."Dimension Value ID"
+               END;
              END;
 
     OnModify=BEGIN
@@ -46,7 +54,8 @@ OBJECT Table 480 Dimension Set Entry
                                                    CaptionML=[ENU=Dimension Code;
                                                               FRA=Code axe];
                                                    NotBlank=Yes }
-    { 3   ;   ;Dimension Value Code;Code20        ;TableRelation="Dimension Value".Code WHERE (Dimension Code=FIELD(Dimension Code));
+    { 3   ;   ;Dimension Value Code;Code20        ;TableRelation="Dimension Value".Code WHERE (Dimension Code=FIELD(Dimension Code),
+                                                                                               Masked=CONST(No));
                                                    OnValidate=BEGIN
                                                                 IF NOT DimMgt.CheckDimValue("Dimension Code","Dimension Value Code") THEN
                                                                   ERROR(DimMgt.GetDimErr);

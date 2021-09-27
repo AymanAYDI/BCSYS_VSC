@@ -2,9 +2,10 @@ OBJECT Page 460 Purchases & Payables Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=06/04/16;
+    Time=18:35:23;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -90,6 +91,12 @@ OBJECT Page 460 Purchases & Payables Setup
     { 61  ;2   ;Field     ;
                 SourceExpr="Default Qty. to Receive" }
 
+    { 1000000001;2;Field  ;
+                SourceExpr="Excel File Vendor Not Created" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Mail Invoice Path" }
+
     { 1904569201;1;Group  ;
                 CaptionML=[ENU=Numbering;
                            FRA=Num‚rotation] }
@@ -133,6 +140,19 @@ OBJECT Page 460 Purchases & Payables Setup
     { 40  ;2   ;Field     ;
                 SourceExpr="Posted Prepmt. Cr. Memo Nos." }
 
+    { 1900977501;1;Group  ;
+                CaptionML=[ENU=Approval;
+                           FRA=Approbation] }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Max. amount allowed;
+                           FRA=Montant max. autoris‚];
+                SourceExpr="Max. Amount allowed";
+                OnValidate=BEGIN
+                             Rec.MODIFY;
+                           END;
+                            }
+
     { 7   ;1   ;Group     ;
                 CaptionML=[ENU=Background Posting;
                            FRA=Validation arriŠre-plan];
@@ -171,6 +191,37 @@ OBJECT Page 460 Purchases & Payables Setup
     { 3   ;3   ;Field     ;
                 SourceExpr="Notify On Success" }
 
+    { 1000000000;1;Group  ;
+                CaptionML=FRA=Imports;
+                GroupType=Group }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Entity Code" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Timing Dimension 0" }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="Verify Dim 0 on Purch. Line" }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Timing Dimension 1" }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Verify Dim 1 on Purch. Line" }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Timing Dimension 2" }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Verify Dim 2 on Purch. Line" }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Timing Dimension 3" }
+
+    { 1000000012;2;Field  ;
+                SourceExpr="Verify Dim 3 on Purch. Line" }
+
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
 
@@ -189,6 +240,10 @@ OBJECT Page 460 Purchases & Payables Setup
   {
 
     BEGIN
+    {
+      //Modif JX-AUD du 25/10/11
+      //Ajout de l'onglet Approbation et du champ Montant max. autoris‚
+    }
     END.
   }
 }

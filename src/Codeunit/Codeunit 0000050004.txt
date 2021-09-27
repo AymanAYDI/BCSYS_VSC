@@ -1,0 +1,270 @@
+OBJECT Codeunit 50004 links between documents
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/08/16;
+    Time=14:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-AUD,JX-VSC4.1-PBD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      pCode_Commande@1000000000 : Code[20];
+      gRec_PurchaseHeader@1000000015 : Record 38;
+      gRec_PurchaseLine@1000000001 : Record 39;
+      gRec_PurchRcptHeader@1000000002 : Record 120;
+      gCode_Invoice@1000000003 : ARRAY [100] OF Code[20];
+      gInt_Count@1000000004 : Integer;
+      gBool_InvoiceExist@1000000005 : Boolean;
+      i@1000000006 : Integer;
+      gRec_ItemLedgerEntry@1000000007 : Record 32;
+      gRec_ValueEntry@1000000008 : Record 5802;
+      gBool_OrderExist@1000000009 : Boolean;
+      gRec_PurchInvHeader@1000000010 : Record 122;
+      gRec_PurchInvLine@1000000011 : Record 123;
+      Gdec_TotalHTDocument@1000000012 : Decimal;
+      Grec_PurchaseLine2@1000000013 : Record 39;
+      grec_VendorLedgerEntry@1000000014 : Record 25;
+
+    PROCEDURE SearchInvoices@1000000000(pCode_Commande@1000000000 : Code[20];VAR pCode_Invoice@1000000001 : ARRAY [5,1000] OF Text) rInt_NbInvoices : Integer;
+    VAR
+      Lrec_PurchInvLine@1000000002 : Record 122;
+    BEGIN
+      //Fonction qui permet de retrouver pour une commande donn‚e
+      //toutes les factures … la fois en cours et enregistr‚es.
+      //Entr‚es :  nø commande
+      //Sorties :  pCode_Invoice (Tableau … deux dimensions de 2x100 chaines de 20 caractŠres contenant les factures:
+      //                            pCode_Invoice[1,x] = Nø facture et pCode_Invoice[2,x] = montant HT)
+      //           rInt_NbInvoices (Nombre de factures trouv‚es)
+
+      gInt_Count := 0;    //Compteur de factures
+
+      //***** On recherche d'abord les r‚ceptions li‚es … la commande *****
+      gRec_PurchRcptHeader.RESET;
+      gRec_PurchRcptHeader.SETFILTER(gRec_PurchRcptHeader."Order No.",'%1',pCode_Commande);
+      IF gRec_PurchRcptHeader.COUNT > 0 THEN
+
+        //***** Pour chaque r‚ception, on recherche les factures en cours correspondantes *****
+        IF gRec_PurchRcptHeader.FIND('-') THEN
+        REPEAT
+          gRec_PurchaseLine.RESET;
+          gRec_PurchaseLine.SETFILTER(gRec_PurchaseLine."Document Type",'%1',gRec_PurchaseLine."Document Type"::Invoice);
+          gRec_PurchaseLine.SETFILTER(gRec_PurchaseLine."Receipt No.",'%1',gRec_PurchRcptHeader."No.");
+          IF gRec_PurchaseLine.COUNT > 0 THEN
+            IF gRec_PurchaseLine.FIND('-') THEN
+            REPEAT
+              //***** On v‚rifie si la facture est d‚j… dans la liste *****
+              gBool_InvoiceExist := FALSE;
+              FOR i:= 1 TO gInt_Count DO
+              BEGIN
+                IF gRec_PurchaseLine."Document No." = pCode_Invoice[1,i] THEN
+                  gBool_InvoiceExist := TRUE;
+              END;
+              //***** Si la facture n'est pas dans la liste, on l'y ajoute *****
+              IF NOT gBool_InvoiceExist THEN
+              BEGIN
+                gInt_Count += 1;
+                IF gInt_Count > 1000 THEN
+                 EXIT;
+                pCode_Invoice[1,gInt_Count] := gRec_PurchaseLine."Document No.";
+                // D‚but Calcul du montant HT total de la facture
+                Gdec_TotalHTDocument := 0;
+                Grec_PurchaseLine2.RESET;
+                Grec_PurchaseLine2.SETFILTER(Grec_PurchaseLine2."Document Type",'%1',Grec_PurchaseLine2."Document Type"::Invoice);
+                Grec_PurchaseLine2.SETFILTER(Grec_PurchaseLine2."Document No.",'%1',pCode_Invoice[1,gInt_Count]);
+                IF Grec_PurchaseLine2.FIND('-') THEN
+                REPEAT
+                    Gdec_TotalHTDocument += Grec_PurchaseLine2."Line Amount";
+                UNTIL Grec_PurchaseLine2.NEXT = 0;
+                IF Gdec_TotalHTDocument <> 0 THEN
+                  pCode_Invoice[2,gInt_Count] := FORMAT(Gdec_TotalHTDocument)
+                ELSE
+                  pCode_Invoice[2,gInt_Count] := '';
+                // Fin Calcul du montant HT total de la facture
+
+                //Modif JX-AUD du 30/10/2012
+                //recherche si la facture est ouverte
+                pCode_Invoice[3,gInt_Count]  := 'true'; //FAPXXX a toujours un montant ouvert
+                IF NOT gRec_PurchaseHeader.GET(gRec_PurchaseLine."Document Type",gRec_PurchaseLine."Document No.") THEN
+                 gRec_PurchaseHeader.INIT;
+                pCode_Invoice[4,gInt_Count] := gRec_PurchaseHeader."Yooz No.";
+                pCode_Invoice[5,gInt_Count] := gRec_PurchaseHeader."Yooz Token link";
+                pCode_Invoice[6,gInt_Count] := gRec_PurchaseHeader."BC No.";
+                //Fin Modif JX-AUD du 30/10/2012
+
+              END;
+            UNTIL gRec_PurchaseLine.NEXT = 0;
+        UNTIL gRec_PurchRcptHeader.NEXT = 0;
+
+        //***** Pour chaque r‚ception, rechercher les ‚critures article correspondantes *****
+        IF gRec_PurchRcptHeader.FIND('-') THEN
+        REPEAT
+          //***** Pour chaque ‚criture article li‚e … la r‚ception, rechercher les ‚critures valeur *****
+          gRec_ItemLedgerEntry.RESET;
+          gRec_ItemLedgerEntry.SETFILTER(gRec_ItemLedgerEntry."Document No.",'%1',gRec_PurchRcptHeader."No.");
+          IF gRec_ItemLedgerEntry.COUNT > 0 THEN
+            IF gRec_ItemLedgerEntry.FIND('-') THEN
+            REPEAT
+              //***** Pour chaque ‚criture valeur li‚e … l'‚criture article, rechercher les factures enregistr‚es *****
+              gRec_ValueEntry.RESET;
+              gRec_ValueEntry.SETFILTER(gRec_ValueEntry."Item Ledger Entry No.",'%1',gRec_ItemLedgerEntry."Entry No.");
+              gRec_ValueEntry.SETFILTER(gRec_ValueEntry."Document Type",'%1',gRec_ValueEntry."Document Type"::"Purchase Invoice");
+              IF gRec_ValueEntry.COUNT > 0 THEN
+                IF gRec_ValueEntry.FIND('-') THEN
+                REPEAT
+                  //***** On v‚rifie si la facture est d‚j… dans la liste *****
+                  gBool_InvoiceExist := FALSE;
+                  FOR i:= 1 TO gInt_Count DO
+                  BEGIN
+                    IF gRec_ValueEntry."Document No." = pCode_Invoice[1,i] THEN
+                      gBool_InvoiceExist := TRUE;
+                  END;
+                  //***** Si la facture n'est pas dans la liste, on l'y ajoute *****
+                  IF NOT gBool_InvoiceExist THEN
+                  BEGIN
+                    gInt_Count += 1;
+                    IF gInt_Count > 1000 THEN
+                     EXIT;
+                    pCode_Invoice[1,gInt_Count] := gRec_ValueEntry."Document No.";
+                    IF NOT gRec_PurchInvHeader.GET(gRec_ValueEntry."Document No.") THEN
+                     gRec_PurchInvHeader.INIT;
+                    pCode_Invoice[4,gInt_Count] := gRec_PurchInvHeader."Yooz No.";
+                    pCode_Invoice[5,gInt_Count] := gRec_PurchInvHeader."Yooz Token link";
+                    pCode_Invoice[6,gInt_Count] := gRec_PurchInvHeader."BC No.";
+                    // D‚but Calcul du montant HT total de la facture
+                    IF Lrec_PurchInvLine.GET(pCode_Invoice[1,gInt_Count]) THEN
+                    BEGIN
+                      Lrec_PurchInvLine.CALCFIELDS(Lrec_PurchInvLine.Amount);
+                      pCode_Invoice[2,gInt_Count] := FORMAT(Lrec_PurchInvLine.Amount);
+                    END ELSE
+                      pCode_Invoice[2,gInt_Count] := '';
+                    // Fin Calcul du montant HT total de la facture
+
+                    //Modif JX-AUD du 30/10/2012
+                    //recherche si la facture est ouverte
+                    grec_VendorLedgerEntry.SETFILTER(grec_VendorLedgerEntry."Document No.",gRec_ValueEntry."Document No.");
+                    IF grec_VendorLedgerEntry.FIND('-') THEN
+                    BEGIN
+                      IF grec_VendorLedgerEntry.Open THEN
+                         pCode_Invoice[3,gInt_Count]  := 'true'
+                      ELSE
+                        pCode_Invoice[3,gInt_Count]  := 'false'
+                    END;
+                   //Fin Modif JX-AUD du 30/10/2012
+
+                  END;
+                UNTIL gRec_ValueEntry.NEXT = 0;
+            UNTIL gRec_ItemLedgerEntry.NEXT = 0;
+        UNTIL gRec_PurchRcptHeader.NEXT = 0;
+
+      rInt_NbInvoices := gInt_Count;
+    END;
+
+    PROCEDURE SearchOrdersFAP@1000000002(pCode_Invoice@1000000000 : Code[20];VAR pCode_Order@1000000001 : ARRAY [1000] OF Code[20]) rInt_NbOrders : Integer;
+    BEGIN
+      //Fonction qui permet de retrouver pour une facture donn‚e (en cours) toutes les commandes.
+      //Entr‚es :  pCode_Invoice (nø facture en cours)
+      //Sorties :  pCode_Order (Tableau de 100 chaines de 20 caractŠres contenant les commandes)
+      //           rInt_NbOrders (Nombre de commandes trouv‚es)
+
+      gInt_Count := 0;    //Compteur de commandes
+
+      //***** On recherche les r‚ceptions li‚es … la facture *****
+      gRec_PurchaseLine.RESET;
+      gRec_PurchaseLine.SETFILTER(gRec_PurchaseLine."Document Type",'%1',gRec_PurchaseLine."Document Type"::Invoice);
+      gRec_PurchaseLine.SETFILTER(gRec_PurchaseLine."Document No.",'%1',pCode_Invoice);
+      IF gRec_PurchaseLine.COUNT > 0 THEN
+        //***** Pour chaque r‚ception, on r‚cupŠre le nø commande *****
+        IF gRec_PurchaseLine.FIND('-') THEN
+        REPEAT
+          IF gRec_PurchaseLine."Receipt No." <> '' THEN
+            IF gRec_PurchRcptHeader.GET(gRec_PurchaseLine."Receipt No.") THEN
+              IF gRec_PurchRcptHeader."Order No." <> '' THEN
+              BEGIN
+                //***** On v‚rifie si la commande est d‚j… dans la liste *****
+                gBool_OrderExist := FALSE;
+                FOR i:= 1 TO gInt_Count DO
+                BEGIN
+                  IF gRec_PurchRcptHeader."Order No." = pCode_Order[i] THEN
+                    gBool_OrderExist := TRUE;
+                END;
+                //***** Si la commande n'est pas dans la liste, on l'y ajoute *****
+                IF NOT gBool_OrderExist THEN
+                BEGIN
+                  gInt_Count += 1;
+                  pCode_Order[gInt_Count] := gRec_PurchRcptHeader."Order No.";
+                END;
+            END;
+        UNTIL gRec_PurchaseLine.NEXT = 0;
+
+      rInt_NbOrders := gInt_Count;
+    END;
+
+    PROCEDURE SearchOrdersFA@1000000003(pCode_Invoice@1000000000 : Code[20];VAR pCode_Order@1000000001 : ARRAY [1000] OF Code[20]) rInt_NbOrders : Integer;
+    BEGIN
+      //Fonction qui permet de retrouver pour une facture donn‚e (enregistr‚e) toutes les commandes.
+      //Entr‚es :  pCode_Invoice (nø facture en cours)
+      //Sorties :  pCode_Order (Tableau de 100 chaines de 20 caractŠres contenant les commandes)
+      //           rInt_NbOrders (Nombre de commandes trouv‚es)
+
+      gInt_Count := 0;    //Compteur de commandes
+
+        //***** Pour chaque ligne de la facture, rechercher les ‚critures valeur correspondantes *****
+        gRec_PurchInvLine.RESET;
+        gRec_PurchInvLine.SETFILTER(gRec_PurchInvLine."Document No.",'%1',pCode_Invoice);
+        IF gRec_PurchInvLine.FIND('-') THEN
+        REPEAT
+          gRec_ValueEntry.RESET;
+          gRec_ValueEntry.SETFILTER(gRec_ValueEntry."Document No.",'%1',gRec_PurchInvLine."Document No.");
+          gRec_ValueEntry.SETFILTER(gRec_ValueEntry."Document Line No.",'%1',gRec_PurchInvLine."Line No.");
+          IF gRec_ValueEntry.COUNT > 0 THEN
+            IF gRec_ValueEntry.FIND('-') THEN
+            REPEAT
+              IF gRec_ItemLedgerEntry.GET(gRec_ValueEntry."Item Ledger Entry No.") THEN
+                IF gRec_PurchRcptHeader.GET(gRec_ItemLedgerEntry."Document No.") THEN
+                  IF gRec_PurchRcptHeader."Order No." <> '' THEN
+                  BEGIN
+                    //***** On v‚rifie si la commande est d‚j… dans la liste *****
+                    gBool_OrderExist := FALSE;
+                    FOR i:= 1 TO gInt_Count DO
+                    BEGIN
+                      IF gRec_PurchRcptHeader."Order No." = pCode_Order[i] THEN
+                        gBool_OrderExist := TRUE;
+                    END;
+                    //***** Si la commande n'est pas dans la liste, on l'y ajoute *****
+                    IF NOT gBool_OrderExist THEN
+                    BEGIN
+                      gInt_Count += 1;
+                      pCode_Order[gInt_Count] := gRec_PurchRcptHeader."Order No.";
+                    END;
+                  END;
+            UNTIL gRec_ValueEntry.NEXT = 0;
+        UNTIL gRec_PurchInvLine.NEXT = 0;
+
+      rInt_NbOrders := gInt_Count;
+    END;
+
+    BEGIN
+    {
+      ------------------------------------- V1.2 -------------------------------------
+
+      CREATION JX-XAD LE 05/01/2010
+      Cr‚ation de 3 fonctions :
+      - SearchInvoices qui permet de retrouver pour une commande donn‚e toutes les factures … la fois en cours et enregistr‚es.
+      - SearchOrdersFAP qui permet de retrouver pour une facture donn‚e (en cours) toutes les commandes.
+      - SearchOrdersFA qui permet de retrouver pour une facture donn‚e (enregistr‚e) toutes les commandes.
+
+      //Modif JX-AUD du 30/10/2012
+      //Ajout du champ Ouvert
+    }
+    END.
+  }
+}
+

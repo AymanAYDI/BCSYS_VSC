@@ -2,8 +2,9 @@ OBJECT Codeunit 96 Purch.-Quote to Order
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=25/09/15;
+    Time=13:30:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -126,7 +127,7 @@ OBJECT Codeunit 96 Purch.-Quote to Order
 
             DELETELINKS;
             DELETE;
-            ApprovalsManagement.DeleteApprovalEntry(DATABASE::"Purchase Header","Document Type","No.");
+            //ApprovalsManagement.DeleteApprovalEntry(DATABASE::"Purchase Header","Document Type","No.");
 
             PurchQuoteLine.DELETEALL;
 

@@ -2,9 +2,10 @@ OBJECT Page 118 General Ledger Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,NAVFR8.00,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -137,6 +138,9 @@ OBJECT Page 118 General Ledger Setup
     { 4   ;2   ;Field     ;
                 SourceExpr="Use Legacy G/L Entry Locking" }
 
+    { 1000000008;2;Field  ;
+                SourceExpr="Default Payment Class" }
+
     { 1904569201;1;Group  ;
                 CaptionML=[ENU=Numbering;
                            FRA=Num‚rotation] }
@@ -177,6 +181,14 @@ OBJECT Page 118 General Ledger Setup
 
     { 22  ;2   ;Field     ;
                 SourceExpr="Shortcut Dimension 8 Code" }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Shortcut Dimension 9 Code" }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Shortcut Dimension 10 Code";
+                Visible=FALSE;
+                Enabled=FALSE }
 
     { 1904488501;1;Group  ;
                 CaptionML=[ENU=Reporting;
@@ -249,6 +261,26 @@ OBJECT Page 118 General Ledger Setup
                 SourceExpr="Payroll Trans. Import Format";
                 Visible=FALSE }
 
+    { 1000000000;1;Group  ;
+                Name=Report Dimension Parameters;
+                CaptionML=FRA=Param‚trage Axes analytiques - Etats;
+                GroupType=Group }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Report Dimension 1" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Report Dimension 2" }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Report Dimension 3" }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Report Dimension 4" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Report Dimension 5" }
+
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
 
@@ -271,6 +303,10 @@ OBJECT Page 118 General Ledger Setup
       Text003@1001 : TextConst 'ENU=If you change the additional reporting currency, future general ledger entries are posted in the new reporting currency and in LCY. To enable the additional reporting currency, a batch job opens, and running the batch job recalculates already posted general ledger entries in the new additional reporting currency.\Entries will be deleted in the Analysis View if it is unblocked, and an update will be necessary.\\Are you sure that you want to change the additional reporting currency?;FRA=Si vous modifiez la devise report, les futures ‚critures comptables sont valid‚es dans la nouvelle devise report et en DS. Pour activer la devise report, un traitement par lots s''ouvre et son ex‚cution entraŒne le recalcul des ‚critures comptables d‚j… valid‚es dans la nouvelle devise report.\Les ‚critures seront supprim‚es dans la vue d''analyse si elle est d‚bloqu‚e et une mise … jour sera alors n‚cessaire.\\Òtes-vous s–r de vouloir modifier la devise reportÿ?';
 
     BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 26/01/15
+      Ajout Axes analytique (Shortcut 9 et 10)
+    }
     END.
   }
 }

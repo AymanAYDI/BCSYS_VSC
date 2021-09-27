@@ -2,9 +2,10 @@ OBJECT Codeunit 93 Purch.-Quote to Order (Yes/No)
 {
   OBJECT-PROPERTIES
   {
-    Date=08/06/01;
-    Time=12:00:00;
-    Version List=NAVW13.00;
+    Date=16/06/15;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=NAVW13.00,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -20,18 +21,84 @@ OBJECT Codeunit 93 Purch.-Quote to Order (Yes/No)
             MESSAGE(
               Text001,
               "No.",PurchOrderHeader."No.");
+
+            // D‚but Modif JX-XAD du 29/06/2010
+            // Test si le devis contient des lignes jours-homm
+            //IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT - RECETTE') THEN    //MODIF JX-AUD 21/10/2014
+            //IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE') THEN
+            BEGIN
+              IF NOT Gcu_ManageContract.CheckOrderLines(PurchOrderHeader."No.") THEN
+              BEGIN
+            // Fin Modif JX-XAD du 29/06/2010
+
+                // DEBUT AJOUT JX-XAD 25/02/2010
+                IF Grec_Contract.GET(PurchOrderHeader."Quote No.") THEN
+                BEGIN
+                  Grec_Contract."Order No." :=PurchOrderHeader."No.";
+                  Gdec_TermOfService := 0;
+                  Grec_PurchOrderLine.RESET;
+                  Grec_PurchOrderLine.SETFILTER(Grec_PurchOrderLine."Document No.",'%1',PurchOrderHeader."No.");
+                  Grec_PurchOrderLine.SETFILTER(Grec_PurchOrderLine."Unit of Measure",'%1','Jours-homm');
+                  IF Grec_PurchOrderLine.FIND('-') THEN
+                  BEGIN
+                    Grec_Contract.TJM := Grec_PurchOrderLine."Direct Unit Cost";
+                    REPEAT
+                      Gdec_TermOfService += Grec_PurchOrderLine.Quantity;
+                    UNTIL Grec_PurchOrderLine.NEXT = 0;
+                    Grec_Contract."Term of service" := Gdec_TermOfService;
+                  END;
+                  Grec_ApprovalEntry.RESET;
+                  Grec_ApprovalEntry.SETFILTER(Grec_ApprovalEntry."Document No.",'%1',PurchOrderHeader."Quote No.");
+                  IF Grec_ApprovalEntry.FIND('+') THEN
+                  REPEAT
+                    IF Grec_ApprovalEntry.Status = Grec_ApprovalEntry.Status::Approved THEN
+                    BEGIN
+                      IF Grec_UserSetup.GET(Grec_ApprovalEntry."Approver ID") THEN
+                      BEGIN
+                        Grec_Contract.Approbateur := Grec_UserSetup.Nom;
+                      END;
+                    END;
+                  UNTIL Grec_ApprovalEntry.FIND('<') = FALSE;
+                  Grec_Contract.MODIFY;
+                END;
+            // FIN AJOUT JX-XAD 25/02/2010
+
+            // D‚but Modif JX-XAD du 29/06/2010
+              END;
+            END;
+            // Fin Modif JX-XAD du 29/06/2010
           END;
 
   }
   CODE
   {
     VAR
-      Text000@1000 : TextConst 'ENU=Do you want to convert the quote to an order?;FRA=Souhaitez-vous transformer la demande de prix en commande ?';
-      Text001@1001 : TextConst 'ENU=Quote number %1 has been converted to order number %2.;FRA=La demande de prix %1 a ‚t‚ transform‚e en commande %2.';
+      Text000@1000 : TextConst 'ENU=Do you want to convert the quote to an order?;FRA=Souhaitez-vous transformer le devis en commande ?';
+      Text001@1001 : TextConst 'ENU=Quote number %1 has been converted to order number %2.;FRA=Le devis %1 a ‚t‚ transform‚ en commande %2.';
       PurchOrderHeader@1002 : Record 38;
       PurchQuoteToOrder@1003 : Codeunit 96;
+      Grec_Contract@1000000005 : Record 50008;
+      Grec_ApprovalEntry@1000000004 : Record 454;
+      Grec_UserSetup@1000000003 : Record 91;
+      Grec_PurchOrderLine@1000000002 : Record 39;
+      Gdec_TermOfService@1000000001 : Decimal;
+      Gcu_ManageContract@1000000000 : Codeunit 50005;
 
     BEGIN
+    {
+
+      -------------------------------- V1.2 --------------------------------
+      DEBUT AJOUT JX-XAD 25/02/2010
+      Gestion des contrats : on ajoute le nø commande dans la table contrat
+
+      //Modif JX-XAD du 29/06/2010
+      On ne traite la partie des contrats que si :
+      - On est dans la st‚ VSCT
+      - Une des lignes contient l'utit‚ jours-homm
+
+      //MODIF JX-AUD 21/10/2014
+      //D‚sactivation du test pour la soci‚t‚ pour les contrats
+    }
     END.
   }
 }

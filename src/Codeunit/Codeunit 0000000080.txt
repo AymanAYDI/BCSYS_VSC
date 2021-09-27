@@ -2,9 +2,10 @@ OBJECT Codeunit 80 Sales-Post
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=31/08/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,JX-VSC2.0-XAD;
   }
   PROPERTIES
   {
@@ -53,6 +54,17 @@ OBJECT Codeunit 80 Sales-Post
             BiggestLineNo@1020 : Integer;
             TransactionLogEntryNo@1024 : Integer;
           BEGIN
+            //DEBUT MODIF JX-XAD 20/05/2011
+            IF ("Document Type" = "Document Type"::Invoice) OR ("Document Type" = "Document Type"::"Credit Memo") THEN BEGIN
+              IF "Your Reference" = '' THEN
+                ERROR(Text061,"Document Type");
+             "Posting Description" := "Your Reference";
+            END;
+            IF ("Document Type" = "Document Type"::Order) THEN//Modif JX-AUD du 15/02/2013
+              IF "Your Reference" = '' THEN
+                ERROR(Text062,"Document Type");
+            //FIN MODIF JX-XAD 20/05/2011
+
             IF PostingDateExists AND (ReplacePostingDate OR ("Posting Date" = 0D)) THEN BEGIN
               "Posting Date" := PostingDate;
               VALIDATE("Currency Code");
@@ -1253,7 +1265,13 @@ OBJECT Codeunit 80 Sales-Post
                     GenJnlLine.INIT;
                     GenJnlLine."Posting Date" := "Posting Date";
                     GenJnlLine."Document Date" := "Document Date";
-                    GenJnlLine.Description := "Posting Description";
+                    //DEBUT MODIF JX-XAD 26/05/2009
+                    IF InvPostingBuffer[1].Description <> '' THEN
+                      GenJnlLine.Description := InvPostingBuffer[1].Description
+                    ELSE
+                      GenJnlLine.Description := "Posting Description";
+                    //FIN MODIF JX-XAD 26/05/2009
+            //        GenJnlLine.Description := "Posting Description";
                     GenJnlLine."Reason Code" := "Reason Code";
                     GenJnlLine."Document Type" := GenJnlLineDocType;
                     GenJnlLine."Document No." := GenJnlLineDocNo;
@@ -1822,6 +1840,8 @@ OBJECT Codeunit 80 Sales-Post
       ShipmentInvoiced@1120000 : Record 10825;
       Text061Err@1171 : TextConst 'ENU=The order line that the item charge was originally assigned to has been fully posted. You must reassign the item charge to the posted receipt or shipment.;FRA=La ligne commande … laquelle les frais annexes ont ‚t‚ initialement affect‚s a ‚t‚ entiŠrement valid‚e. Vous devez r‚affecter les frais annexes … la r‚ception ou l''exp‚dition valid‚e.';
       Text062Qst@1132 : TextConst '@@@="One or more reservation entries exist for the item with No. = 1000, Location Code = SILVER, Variant Code = NEW which may be disrupted if you post this negative adjustment. Do you want to continue?";ENU="One or more reservation entries exist for the item with %1 = %2, %3 = %4, %5 = %6 which may be disrupted if you post this negative adjustment. Do you want to continue?";FRA="Au moins une des ‚critures r‚servation existe pour l''article avec %1 = %2, %3 = %4, %5 = %6, qui peut ˆtre interrompu si vous validez cet ajustement n‚gatif. Voulez-vous continuerÿ?"';
+      Text061@1000000001 : TextConst 'ENU=The field "Your reference" in header %1 is mandatory;FRA=Le champs "Votre r‚f‚rence" dans en-tˆte %1 est obligatoire';
+      Text062@1000000000 : TextConst 'ENU=The field "Your reference" in header %1 is mandatory;FRA=Le champs "Notre r‚f‚rence" dans en-tˆte %1 est obligatoire';
 
     PROCEDURE SetPostingDate@1(NewReplacePostingDate@1000 : Boolean;NewReplaceDocumentDate@1001 : Boolean;NewPostingDate@1002 : Date);
     BEGIN
@@ -5321,7 +5341,12 @@ OBJECT Codeunit 80 Sales-Post
         GenJnlLine2.INIT;
         GenJnlLine2."Posting Date" := "Posting Date";
         GenJnlLine2."Document Date" := "Document Date";
-        GenJnlLine2.Description := "Posting Description";
+
+        //DEBUT MODIF JX-XAD 20/05/2011
+        //GenJnlLine2.Description := "Posting Description";
+        GenJnlLine2.Description := "Your Reference";
+        //FIN MODIF JX-XAD 20/05/2011
+
         GenJnlLine2."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
         GenJnlLine2."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
         GenJnlLine2."Dimension Set ID" := "Dimension Set ID";
@@ -6104,6 +6129,15 @@ OBJECT Codeunit 80 Sales-Post
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 20/05/2011
+      Remplacement du nø facture par Votre r‚f‚rence dans la description des ‚critures comptables (factures et avoirs)
+      Le champ "Votre r‚f‚rence" devient obligatoire
+
+      //Modif JX-AUD du 15/02/2013
+      //Ajout code OR ("Document Type" = "Document Type"::"Order")
+    }
     END.
   }
 }

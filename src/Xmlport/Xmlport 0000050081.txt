@@ -1,0 +1,57 @@
+OBJECT XMLport 50081 Mail Setup Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/07/16;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+  }
+  ELEMENTS
+  {
+    { [{7F6FA636-2328-458F-9EC3-E49D732617BC}];  ;Root                ;Element ;Text     }
+
+    { [{54F8C663-BA7E-4BD6-9B10-0EBCD7BF0E57}];1 ;Table               ;Element ;Table   ;
+                                                  SourceTable=Table50017;
+                                                  AutoUpdate=Yes }
+
+    { [{13D56F3C-7EEE-4B7B-8CB1-DC97E080ADA9}];2 ;Type                ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Mail Body Setup::Mail Type }
+
+    { [{79BD37E8-33A3-4783-97B7-F8D1834BDC14}];2 ;Line                ;Element ;Field   ;
+                                                  DataType=Integer;
+                                                  SourceField=Mail Body Setup::Line No. }
+
+    { [{A7A2A814-C74E-4616-BB68-C3808F18A007}];2 ;TextLine            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Mail Body Setup::Textline }
+
+    { [{E541C3F6-735B-4D9F-A1F5-195A374744B1}];2 ;Sep                 ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Mail Body Setup::Seperator }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

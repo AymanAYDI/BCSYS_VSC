@@ -2,9 +2,10 @@ OBJECT Page 55 Purch. Invoice Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-LAB,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -235,14 +236,6 @@ OBJECT Page 55 Purch. Invoice Subform
                 SourceExpr=Nonstock;
                 Visible=FALSE }
 
-    { 14  ;2   ;Field     ;
-                SourceExpr="VAT Prod. Posting Group";
-                Visible=FALSE;
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-                            }
-
     { 6   ;2   ;Field     ;
                 SourceExpr=Description }
 
@@ -251,40 +244,12 @@ OBJECT Page 55 Purch. Invoice Subform
                 Visible=FALSE }
 
     { 58  ;2   ;Field     ;
-                SourceExpr="Location Code" }
+                SourceExpr="Location Code";
+                Visible=FALSE }
 
     { 80  ;2   ;Field     ;
                 SourceExpr="Bin Code";
                 Visible=FALSE }
-
-    { 8   ;2   ;Field     ;
-                BlankZero=Yes;
-                SourceExpr=Quantity;
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-
-                ShowMandatory=TypeChosen }
-
-    { 34  ;2   ;Field     ;
-                SourceExpr="Unit of Measure Code";
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-                            }
-
-    { 10  ;2   ;Field     ;
-                SourceExpr="Unit of Measure";
-                Visible=FALSE }
-
-    { 12  ;2   ;Field     ;
-                BlankZero=Yes;
-                SourceExpr="Direct Unit Cost";
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-
-                ShowMandatory=TypeChosen }
 
     { 68  ;2   ;Field     ;
                 SourceExpr="Indirect Cost %";
@@ -310,17 +275,10 @@ OBJECT Page 55 Purch. Invoice Subform
                            END;
                             }
 
-    { 52  ;2   ;Field     ;
-                BlankZero=Yes;
-                SourceExpr="Line Amount";
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-                            }
-
     { 16  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Discount %";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -349,6 +307,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 44  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. to Assign";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -359,6 +318,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 42  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. Assigned";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -477,7 +437,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 300 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[3];
                 CaptionClass='1,2,3';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(3,ShortcutDimCode[3]);
                            END;
@@ -490,7 +450,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 302 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[4];
                 CaptionClass='1,2,4';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(4,ShortcutDimCode[4]);
                            END;
@@ -503,7 +463,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 304 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[5];
                 CaptionClass='1,2,5';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(5,ShortcutDimCode[5]);
                            END;
@@ -516,7 +476,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 306 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[6];
                 CaptionClass='1,2,6';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(6,ShortcutDimCode[6]);
                            END;
@@ -529,7 +489,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 308 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[7];
                 CaptionClass='1,2,7';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(7,ShortcutDimCode[7]);
                            END;
@@ -542,7 +502,7 @@ OBJECT Page 55 Purch. Invoice Subform
     { 310 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[8];
                 CaptionClass='1,2,8';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(8,ShortcutDimCode[8]);
                            END;
@@ -552,89 +512,93 @@ OBJECT Page 55 Purch. Invoice Subform
                          END;
                           }
 
-    { 39  ;1   ;Group     ;
-                GroupType=Group }
+    { 1000000010;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
 
-    { 33  ;2   ;Group     ;
-                GroupType=Group }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
 
-    { 31  ;3   ;Field     ;
-                Name=Invoice Discount Amount;
-                CaptionML=[ENU=Invoice Discount Amount;
-                           FRA=Montant remise facture];
-                SourceExpr=TotalPurchaseLine."Inv. Discount Amount";
-                AutoFormatType=1;
-                Editable=InvDiscAmountEditable;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled;
-                OnValidate=VAR
-                             PurchaseHeader@1000 : Record 38;
-                           BEGIN
-                             PurchaseHeader.GET("Document Type","Document No.");
-                             PurchCalcDiscByType.ApplyInvDiscBasedOnAmt(TotalPurchaseLine."Inv. Discount Amount",PurchaseHeader);
-                             CurrPage.UPDATE(FALSE);
+    { 1000000011;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="VAT Prod. Posting Group";
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
                            END;
                             }
 
-    { 29  ;3   ;Field     ;
-                Name=Invoice Disc. Pct.;
-                CaptionML=[ENU=Invoice Discount %;
-                           FRA=% remise facture];
-                DecimalPlaces=0:2;
-                SourceExpr=PurchCalcDiscByType.GetVendInvoiceDiscountPct(Rec);
+    { 1000000001;2;Field  ;
+                SourceExpr="Gen. Bus. Posting Group";
+                Visible=FALSE }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="VAT Bus. Posting Group";
+                Visible=FALSE }
+
+    { 1000000008;2;Field  ;
+                BlankZero=Yes;
+                SourceExpr=Quantity;
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
+                           END;
+
+                ShowMandatory=TypeChosen }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Unit of Measure Code";
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
+                           END;
+                            }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Unit of Measure";
                 Visible=TRUE;
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+                Editable=FALSE }
 
-    { 15  ;2   ;Group     ;
-                GroupType=Group }
+    { 1000000005;2;Field  ;
+                BlankZero=Yes;
+                SourceExpr="Direct Unit Cost";
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
+                           END;
 
-    { 13  ;3   ;Field     ;
-                Name=Total Amount Excl. VAT;
-                DrillDown=No;
-                CaptionML=[ENU=Total Amount Excl. VAT;
-                           FRA=Montant total HT];
-                SourceExpr=TotalPurchaseLine.Amount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalExclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+                ShowMandatory=TypeChosen }
 
-    { 11  ;3   ;Field     ;
-                Name=Total VAT Amount;
-                CaptionML=[ENU=Total VAT;
-                           FRA=Total TVA];
-                SourceExpr=VATAmount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+    { 1000000003;2;Field  ;
+                BlankZero=Yes;
+                SourceExpr="Line Amount";
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
+                           END;
+                            }
 
-    { 9   ;3   ;Field     ;
-                Name=Total Amount Incl. VAT;
-                CaptionML=[ENU=Total Amount Incl. VAT;
-                           FRA=Montant total TTC];
-                SourceExpr=TotalPurchaseLine."Amount Including VAT";
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalInclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                StyleExpr=TotalAmountStyle }
-
-    { 7   ;3   ;Field     ;
-                Name=RefreshTotals;
-                DrillDown=Yes;
-                SourceExpr=RefreshMessageText;
-                Enabled=RefreshMessageEnabled;
-                Editable=FALSE;
-                OnDrillDown=BEGIN
-                              DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
-                            END;
-
-                ShowCaption=No }
+    { 1000000009;2;Field  ;
+                SourceExpr="Amount Including VAT";
+                Visible=FALSE }
 
   }
   CODE
@@ -648,7 +612,7 @@ OBJECT Page 55 Purch. Invoice Subform
       PurchPriceCalcMgt@1004 : Codeunit 7010;
       PurchCalcDiscByType@1010 : Codeunit 66;
       DocumentTotals@1009 : Codeunit 57;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       UpdateAllowedVar@1000 : Boolean;
       Text000@1001 : TextConst 'ENU=Unable to run this function while in View mode.;FRA=Impossible d''ex‚cuter cette fonction en mode Afficher.';
       VATAmount@1017 : Decimal;
@@ -726,6 +690,19 @@ OBJECT Page 55 Purch. Invoice Subform
       PurchPriceCalcMgt.GetPurchLineLineDisc(PurchHeader,Rec);
     END;
 
+    PROCEDURE JX_InsertDescriptInHisto@1000000000() Rtxt_Description : Text[50];
+    VAR
+      Lrec_PurchLines@1000000000 : Record 39;
+    BEGIN
+      //D‚but Ajout JX-XAD le 20/11/2009
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document Type",'%1',"Document Type");
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document No.",'%1',"Document No.");
+
+      IF Lrec_PurchLines.FIND('-') THEN
+        Rtxt_Description := Lrec_PurchLines.Description;
+      //Fin Ajout JX-XAD le 20/11/2009
+    END;
+
     LOCAL PROCEDURE NoOnAfterValidate@19066594();
     BEGIN
       InsertExtendedText(FALSE);
@@ -750,7 +727,27 @@ OBJECT Page 55 Purch. Invoice Subform
       CurrPage.UPDATE;
     END;
 
+    PROCEDURE JX_GetPurchLines@1000000001(VAR Prec_PurchLines@1000000000 : Record 39);
     BEGIN
+      Prec_PurchLines.SETFILTER(Prec_PurchLines."Document Type",'%1',"Document Type");
+      Prec_PurchLines.SETFILTER(Prec_PurchLines."Document No.",'%1',"Document No.");
+    END;
+
+    BEGIN
+    {
+      Modif JX-LAB du 18/09/2008
+      Mise en visible des champs analytiques
+
+      ----------------------------------- V1.2 -----------------------------------
+      Modif JX-XAD du 20/11/2009
+      Ajout d'une fonction JX_InsertDescripionInHisto() renvoyant la premiŠre ligne de description destin‚e … l'historique
+      Ajout d'une fonction JX_GetPurchLines() pour renvoyer le contenu de la facture
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+      Ajout Axes analytique (Shortcut 9 et 10)
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

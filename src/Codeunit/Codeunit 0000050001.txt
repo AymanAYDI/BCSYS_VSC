@@ -1,0 +1,127 @@
+OBJECT Codeunit 50001 PrintOrderVSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.1-AUD,JX-VSC1.2-XAD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ReportSelection@1000000000 : Record 77;
+      PurchLine@1000000001 : Record 39;
+      PurchSetup@1000000002 : Record 312;
+      PurchCalcDisc@1000000003 : Codeunit 70;
+      Gcu_ContractManagement@1000000004 : Codeunit 50005;
+      Gbool_ManageContract@1000000005 : Boolean;
+
+    PROCEDURE PrintOrderVSC@1000000000(PurchaseHeader@1000000000 : Record 38);
+    VAR
+      Grec_Contract@1000000001 : Record 50008;
+    BEGIN
+      PurchaseHeader.SETRANGE("No.",PurchaseHeader."No.");
+      PurchSetup.GET;
+      IF PurchSetup."Calc. Inv. Discount" THEN BEGIN
+        PurchLine.RESET;
+        PurchLine.SETRANGE("Document Type",PurchaseHeader."Document Type");
+        PurchLine.SETRANGE("Document No.",PurchaseHeader."No.");
+        PurchLine.FIND('-');
+        PurchCalcDisc.RUN(PurchLine);
+        PurchaseHeader.GET(PurchaseHeader."Document Type",PurchaseHeader."No.");
+        COMMIT;
+      END;
+
+      CASE PurchaseHeader."Document Type" OF
+        PurchaseHeader."Document Type"::Order:
+           IF(COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT Test') OR (COMPANYNAME = 'VFEC') OR (COMPANYNAME = 'VFEC Test') THEN BEGIN
+           //DEBUT MODIF JX-XAD le 20/04/2010
+
+             IF (NOT Gcu_ContractManagement.CheckOrderLines(PurchaseHeader."No.")) THEN
+             BEGIN
+               //D‚but MODIF JX-XAD le 25/06/2010
+               //REPORT.RUNMODAL(ReportSelection."Report ID",TRUE,FALSE,PurchaseHeader)
+               Gbool_ManageContract := TRUE;
+               IF Grec_Contract.GET(PurchaseHeader."Quote No.") THEN
+               BEGIN
+                 IF Grec_Contract.Description1 = '' THEN
+                   Gbool_ManageContract := FALSE;
+               END ELSE
+                 Gbool_ManageContract := FALSE;
+
+               IF Gbool_ManageContract THEN
+                 REPORT.RUNMODAL(50041,TRUE,FALSE,PurchaseHeader)
+               ELSE BEGIN
+                 ReportSelection.SETRANGE(Usage,ReportSelection.Usage::"P.Order");
+                 ReportSelection.SETFILTER("Report ID",'<>0');
+                 ReportSelection.FIND('-');
+                 REPEAT
+                 REPORT.RUNMODAL(ReportSelection."Report ID",TRUE,FALSE,PurchaseHeader)
+                 UNTIL ReportSelection.NEXT = 0;
+               END;
+               //Fin MODIF JX-XAD le 25/06/2010
+             END ELSE BEGIN
+           //FIN MODIF JX-XAD le 20/04/2010
+               ReportSelection.SETRANGE(Usage,ReportSelection.Usage::"P.Order");
+               ReportSelection.SETFILTER("Report ID",'<>0');
+               ReportSelection.FIND('-');
+               REPEAT
+               REPORT.RUNMODAL(ReportSelection."Report ID",TRUE,FALSE,PurchaseHeader)
+               UNTIL ReportSelection.NEXT = 0;
+             END;
+           END ELSE BEGIN
+
+           IF(PurchaseHeader."Buy-from Country/Region Code" = '') OR
+             (PurchaseHeader."Buy-from Country/Region Code" = 'FR') OR
+             (PurchaseHeader."Buy-from Country/Region Code" = 'BE') OR
+             (PurchaseHeader."Buy-from Country/Region Code" = 'LU') THEN BEGIN
+             ReportSelection.SETRANGE(Usage,ReportSelection.Usage::"P.Order");
+             ReportSelection.SETFILTER("Report ID",'<>0');
+             ReportSelection.FIND('-');
+             REPEAT
+             REPORT.RUNMODAL(ReportSelection."Report ID",TRUE,FALSE,PurchaseHeader)
+             UNTIL ReportSelection.NEXT = 0;
+           END ELSE BEGIN
+
+                 IF(COMPANYNAME = 'Agence') OR (COMPANYNAME = 'Agence Test') THEN BEGIN
+                 REPORT.RUNMODAL(50031,TRUE,FALSE,PurchaseHeader);
+                 END;
+
+                 IF(COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC Test') THEN BEGIN
+                 REPORT.RUNMODAL(50029,TRUE,FALSE,PurchaseHeader);
+                 END;
+           END;
+
+           END;
+        ELSE
+          EXIT;
+      END;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-AUD le 08.04.2009
+      //fonction permettant d'afficher les CGA en fonction de la soci‚t‚ et du codePays du fournisseur
+
+      MODIF JX-XAD le 20/04/2010
+      Lancement du report 50041 (copmmande + contrat r‚gie) si soci‚t‚ VSCT et unit‚ = jours-hommes
+
+      MODIF JX-XAD le 25/06/2010
+      On imprime le contrat si le devis existe et contient une description. Ce code est en rapport avec le fait qu'on
+      gŠre les contrats uniquement si le devis a ‚t‚ cr‚‚ aprŠs da date de mise en service de la gestion des contrats,
+      soit le 16/06/2010.
+
+      //MODIF JX-AUD le 16/12/2010
+      //Ajout du code "OR (COMPANYNAME = 'VFE')" pour la soci‚t‚ VFE
+    }
+    END.
+  }
+}
+

@@ -1,0 +1,370 @@
+OBJECT Report 50078 Modify Dimension 2015
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/02/17;
+    Time=14:53:16;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 17=rm,
+                TableData 21=rm,
+                TableData 25=rm,
+                TableData 37=rimd,
+                TableData 39=rimd,
+                TableData 111=rimd,
+                TableData 113=rimd,
+                TableData 115=rimd,
+                TableData 121=rimd,
+                TableData 123=rimd,
+                TableData 125=rimd;
+    CaptionML=FRA=Modifications analytiques;
+    ProcessingOnly=Yes;
+    OnPreReport=BEGIN
+                  IF (NOT gMCpta) AND (NOT gMVte) AND (NOT gMAch) THEN
+                   CurrReport.QUIT;
+
+                  TextMsg := Text001;
+                  IF gMCpta THEN
+                   TextMsg := TextMsg + TextCpta;
+                  IF gMVte THEN
+                   TextMsg := TextMsg + TextVte;
+                  IF gMAch THEN
+                   TextMsg := TextMsg + TextAch;
+
+                   IF NOT CONFIRM(TextMsg,FALSE) THEN
+                    CurrReport.QUIT;
+
+                  W.OPEN('#1#########');
+                END;
+
+  }
+  DATASET
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table480;
+               DataItemTableView=SORTING(Dimension Code,Dimension Value Code);
+               OnPreDataItem=BEGIN
+                               SETRANGE("Dimension Code",gAxe);
+                               SETRANGE("Dimension Value Code",gOldDim);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  lNewDimSet := DimMgt.NewDimensionSet("Dimension Set ID",gAxe,gOldDim,gNewDim);
+                                END;
+                                 }
+
+    { 1000000001;1;DataItem;                 ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMCpta) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF GLEntry.GET("Entry No.") THEN BEGIN
+                                   GLEntry."Dimension Set ID" := lNewDimSet;
+                                   GLEntry.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Entry No.");
+                                END;
+                                 }
+
+    { 1000000002;1;DataItem;                 ;
+               DataItemTable=Table21;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMCpta) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF CustEntry.GET("Entry No.") THEN BEGIN
+                                   CustEntry."Dimension Set ID" := lNewDimSet;
+                                   CustEntry.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Entry No.");
+                                END;
+                                 }
+
+    { 1000000003;1;DataItem;                 ;
+               DataItemTable=Table25;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMCpta) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF VendEntry.GET("Entry No.") THEN BEGIN
+                                   VendEntry."Dimension Set ID" := lNewDimSet;
+                                   VendEntry.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Entry No.");
+                                END;
+                                 }
+
+    { 1000000004;1;DataItem;                 ;
+               DataItemTable=Table37;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMVte) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF SalesLine.GET("Document Type","Document No.","Line No.") THEN BEGIN
+                                   SalesLine."Dimension Set ID" := lNewDimSet;
+                                   SalesLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000005;1;DataItem;                 ;
+               DataItemTable=Table111;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMVte) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF SalesShptLine.GET("Document No.","Line No.") THEN BEGIN
+                                   SalesShptLine."Dimension Set ID" := lNewDimSet;
+                                   SalesShptLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000006;1;DataItem;                 ;
+               DataItemTable=Table113;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMVte) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF SalesInvLine.GET("Document No.","Line No.") THEN BEGIN
+                                   SalesInvLine."Dimension Set ID" := lNewDimSet;
+                                   SalesInvLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000007;1;DataItem;                 ;
+               DataItemTable=Table115;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMVte) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF SalesCrLine.GET("Document No.","Line No.") THEN BEGIN
+                                   SalesCrLine."Dimension Set ID" := lNewDimSet;
+                                   SalesCrLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000008;1;DataItem;                 ;
+               DataItemTable=Table39;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMAch) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF PurchLine.GET("Purchase Line"."Document Type","Purchase Line"."Document No.","Purchase Line"."Line No.") THEN BEGIN
+                                   PurchLine."Dimension Set ID" := lNewDimSet;
+                                   PurchLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000009;1;DataItem;                 ;
+               DataItemTable=Table121;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMAch) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF PurchRcptLine.GET("Purch. Rcpt. Line"."Document No.","Purch. Rcpt. Line"."Line No.") THEN BEGIN
+                                   PurchRcptLine."Dimension Set ID" := lNewDimSet;
+                                   PurchRcptLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000010;1;DataItem;                 ;
+               DataItemTable=Table123;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMAch) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF PurchInvLine.GET("Purch. Inv. Line"."Document No.","Purch. Inv. Line"."Line No.") THEN BEGIN
+                                   PurchInvLine."Dimension Set ID" := lNewDimSet;
+                                   PurchInvLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+    { 1000000011;1;DataItem;                 ;
+               DataItemTable=Table125;
+               DataItemTableView=SORTING(Dimension Set ID);
+               OnPreDataItem=BEGIN
+                               IF (NOT gMAch) THEN
+                                CurrReport.BREAK;
+                               SETRANGE("Dimension Set ID","Dimension Set Entry"."Dimension Set ID");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF PurchCrLine.GET("Purch. Cr. Memo Line"."Document No.","Purch. Cr. Memo Line"."Line No.") THEN BEGIN
+                                   PurchCrLine."Dimension Set ID" := lNewDimSet;
+                                   PurchCrLine.MODIFY;
+                                  END;
+                                  W.UPDATE(1,"Document No.");
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Analytique;
+                  ContainerType=ContentArea }
+
+      { 1000000004;1;Group  ;
+                  Name=Modification Section;
+                  GroupType=Group }
+
+      { 1000000001;2;Field  ;
+                  Name=Axe;
+                  CaptionML=FRA=Axe … modifier;
+                  SourceExpr=gAxe;
+                  TableRelation=Dimension }
+
+      { 1000000002;2;Field  ;
+                  Name=Ancien Code Section;
+                  SourceExpr=gOldDim;
+                  OnLookup=BEGIN
+                             gOldDim := ShowDim;
+                           END;
+                            }
+
+      { 1000000003;2;Field  ;
+                  Name=Nouveau Code Section;
+                  SourceExpr=gNewDim;
+                  OnLookup=BEGIN
+                             gNewDim := ShowDim;
+                           END;
+                            }
+
+      { 1000000005;1;Group  ;
+                  Name=Modification Ecritures;
+                  GroupType=Group }
+
+      { 1000000006;2;Field  ;
+                  Name=Modification Compta;
+                  SourceExpr=gMCpta }
+
+      { 1000000007;2;Field  ;
+                  Name=Modification Vente;
+                  SourceExpr=gMVte }
+
+      { 1000000008;2;Field  ;
+                  Name=Modification Achat;
+                  SourceExpr=gMAch }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      gAxe@1000000000 : Code[20];
+      gOldDim@1000000001 : Code[20];
+      gNewDim@1000000002 : Code[20];
+      gMCpta@1000000012 : Boolean;
+      gMVte@1000000013 : Boolean;
+      gMAch@1000000014 : Boolean;
+      DimMgt@1000000003 : Codeunit 408;
+      lNewDimSet@1000000004 : Integer;
+      TextMsg@1000000015 : Text;
+      Text001@1000000008 : TextConst 'FRA=Etes-vous asbsolument certain de vouloir remplacer cette section analytique dans les tables suivantes :\';
+      TextCpta@1000000009 : TextConst 'FRA=Ecritures Comptables, Ecritures Compta. Client, Ecritures Compta. Fournisseur\';
+      TextVte@1000000010 : TextConst 'FRA=Lignes Documents Vente, Lignes Exp‚ditions Vente, Lignes Factures Vente, Lignes Avoirs Vente\';
+      TextAch@1000000011 : TextConst 'FRA=Lignes Documents Achat, Lignes R‚ceptions Achat, Lignes Factures Achat, Lignes Avoirs Achat';
+      PurchLine@1000000007 : Record 39;
+      PurchRcptLine@1000000018 : Record 121;
+      PurchInvLine@1000000016 : Record 123;
+      PurchCrLine@1000000017 : Record 125;
+      SalesLine@1000000022 : Record 37;
+      SalesShptLine@1000000021 : Record 111;
+      SalesInvLine@1000000020 : Record 113;
+      SalesCrLine@1000000019 : Record 115;
+      GLEntry@1000000023 : Record 17;
+      CustEntry@1000000024 : Record 21;
+      VendEntry@1000000025 : Record 25;
+      W@1000000005 : Dialog;
+
+    LOCAL PROCEDURE ShowDim@1000000000() : Code[10];
+    VAR
+      Dim@1000000001 : Record 349;
+      PageDim@1000000000 : Page 537;
+    BEGIN
+      CLEAR(PageDim);
+      Dim.RESET;
+      Dim.SETRANGE("Dimension Code",gAxe);
+      PageDim.LOOKUPMODE(TRUE);
+      PageDim.SETRECORD(Dim);
+      PageDim.SETTABLEVIEW(Dim);
+      IF PageDim.RUNMODAL = ACTION::LookupOK THEN BEGIN
+       PageDim.GETRECORD(Dim);
+       EXIT(Dim.Code);
+      END ELSE
+       EXIT('');
+    END;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

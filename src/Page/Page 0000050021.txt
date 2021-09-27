@@ -1,0 +1,105 @@
+OBJECT Page 50021 Contract list
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=FRA=Liste des contrats;
+    SourceTable=Table50008;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                Editable=FALSE;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Initial quote No" }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Oder No. / Contract;
+                           FRA=Nø Commande / Contrat];
+                SourceExpr="Order No." }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Date of entry" }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="End date" }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Term of service" }
+
+    { 1000000013;2;Field  ;
+                SourceExpr="Speaking supplier" }
+
+    { 1000000015;2;Field  ;
+                SourceExpr="Speaking VSCT" }
+
+    { 1000000019;2;Field  ;
+                SourceExpr=Description1 }
+
+    { 1000000021;2;Field  ;
+                SourceExpr=Description2 }
+
+    { 1000000023;2;Field  ;
+                SourceExpr=Description3 }
+
+    { 1000000025;2;Field  ;
+                SourceExpr=Description4 }
+
+    { 1000000027;2;Field  ;
+                SourceExpr=Description5 }
+
+    { 1000000029;2;Field  ;
+                SourceExpr=Description6 }
+
+    { 1000000031;2;Field  ;
+                SourceExpr=Description7 }
+
+    { 1000000033;2;Field  ;
+                SourceExpr=Description8 }
+
+    { 1000000035;2;Field  ;
+                SourceExpr=TJM }
+
+    { 1000000037;2;Field  ;
+                SourceExpr="Date de commande" }
+
+    { 1000000039;2;Field  ;
+                SourceExpr=Approbateur }
+
+    { 1000000044;2;Field  ;
+                SourceExpr="Nom prestataire" }
+
+    { 1000000046;2;Field  ;
+                SourceExpr="Pr‚nom prestataire" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Signature status" }
+
+    { 1000000017;2;Field  ;
+                SourceExpr="Date de mise au coffre" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD 06/04/2010
+      Liste des contrats
+    }
+    END.
+  }
+}
+

@@ -2,9 +2,10 @@ OBJECT Page 25 Customer Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=09/09/15;
+    Time=16:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC2.0-XAD-AUD;
   }
   PROPERTIES
   {
@@ -16,10 +17,34 @@ OBJECT Page 25 Customer Ledger Entries
     DataCaptionFields=Customer No.;
     PageType=List;
     OnInit=BEGIN
+             //Modif JX-AUD du 03/01/2012
+             IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                Gcode_Axe := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+             END;
+
+             IF Grec_Dimension.GET(Gcode_Axe) THEN Gtext_ColAxe := Grec_Dimension."Code Caption";
+             //Fin modif JX-AUD du 03/01/2012
+
              RemainingAmtLCYVisible := FALSE;
            END;
 
     OnAfterGetRecord=BEGIN
+                       //Modif JX-AUD du 03/01/2012
+                       Gtext_CodeAxe := '';
+                       Grec_SalesInvoiceLine.SETFILTER(Grec_SalesInvoiceLine."Document No.","Document No.");
+                       IF Grec_SalesInvoiceLine.FIND('-') THEN
+                       BEGIN
+                         REPEAT
+                           IF Grec_DimSetEntry.GET(Grec_SalesInvoiceLine."Dimension Set ID",Gcode_Axe) THEN
+                           BEGIN
+                              Gtext_CodeAxe := Grec_DimSetEntry."Dimension Value Code";
+                              EXIT;
+                           END;
+                         UNTIL Grec_SalesInvoiceLine.NEXT =0;
+                       END ELSE
+                         Gtext_CodeAxe := '';
+                       //Fin modif JX-AUD du 03/01/2012
+
                        StyleTxt := SetStyle;
                      END;
 
@@ -190,6 +215,9 @@ OBJECT Page 25 Customer Ledger Entries
                 Editable=FALSE;
                 StyleExpr=StyleTxt }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="External Document No." }
+
     { 8   ;2   ;Field     ;
                 SourceExpr="Customer No.";
                 Editable=FALSE }
@@ -200,6 +228,11 @@ OBJECT Page 25 Customer Ledger Entries
     { 10  ;2   ;Field     ;
                 SourceExpr=Description;
                 Editable=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr=Gtext_CodeAxe;
+                CaptionClass=Gtext_ColAxe;
+                Visible=TRUE }
 
     { 39  ;2   ;Field     ;
                 SourceExpr="Global Dimension 1 Code";
@@ -353,8 +386,15 @@ OBJECT Page 25 Customer Ledger Entries
   {
     VAR
       Navigate@1000 : Page 344;
+      Gtext_CodeAxe@1000000001 : Text[30];
+      Gcode_Axe@1000000002 : Code[20];
+      Gtext_ColAxe@1000000003 : Text[30];
+      Grecord_GeneralLedgerSetup@1000000004 : Record 98;
+      Grec_Dimension@1000000005 : Record 348;
+      Grec_SalesInvoiceLine@1000000006 : Record 113;
       StyleTxt@1001 : Text;
       RemainingAmtLCYVisible@1002 : Boolean;
+      Grec_DimSetEntry@1000000000 : Record 480;
 
     PROCEDURE SetRemainingAmtLCYToVisible@2();
     BEGIN
@@ -367,6 +407,13 @@ OBJECT Page 25 Customer Ledger Entries
     END;
 
     BEGIN
+    {
+      MODIF JX-XAD 21/09/2010
+      Ajout champ "Nø doc externe"
+
+      //Modif JX-AUD du 03/01/2012
+      //Ajout du code axe intragroupe sur chaque ligne
+    }
     END.
   }
 }

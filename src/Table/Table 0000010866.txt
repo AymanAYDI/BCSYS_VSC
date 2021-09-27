@@ -2,9 +2,10 @@ OBJECT Table 10866 Payment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
+    Date=23/08/16;
     Time=12:00:00;
-    Version List=NAVFR8.00.00.39663;
+    Modified=Yes;
+    Version List=NAVFR8.00.00.39663,JX-YOOZ2,JX-VSC4.1-PBD,JX-VSC4.2-PBD;
   }
   PROPERTIES
   {
@@ -32,6 +33,7 @@ OBJECT Table 10866 Payment Line
 
     OnModify=BEGIN
                ModifyCheck;
+               FctYooz(TRUE);
              END;
 
     OnDelete=VAR
@@ -363,6 +365,16 @@ OBJECT Table 10866 Payment Line
 
                                                    CaptionML=[ENU=Direct Debit Mandate ID;
                                                               FRA=ID mandat de pr‚lŠvement] }
+    { 50000;  ;Account Name        ;Text50        ;CaptionML=FRA=Nom du compte;
+                                                   Description=JX-YOOZ2;
+                                                   Editable=No }
+    { 50010;  ;Applied Yooz No.    ;Text250       ;CaptionML=FRA=Nø Yooz lettr‚s;
+                                                   Description=JX-YOOZ2 }
+    { 50020;  ;Pay Document Type   ;Option        ;CaptionML=FRA=Type Document pay‚;
+                                                   OptionCaptionML=[ENU=Invoice,Quote,Order,FAP;
+                                                                    FRA=Facture enregistr‚e,Devis,Commande,FAP];
+                                                   OptionString=Invoice,Quote,Order,FAP }
+    { 50021;  ;Pay Document No.    ;Code20        ;CaptionML=FRA=Nø Document pay‚ }
   }
   KEYS
   {
@@ -373,6 +385,8 @@ OBJECT Table 10866 Payment Line
                                                    SumIndexFields=Amount (LCY) }
     {    ;No.,Account No.,Bank Branch No.,Agency Code,Bank Account No.,Payment Address Code }
     {    ;Posting Date,Document No.                }
+    {    ;Account Name,Line No.                    }
+    {    ;Pay Document Type,Pay Document No.       }
   }
   FIELDGROUPS
   {
@@ -641,6 +655,7 @@ OBJECT Table 10866 Payment Line
             GLAccount.GET("Account No.");
             GLAccount.TESTFIELD("Account Type",GLAccount."Account Type"::Posting);
             GLAccount.TESTFIELD(Blocked,FALSE);
+            "Account Name" := GLAccount.Name; // JX-YOOZ2 13/11/15
           END;
         "Account Type"::Customer:
           BEGIN
@@ -652,6 +667,7 @@ OBJECT Table 10866 Payment Line
                 VALIDATE("Bank Account Code",Customer."Preferred Bank Account");
             IF NOT InsertRecord THEN
               UpdateDueDate(0D);
+            "Account Name" := Customer.Name; // JX-YOOZ2 13/11/15
           END;
         "Account Type"::Vendor:
           BEGIN
@@ -662,19 +678,22 @@ OBJECT Table 10866 Payment Line
                 VALIDATE("Bank Account Code",Vendor."Preferred Bank Account");
             IF NOT InsertRecord THEN
               UpdateDueDate(0D);
+            "Account Name" := Vendor.Name; // JX-YOOZ2 13/11/15
           END;
         "Account Type"::"Bank Account":
           BEGIN
             BankAccount.GET("Account No.");
             BankAccount.TESTFIELD(Blocked,FALSE);
+            "Account Name" := BankAccount.Name; // JX-YOOZ2 13/11/15
           END;
         "Account Type"::"Fixed Asset":
           BEGIN
             FixedAsset.GET("Account No.");
             FixedAsset.TESTFIELD(Blocked,FALSE);
+            "Account Name" := FixedAsset.Description; // JX-YOOZ2 13/11/15
           END;
       END;
-      DimensionSetup;
+      //DimensionSetup;
       PaymentAddress.SETRANGE("Account Type","Account Type");
       PaymentAddress.SETRANGE("Account No.","Account No.");
       PaymentAddress.SETRANGE("Default Value",TRUE);
@@ -690,7 +709,45 @@ OBJECT Table 10866 Payment Line
         ERROR(Text002);
     END;
 
+    PROCEDURE FctYooz@1000000000(piHeader@1000000002 : Boolean);
+    VAR
+      VendLedgerEntry@1000000000 : Record 25;
+      InvoiceHeader@1000000003 : Record 122;
+      CrMemoHeader@1000000004 : Record 124;
+      PayHeader@1000000001 : Record 10865;
     BEGIN
+      //Vendor No.=FIELD(Account No.),Applies-to ID=FIELD(Applies-to ID)
+      "Applied Yooz No." := '';
+      IF "Applies-to ID" <> '' THEN BEGIN
+       VendLedgerEntry.RESET;
+       VendLedgerEntry.SETCURRENTKEY("Vendor No.","Applies-to ID");
+       VendLedgerEntry.SETRANGE("Vendor No.","Account No.");
+       VendLedgerEntry.SETRANGE("Applies-to ID","Applies-to ID");
+       IF VendLedgerEntry.FINDFIRST THEN
+        REPEAT
+         IF VendLedgerEntry."Yooz No." = '' THEN
+          IF VendLedgerEntry."Document Type" = VendLedgerEntry."Document Type"::Invoice THEN BEGIN
+           IF InvoiceHeader.GET(VendLedgerEntry."Document No.") THEN
+            VendLedgerEntry."Yooz No." := InvoiceHeader."Yooz No.";
+          END ELSE
+           IF CrMemoHeader.GET(VendLedgerEntry."Document No.") THEN
+            VendLedgerEntry."Yooz No." := CrMemoHeader."Yooz No.";
+
+         IF VendLedgerEntry."Yooz No." <> '' THEN
+          "Applied Yooz No." := "Applied Yooz No." + VendLedgerEntry."Yooz No." + ';';
+        UNTIL VendLedgerEntry.NEXT = 0;
+       MODIFY;
+
+       IF piHeader THEN
+        IF PayHeader.GET("No.") THEN
+         PayHeader.FctYooz(FALSE);
+      END;
+    END;
+
+    BEGIN
+    {
+      // JX-YOOZ2 13/11/15 Ajout zone "Account Name" affichage du compte
+    }
     END.
   }
 }

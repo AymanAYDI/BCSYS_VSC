@@ -1,0 +1,61 @@
+OBJECT Page 50034 Magnitude
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table50009;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000012;2;Field  ;
+                CaptionML=[ENU=Line No.;
+                           FRA=Nø ligne];
+                SourceExpr="Line No.";
+                Visible=FALSE }
+
+    { 1000000001;2;Field  ;
+                CaptionML=[ENU=Rubric;
+                           FRA=Rubrique];
+                SourceExpr=Rubric }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Level;
+                           FRA=Niveau];
+                SourceExpr=Level }
+
+    { 1000000005;2;Field  ;
+                CaptionML=[ENU=Account No.;
+                           FRA=Nø compte];
+                SourceExpr="Account No." }
+
+    { 1000000007;2;Field  ;
+                CaptionML=[ENU=Amount balance;
+                           FRA=Montant solde];
+                SourceExpr=Sign }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //CREATION JX-AUD du 15/12/2010
+      //Formulaire pour afficher la table Magnitude Correspondence 50009
+    }
+    END.
+  }
+}
+

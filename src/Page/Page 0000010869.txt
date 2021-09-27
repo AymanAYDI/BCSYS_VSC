@@ -2,9 +2,10 @@ OBJECT Page 10869 Payment Slip Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=23/08/16;
     Time=12:00:00;
-    Version List=NAVFR8.00;
+    Modified=Yes;
+    Version List=NAVFR6.00,SEPA,JX-VSC2.0-AUD,JX-YOOZ2,JX-VSC4.1-PBD,JX-VSC4.2-PBD;
   }
   PROPERTIES
   {
@@ -12,6 +13,7 @@ OBJECT Page 10869 Payment Slip Subform
                FRA=Lignes];
     SourceTable=Table10866;
     DelayedInsert=Yes;
+    SourceTableView=SORTING(Account Name,Line No.);
     PageType=ListPart;
     AutoSplitKey=Yes;
     OnInit=BEGIN
@@ -19,6 +21,7 @@ OBJECT Page 10869 Payment Slip Subform
              CreditAmountVisible := TRUE;
              DebitAmountVisible := TRUE;
              AmountVisible := TRUE;
+             "Bank Account NameVisible" := TRUE;
              AcceptationCodeVisible := TRUE;
              RIBVisible := TRUE;
            END;
@@ -138,6 +141,9 @@ OBJECT Page 10869 Payment Slip Subform
                 Style=Strong;
                 StyleExpr=AccountNoEmphasize }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="Account Name" }
+
     { 1120014;2;Field     ;
                 SourceExpr="Document No." }
 
@@ -226,6 +232,14 @@ OBJECT Page 10869 Payment Slip Subform
     { 1120003;2;Field     ;
                 SourceExpr="Direct Debit Mandate ID" }
 
+    { 1000000001;2;Field  ;
+                SourceExpr="Pay Document Type";
+                Editable=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Pay Document No.";
+                Editable=FALSE }
+
   }
   CODE
   {
@@ -245,6 +259,7 @@ OBJECT Page 10869 Payment Slip Subform
       CreditAmountVisible@1120011 : Boolean INDATASET;
       DebitAmountVisible@1120012 : Boolean INDATASET;
       RIBVisible@1120015 : Boolean INDATASET;
+      "Bank Account NameVisible"@1000000000 : Boolean;
 
     LOCAL PROCEDURE Application@1();
     BEGIN
@@ -387,6 +402,10 @@ OBJECT Page 10869 Payment Slip Subform
     END;
 
     BEGIN
+    {
+      //Jx-AUD du 10/09/2013
+      //Mise en non ‚ditable les champs Code ‚tablissement, Agence, Compte bancaire
+    }
     END.
   }
 }

@@ -1,0 +1,147 @@
+OBJECT Report 50046 Contrepassation des CCA
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/12/17;
+    Time=12:29:01;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Reversal of invoices not received;
+               FRA=Contrepassation des CCA];
+    ProcessingOnly=Yes;
+    OnPreReport=BEGIN
+                  Grec_FeuilleComptaEXTCCA.SETRANGE("Journal Template Name",Grec_FeuilleComptaEXTCCA."Journal Template Name");
+                  Grec_FeuilleComptaEXTCCA.SETRANGE("Journal Batch Name",Grec_FeuilleComptaEXTCCA."Journal Batch Name");
+                  IF (Grec_FeuilleComptaEXTCCA.COUNT > 0) THEN
+                    IF NOT CONFIRM(Text002) THEN
+                      ERROR(Text003);
+                  Grec_FeuilleComptaEXTCCA.DELETEALL;
+                  Grec_FeuilleComptaEXTCCA.LOCKTABLE;
+                  Gcode_NoEXTCCA := Grec_FeuilleComptaEXTCCA."Document No.";
+                  Gcode_CodeJournal := Grec_FeuilleComptaEXTCCA."Source Code";
+
+                  IF Grec_GenJnlBatch.GET(Grec_FeuilleComptaEXTCCA."Journal Template Name",Grec_FeuilleComptaEXTCCA."Journal Batch Name") THEN
+                    IF Grec_GenJnlBatch."No. Series" <> 'EXTCCA' THEN
+                      ERROR(Text001);
+                END;
+
+  }
+  DATASET
+  {
+    { 7069;    ;DataItem;                    ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Entry No.);
+               OnPreDataItem=BEGIN
+                               Grec_LigneNoSouche.RESET;
+                               Grec_LigneNoSouche.SETFILTER(Grec_LigneNoSouche."Series Code",'CCA');
+                               Grec_LigneNoSouche.SETFILTER(Grec_LigneNoSouche.Open,'%1',TRUE);
+                               IF Grec_LigneNoSouche.FIND('-') THEN
+                                 Gcode_NoCCA := Grec_LigneNoSouche."Last No. Used";
+
+                               SETFILTER("G/L Entry"."Document No.",'%1',Gcode_NoCCA);
+
+                               Gint_Ligne := 0;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+
+                                      //Insertion ligne CREDIT
+                                      Grec_FeuilleComptaEXTCCA.INIT;
+                                      //JX-ABE-08/11/2017
+                                      // Gint_Ligne += 10000;
+                                      Gint_Ligne += 100;
+                                      //Fin-modif-JX-ABE-08/11/2017
+                                      Grec_FeuilleComptaEXTCCA."Line No." := Gint_Ligne;
+                                      Grec_FeuilleComptaEXTCCA."Document No." := Gcode_NoEXTCCA;
+                                      Grec_FeuilleComptaEXTCCA."External Document No." := PADSTR("External Document No.",20);
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE("Source Code",Gcode_CodeJournal);
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE("Account No.","G/L Account No.");
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."Posting Date",Gdate_Compta);
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."Document Date","Document Date");
+                                      IF ("G/L Entry"."Debit Amount" <> 0) THEN
+                                        Grec_FeuilleComptaEXTCCA.VALIDATE("Credit Amount","G/L Entry"."Debit Amount")
+                                      ELSE
+                                        Grec_FeuilleComptaEXTCCA.VALIDATE("Debit Amount","G/L Entry"."Credit Amount");
+                                      Grec_FeuilleComptaEXTCCA.Description := Description;
+                                      Grec_FeuilleComptaEXTCCA."Vendor No." := "G/L Entry"."Vendor No.";
+                                      Grec_FeuilleComptaEXTCCA."Customer No." := "G/L Entry"."Customer No.";
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."Gen. Bus. Posting Group",'');
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."Gen. Prod. Posting Group",'');
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."VAT Bus. Posting Group",'');
+                                      Grec_FeuilleComptaEXTCCA.VALIDATE(Grec_FeuilleComptaEXTCCA."VAT Prod. Posting Group",'');
+                                      // Migration 2015 - Plus d'insertion de l'analytique - Utilisation zone Dimension Set ID
+                                      // Ins‚r‚rAnalytique();
+                                      Grec_FeuilleComptaEXTCCA."Dimension Set ID" := "G/L Entry"."Dimension Set ID";
+                                      Grec_FeuilleComptaEXTCCA.INSERT;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Group  ;
+                  Name=Options;
+                  GroupType=Group }
+
+      { 1000000002;2;Field  ;
+                  Name=Date de comptabilisation;
+                  SourceExpr=Gdate_Compta }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gint_Ligne@1000000000 : Integer;
+      Grec_FeuilleComptaEXTCCA@1000000024 : Record 81;
+      Gdec_MontantTTC@1000000002 : Decimal;
+      Gdec_MontantHT@1000000003 : Decimal;
+      Gdate_Compta@1000000004 : Date;
+      "Grec_ParamŠtresTVA"@1000000005 : Record 325;
+      Gcode_NoCCA@1000000001 : Code[20];
+      Text001@1000000009 : TextConst 'ENU=This sheet is not a reversal of invoices not received.;FRA=Cette feuille n''est pas destin‚e … la contrepassation des CCA.';
+      Gcode_NoEXTCCA@1000000025 : Code[20];
+      Gcode_CodeJournal@1000000008 : Code[10];
+      Text002@1000000010 : TextConst 'ENU=This sheet is not empty.\\All data being entered will be replaced.\\Would you like to continue ?;FRA=Cette feuille n''est pas vide.\\Toutes les donn‚es actuellement saises seront remplac‚es.\\Souhaitez-vous tout de mˆme poursuivre ?';
+      Text003@1000000011 : TextConst 'ENU=Operation canceled;FRA=Op‚ration annul‚e';
+      Grec_Fournisseur@1000000012 : Record 23;
+      Grec_Dimension@1000000016 : Record 348;
+      Gcode_CompteTVA@1000000017 : Code[20];
+      Grec_GenJnlBatch@1000000018 : Record 232;
+      "Gint_Ann‚eComptable"@1000000019 : Integer;
+      "Gint_Ann‚eR‚ception"@1000000020 : Integer;
+      Grec_ParamCompa@1000000021 : Record 98;
+      "Gdate_D‚butExerciceComptable"@1000000022 : Date;
+      Grec_LigneNoSouche@1000000023 : Record 309;
+
+    PROCEDURE SetEXTCCAJnlLine@1000000003(FeuilleComptaEXTCCA@1000000000 : Record 81);
+    BEGIN
+      Grec_FeuilleComptaEXTCCA := FeuilleComptaEXTCCA;
+    END;
+
+    BEGIN
+    {
+      CEATION JX-XAD 26/08/2010
+      Contrepassation des CCA dans la feuille de comptabilit‚ g‚n‚rale.
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

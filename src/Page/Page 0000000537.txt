@@ -2,9 +2,10 @@ OBJECT Page 537 Dimension Values
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW14.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -46,6 +47,10 @@ OBJECT Page 537 Dimension Values
                 IndentationControls=Name;
                 GroupType=Repeater }
 
+    { 1000000002;2;Field  ;
+                SourceExpr="Dimension Code";
+                Visible=TRUE }
+
     { 4   ;2   ;Field     ;
                 SourceExpr=Code;
                 Style=Strong;
@@ -55,6 +60,9 @@ OBJECT Page 537 Dimension Values
                 SourceExpr=Name;
                 Style=Strong;
                 StyleExpr=Emphasize }
+
+    { 1000000000;2;Field  ;
+                SourceExpr=Masked }
 
     { 8   ;2   ;Field     ;
                 SourceExpr="Dimension Value Type" }
@@ -116,6 +124,10 @@ OBJECT Page 537 Dimension Values
     END;
 
     BEGIN
+    {
+      //JX-AUD du 18/10/2012
+      //Ajout du champ Masqu‚
+    }
     END.
   }
 }

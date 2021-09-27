@@ -1,0 +1,71 @@
+OBJECT Report 50096 Update Receipt Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=28/07/15;
+    Time=15:40:02;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    ProcessingOnly=Yes;
+    UseRequestPage=No;
+  }
+  DATASET
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table38;
+               OnPreDataItem=BEGIN
+                               W.OPEN('#1##############');
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  ReleaseDoc.FctReceiptStatus("Purchase Header");
+                                  MODIFY;
+                                  W.UPDATE(1,"Purchase Header"."No.");
+                                END;
+
+               OnPostDataItem=BEGIN
+                                W.CLOSE;
+                              END;
+                               }
+
+    { 1000000001;1;DataItem;                 ;
+               DataItemTable=Table39;
+               DataItemTableView=SORTING(Document Type,Document No.,Line No.);
+               OnAfterGetRecord=BEGIN
+                                  UpdateVATAmounts;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Document Type=FIELD(Document Type),
+                            Document No.=FIELD(No.) }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      W@1000000000 : Dialog;
+      ReleaseDoc@1000000001 : Codeunit 415;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

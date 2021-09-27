@@ -2,9 +2,10 @@ OBJECT Page 560 Dimension Value List
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW14.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -117,6 +118,10 @@ OBJECT Page 560 Dimension Value List
     END;
 
     BEGIN
+    {
+      //JX-VSC2.0-AUD
+      //Traitement pour Liste d‚roulante des axes analytiques afin que les op‚rationnels ne renseignent pas des analytiques
+    }
     END.
   }
 }

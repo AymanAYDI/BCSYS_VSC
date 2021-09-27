@@ -2,9 +2,10 @@ OBJECT Table 349 Dimension Value
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/08/18;
+    Time=16:26:35;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -145,11 +146,13 @@ OBJECT Table 349 Dimension Value
                                                    CaptionML=[ENU=Dimension Value ID;
                                                               FRA=ID section analytique];
                                                    Editable=No }
+    { 50000;  ;Masked              ;Boolean       ;CaptionML=FRA=Masqu‚ }
   }
   KEYS
   {
     {    ;Dimension Code,Code                     ;Clustered=Yes }
     {    ;Code,Global Dimension No.                }
+    {    ;Dimension Value ID                       }
   }
   FIELDGROUPS
   {
@@ -503,6 +506,11 @@ OBJECT Table 349 Dimension Value
     END;
 
     BEGIN
+    {
+
+      //JX-AUD du 18/10/2012
+      //Ajout du champ Masked
+    }
     END.
   }
 }

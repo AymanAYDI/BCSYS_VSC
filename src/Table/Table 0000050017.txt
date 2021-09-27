@@ -1,0 +1,35 @@
+OBJECT Table 50017 Mail Body Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=27/07/16;
+    Time=19:00:00;
+    Modified=Yes;
+    Version List=JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;Mail Type           ;Option        ;CaptionML=FRA=Type Mail;
+                                                   OptionString=Fourn. non cr‚‚,DA … cr‚er,DA non envoy‚ en appro.,DA non approuv‚e,DA non transorm‚e,DA Cplmt,BC … r‚ceptionner,Fact. … approuver,Factures Presta Tim‚ }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=FRA=Nø Ligne }
+    { 4   ;   ;Textline            ;Text250       ;CaptionML=FRA=Ligne Texte }
+    { 5   ;   ;Seperator           ;Option        ;OptionString=[ ,Space,Carriage Return] }
+  }
+  KEYS
+  {
+    {    ;Mail Type,Line No.                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

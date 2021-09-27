@@ -2,9 +2,10 @@ OBJECT Codeunit 90 Purch.-Post
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39663,NAVFR8.00.00.39663;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39663,NAVFR8.00.00.39663,JX-VSC1.1-XAD,JX-VSC1.3-XAD,JX-VSC2.0-XAD,JX-YOOZ2,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -52,7 +53,28 @@ OBJECT Codeunit 90 Purch.-Post
             GLEntryNo@1005 : Integer;
             BiggestLineNo@1021 : Integer;
             PrevStatus@1020 : Option;
+            lPurchOrder@1000000000 : Record 38;
+            lReleasePurch@1000000001 : Codeunit 415;
           BEGIN
+            //DEBUT MODIF JX-XAD 20/05/2011
+            IF ("Document Type" = "Document Type"::Invoice) OR ("Document Type" = "Document Type"::"Credit Memo") THEN BEGIN
+              IF "Your Reference" = '' THEN
+                ERROR(Text061,"Document Type");
+             "Posting Description" := "Your Reference";
+            END;
+            //FIN MODIF JX-XAD 20/05/2011
+
+            //DEBUT MODIF JX-XAD 09/07/2009
+            IF Grec_Temp.GET(-1) THEN BEGIN
+              Grec_Temp.Compte := "Assigned User ID";
+              Grec_Temp.MODIFY;
+            END ELSE BEGIN
+              Grec_Temp.PiŠce := (-1);
+              Grec_Temp.Compte := "Assigned User ID";
+              Grec_Temp.INSERT;
+            END;
+            //FIN MODIF JX-XAD 09/07/2009
+
             IF PostingDateExists AND (ReplacePostingDate OR ("Posting Date" = 0D)) THEN BEGIN
               "Posting Date" := PostingDate;
               VALIDATE("Currency Code");
@@ -225,7 +247,7 @@ OBJECT Codeunit 90 Purch.-Post
 
               IF NOT (Receive OR Invoice OR Ship) THEN
                 IF NOT OnlyAssgntPosting THEN
-                  ERROR(Text001);
+                  ERROR(Text001,"No.");
 
               IF Invoice THEN BEGIN
                 PurchLine.RESET;
@@ -428,7 +450,10 @@ OBJECT Codeunit 90 Purch.-Post
                   END;
                   PurchRcptHeader."No. Printed" := 0;
                   PurchRcptHeader."Source Code" := SrcCode;
-                  PurchRcptHeader."User ID" := USERID;
+                  //DEBUT MODIF JX-XAD 09/07/2009
+                  //PurchRcptHeader."User ID" := USERID;
+                  PurchRcptHeader."User ID" := "Assigned User ID";
+                  //FIN MODIF JX-XAD 09/07/2009
                   PurchRcptHeader.INSERT;
 
                   ApprovalMgt.MoveApprvalEntryToPosted(TempApprovalEntry,DATABASE::"Purch. Rcpt. Header",PurchRcptHeader."No.");
@@ -466,7 +491,10 @@ OBJECT Codeunit 90 Purch.-Post
                   ReturnShptHeader."No. Series" := "Return Shipment No. Series";
                   ReturnShptHeader."No. Printed" := 0;
                   ReturnShptHeader."Source Code" := SrcCode;
-                  ReturnShptHeader."User ID" := USERID;
+                  //DEBUT MODIF JX-XAD 09/07/2009
+                  //ReturnShptHeader."User ID" := USERID;
+                  ReturnShptHeader."User ID" := "Assigned User ID";
+                  //FIN MODIF JX-XAD 09/07/2009
                   ReturnShptHeader.INSERT;
 
                   ApprovalMgt.MoveApprvalEntryToPosted(TempApprovalEntry,DATABASE::"Return Shipment Header",ReturnShptHeader."No.");
@@ -512,7 +540,10 @@ OBJECT Codeunit 90 Purch.-Post
                   PurchInvHeader."Payment Reference" := "Payment Reference";
                   PurchInvHeader."Payment Method Code" := "Payment Method Code";
                   PurchInvHeader."Source Code" := SrcCode;
-                  PurchInvHeader."User ID" := USERID;
+                  //DEBUT MODIF JX-XAD 09/07/2009
+                  //PurchInvHeader."User ID" := USERID;
+                  PurchInvHeader."User ID" := "Assigned User ID";
+                  //FIN MODIF JX-XAD 09/07/2009
                   PurchInvHeader."No. Printed" := 0;
                   PurchInvHeader.INSERT;
 
@@ -547,7 +578,10 @@ OBJECT Codeunit 90 Purch.-Post
                     END;
                   END;
                   PurchCrMemoHeader."Source Code" := SrcCode;
-                  PurchCrMemoHeader."User ID" := USERID;
+                  //DEBUT MODIF JX-XAD 09/07/2009
+                  //PurchCrMemoHeader."User ID" := USERID;
+                  PurchCrMemoHeader."User ID" := "Assigned User ID";
+                  //FIN MODIF JX-XAD 09/07/2009
                   PurchCrMemoHeader."No. Printed" := 0;
                   PurchCrMemoHeader.INSERT(TRUE);
 
@@ -1291,7 +1325,14 @@ OBJECT Codeunit 90 Purch.-Post
                     GenJnlLine.INIT;
                     GenJnlLine."Posting Date" := "Posting Date";
                     GenJnlLine."Document Date" := "Document Date";
-                    GenJnlLine.Description := "Posting Description";
+                    //DEBUT MODIF JX-XAD 26/05/2009
+                    //GenJnlLine.Description := "Posting Description";
+                    IF InvPostingBuffer[1].Description <> '' THEN
+                      GenJnlLine.Description := InvPostingBuffer[1].Description
+                    ELSE
+                      GenJnlLine.Description := "Posting Description";
+                    //FIN MODIF JX-XAD 26/05/2009
+            //        GenJnlLine.Description := "Posting Description";
                     GenJnlLine."Reason Code" := "Reason Code";
                     GenJnlLine."Document Type" := GenJnlLineDocType;
                     GenJnlLine."Document No." := GenJnlLineDocNo;
@@ -1379,10 +1420,10 @@ OBJECT Codeunit 90 Purch.-Post
                   VendLedgEntry.SETRANGE("External Document No.",GenJnlLineExtDocNo);
                   VendLedgEntry.SETRANGE("Vendor No.","Pay-to Vendor No.");
                   VendLedgEntry.SETRANGE(Reversed,FALSE);
-                  IF VendLedgEntry.FINDFIRST THEN
-                    ERROR(
-                      Text016,
-                      VendLedgEntry."Document Type",GenJnlLineExtDocNo);
+            //      IF VendLedgEntry.FINDFIRST THEN
+            //        ERROR(
+            //          Text016,
+            //          VendLedgEntry."Document Type",GenJnlLineExtDocNo);
                 END;
 
                 // Post vendor entries
@@ -1391,7 +1432,24 @@ OBJECT Codeunit 90 Purch.-Post
                 GenJnlLine.INIT;
                 GenJnlLine."Posting Date" := "Posting Date";
                 GenJnlLine."Document Date" := "Document Date";
-                GenJnlLine.Description := "Posting Description";
+
+                //DEBUT MODIF JX-XAD 20/05/2011
+                //GenJnlLine.Description := "Posting Description";
+                GenJnlLine.Description := "Your Reference";
+                //FIN MODIF JX-XAD 20/05/2011
+
+            //    GenJnlLine.Description := "Posting Description";
+                // JX-YOOZ2 13/11/15
+                GenJnlLine."BC No." := "BC No.";
+                GenJnlLine."Yooz No." := "Yooz No.";
+                GenJnlLine."Yooz Token link" := "Yooz Token link";
+                //
+                // JX-VSC4.1-PBD 21/07/16
+                IF "Document Prepaid" THEN BEGIN
+                 GenJnlLine."Document Type Prepaid" := "Document Type Prepaid";
+                 GenJnlLine."Document Prepaid" := "Document No. Prepaid";
+                END;
+                //
                 GenJnlLine."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
                 GenJnlLine."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
                 GenJnlLine."Dimension Set ID" := "Dimension Set ID";
@@ -1600,6 +1658,11 @@ OBJECT Codeunit 90 Purch.-Post
                 END;
                 WhsePurchRelease.Release(PurchHeader);
                 UpdateItemChargeAssgnt;
+
+                //
+                IF ("Document Type" = "Document Type"::Order) THEN
+                 lReleasePurch.FctReceiptStatus(Rec);
+                //
               END ELSE BEGIN
                 CASE "Document Type" OF
                   "Document Type"::Invoice:
@@ -1713,9 +1776,20 @@ OBJECT Codeunit 90 Purch.-Post
                   DELETELINKS;
                 DELETE;
 
+                //
+                IF ("Document Type" = "Document Type"::Order) THEN
+                 lReleasePurch.FctReceiptStatus(Rec);
+                //
+
                 ReservePurchLine.DeleteInvoiceSpecFromHeader(PurchHeader);
                 IF PurchLine.FINDFIRST THEN
                   REPEAT
+                  //
+                  IF PurchRcptLine.GET(PurchLine."Receipt No.",PurchLine."Receipt Line No.") THEN
+                   IF PurchRcptLine."Order No." <> '' THEN
+                    IF lPurchOrder.GET(lPurchOrder."Document Type"::Order,PurchRcptLine."Order No.") THEN
+                     lReleasePurch.FctReceiptStatus(lPurchOrder);
+                  //
                     IF PurchLine.HASLINKS THEN
                       PurchLine.DELETELINKS;
                   UNTIL PurchLine.NEXT = 0;
@@ -1761,7 +1835,7 @@ OBJECT Codeunit 90 Purch.-Post
   CODE
   {
     VAR
-      Text001@1000 : TextConst 'ENU=There is nothing to post.;FRA=Il n''y a rien … valider.';
+      Text001@1000 : TextConst 'ENU=There is nothing to post.;FRA=Il n''y a rien … valider sur le document %1.';
       Text002@1001 : TextConst 'ENU=A drop shipment from a purchase order cannot be received and invoiced at the same time.;FRA=Une livraison directe d''une commande achat ne peut pas ˆtre r‚ceptionn‚e et factur‚e en mˆme temps.';
       Text003@1002 : TextConst 'ENU="You cannot invoice this purchase order before the associated sales orders have been invoiced. ";FRA="Vous ne pouvez pas facturer cette commande achat avant que les commandes vente associ‚es ne soient factur‚es. "';
       Text004@1003 : TextConst 'ENU=Please invoice sales order %1 before invoicing this purchase order.;FRA=Veuillez facturer la commande vente %1 avant de facturer cette commande achat.';
@@ -1959,6 +2033,8 @@ OBJECT Codeunit 90 Purch.-Post
       PurchaseLinesProcessed@1080 : Boolean;
       Text061Qst@1200 : TextConst '@@@="One or more reservation entries exist for the item with No. = 1000, Location Code = SILVER, Variant Code = NEW which may be disrupted if you post this negative adjustment. Do you want to continue?";ENU="One or more reservation entries exist for the item with %1 = %2, %3 = %4, %5 = %6 which may be disrupted if you post this negative adjustment. Do you want to continue?";FRA="Au moins une des ‚critures r‚servation existe pour l''article avec %1 = %2, %3 = %4, %5 = %6, qui peut ˆtre interrompu si vous validez cet ajustement n‚gatif. Voulez-vous continuerÿ?"';
       Text062Err@1199 : TextConst 'ENU=The order line that the item charge was originally assigned to has been fully posted. You must reassign the item charge to the posted receipt or shipment.;FRA=La ligne commande … laquelle les frais annexes ont ‚t‚ initialement affect‚s a ‚t‚ entiŠrement valid‚e. Vous devez r‚affecter les frais annexes … la r‚ception ou l''exp‚dition valid‚e.';
+      Text061@1000000000 : TextConst 'ENU=The field "Your reference" in header %1 is mandatory;FRA=Le champs "Votre r‚f‚rence" dans en-tˆte %1 est obligatoire';
+      Grec_Temp@1000000001 : Record 50001;
 
     PROCEDURE SetPostingDate@1(NewReplacePostingDate@1000 : Boolean;NewReplaceDocumentDate@1001 : Boolean;NewPostingDate@1002 : Date);
     BEGIN
@@ -2963,6 +3039,11 @@ OBJECT Codeunit 90 Purch.-Post
       TotalAmount := PurchLine.Amount;
       TotalAmountACY := PurchLineACY.Amount;
 
+      //DEBUT AJOUT JX-XAD 26/05/2009
+      //InvPostingBuffer[1].Description := Description;
+      InvPostingBuffer[1].Description := PurchLine.Description;   // Modif JX-XAD 05/08/2010 suite migration
+      //FIN AJOUT JX-XAD 26/05/2009
+
       IF PurchSetup."Discount Posting" IN
          [PurchSetup."Discount Posting"::"Invoice Discounts",PurchSetup."Discount Posting"::"All Discounts"]
       THEN BEGIN
@@ -3664,6 +3745,10 @@ OBJECT Codeunit 90 Purch.-Post
           PurchRcptHeader.TRANSFERFIELDS(PurchHeader);
           PurchRcptHeader."No." := "Receiving No.";
           PurchRcptHeader."Posting Date" := TODAY;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //PurchRcptHeader."User ID" := USERID;
+          PurchRcptHeader."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           PurchRcptHeader."User ID" := USERID;
           PurchRcptHeader."Source Code" := SourceCode.Code;
         END;
@@ -3672,6 +3757,10 @@ OBJECT Codeunit 90 Purch.-Post
           ReturnShptHeader.TRANSFERFIELDS(PurchHeader);
           ReturnShptHeader."No." := "Return Shipment No.";
           ReturnShptHeader."Posting Date" := TODAY;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //ReturnShptHeader."User ID" := USERID;
+          ReturnShptHeader."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           ReturnShptHeader."User ID" := USERID;
           ReturnShptHeader."Source Code" := SourceCode.Code;
         END;
@@ -3695,7 +3784,10 @@ OBJECT Codeunit 90 Purch.-Post
             PurchInvHeader."Order No." := "No.";
           END;
           PurchInvHeader."Posting Date" := TODAY;
-          PurchInvHeader."User ID" := USERID;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //PurchInvHeader."User ID" := USERID;
+          PurchInvHeader."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           PurchInvHeader."Source Code" := SourceCode.Code;
         END;
 
@@ -3711,7 +3803,10 @@ OBJECT Codeunit 90 Purch.-Post
           PurchCrMemoHeader."Pre-Assigned No. Series" := "No. Series";
           PurchCrMemoHeader."Pre-Assigned No." := "No.";
           PurchCrMemoHeader."Posting Date" := TODAY;
-          PurchCrMemoHeader."User ID" := USERID;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //PurchCrMemoHeader."User ID" := USERID;
+          PurchCrMemoHeader."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           PurchCrMemoHeader."Source Code" := SourceCode.Code;
         END;
 
@@ -3724,7 +3819,10 @@ OBJECT Codeunit 90 Purch.-Post
           PurchInvHeaderPrepmt."Posting Date" := TODAY;
           PurchInvHeaderPrepmt."Pre-Assigned No. Series" := '';
           PurchInvHeaderPrepmt."Pre-Assigned No." := '';
-          PurchInvHeaderPrepmt."User ID" := USERID;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //PurchInvHeaderPrepmt."User ID" := USERID;
+          PurchInvHeaderPrepmt."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           PurchInvHeaderPrepmt."Source Code" := SourceCode.Code;
           PurchInvHeaderPrepmt."Prepayment Invoice" := TRUE;
         END;
@@ -3737,7 +3835,10 @@ OBJECT Codeunit 90 Purch.-Post
           PurchCrMemoHeaderPrepmt."Posting Date" := TODAY;
           PurchCrMemoHeaderPrepmt."Pre-Assigned No. Series" := '';
           PurchCrMemoHeaderPrepmt."Pre-Assigned No." := '';
-          PurchCrMemoHeaderPrepmt."User ID" := USERID;
+          //DEBUT MODIF JX-XAD 09/07/2009
+          //PurchCrMemoHeaderPrepmt."User ID" := USERID;
+          PurchCrMemoHeaderPrepmt."User ID" := PurchHeader."Assigned User ID";
+          //FIN MODIF JX-XAD 09/07/2009
           PurchCrMemoHeaderPrepmt."Source Code" := SourceCode.Code;
           PurchCrMemoHeaderPrepmt."Prepayment Credit Memo" := TRUE;
         END;
@@ -6121,6 +6222,23 @@ OBJECT Codeunit 90 Purch.-Post
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 26/05/2009
+      Ajout de code consistant … transf‚rer le libel‚ des lignes des factures vers les ‚critures comptables
+      Voir aussi la modification associ‚e dans la table 49
+
+      MODIF JX-XAD 09/07/2009
+      Validation de la facture avec le code utilisateur affect‚ et non le USER ID
+      Voir aussi les code unit 91, 12 et 22
+
+      Modif JX-XAD 05/08/2010
+      Erreur de Dev Toolkit suite … la migration
+
+      Modif JX-XAD 20/05/2011
+      Remplacement du nø facture par Votre r‚f‚rence dans la description des ‚critures comptables (factures et avoirs)
+      Le champ "Votre r‚f‚rence" devient obligatoire
+    }
     END.
   }
 }

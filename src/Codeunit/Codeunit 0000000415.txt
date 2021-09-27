@@ -2,9 +2,10 @@ OBJECT Codeunit 415 Release Purchase Document
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=23/07/15;
+    Time=22:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC4.0-PBD;
   }
   PROPERTIES
   {
@@ -60,6 +61,9 @@ OBJECT Codeunit 415 Release Purchase Document
             END
               ;
             Status := Status::Released;
+            //Modif JX-VSC4.0-PBD du 24/06/15 Migration 2015 - Gestion statut r‚ception
+            FctReceiptStatus(Rec);
+            //
 
             PurchLine.SetPurchHeader(Rec);
             PurchLine.CalcVATAmountLines(0,Rec,PurchLine,TempVATAmountLine0);
@@ -96,7 +100,7 @@ OBJECT Codeunit 415 Release Purchase Document
           WhsePurchRelease.Reopen(PurchHeader);
         Status := Status::Open;
 
-        ZeroAmountInLines;
+      //  ZeroAmountInLines;
         MODIFY(TRUE);
       END;
     END;
@@ -201,7 +205,33 @@ OBJECT Codeunit 415 Release Purchase Document
       EXIT(TRUE);
     END;
 
+    LOCAL PROCEDURE "----------"@1000000000();
     BEGIN
+    END;
+
+    PROCEDURE FctReceiptStatus@1000000001(VAR piPurchOrder@1000000000 : Record 38);
+    BEGIN
+      //Modif JX-VSC4.0-PBD du 24/06/15 Migration 2015 - Gestion statut r‚ception
+      IF piPurchOrder."Document Type" <> piPurchOrder."Document Type"::Order THEN
+       EXIT;
+
+      WITH piPurchOrder DO BEGIN
+       CALCFIELDS("Total Quantity","Total Quantity Received");
+       IF "Total Quantity Received" = "Total Quantity" THEN
+        piPurchOrder."Receipt Status" := piPurchOrder."Receipt Status"::Receive
+       ELSE
+        IF (piPurchOrder."Total Quantity" <> 0) AND (piPurchOrder."Total Quantity Received" = 0) THEN
+         piPurchOrder."Receipt Status" := piPurchOrder."Receipt Status"::"Not receive"
+        ELSE
+         IF (piPurchOrder."Total Quantity" <> 0) AND (piPurchOrder."Total Quantity Received" < piPurchOrder."Total Quantity") THEN
+          piPurchOrder."Receipt Status" := piPurchOrder."Receipt Status"::"Partially receive";
+      END;
+    END;
+
+    BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 24/06/15 Migration 2015 - Gestion statut r‚ception
+    }
     END.
   }
 }

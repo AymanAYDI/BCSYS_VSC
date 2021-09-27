@@ -2,8 +2,9 @@ OBJECT Codeunit 10861 Payment-Apply
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=23/08/16;
     Time=12:00:00;
+    Modified=Yes;
     Version List=NAVFR8.00;
   }
   PROPERTIES
@@ -226,6 +227,8 @@ OBJECT Codeunit 10861 Payment-Apply
             VALIDATE("Amount (LCY)");
             IF ("Direct Debit Mandate ID" = '') AND (GenJnlLine."Direct Debit Mandate ID" <> '') THEN
               VALIDATE("Direct Debit Mandate ID",GenJnlLine."Direct Debit Mandate ID");
+            // PBE  29/07/16
+            FctYooz(TRUE);
           END;
 
   }

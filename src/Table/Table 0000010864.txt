@@ -2,9 +2,10 @@ OBJECT Table 10864 Payment Post. Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVFR7.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVFR7.00,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -217,6 +218,10 @@ OBJECT Table 10864 Payment Post. Buffer
                                                               FRA=Nø document en-tˆte] }
     { 5625;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
                                                               FRA=Nø ligne] }
+    { 50000;  ;Document Type Prepaid;Option       ;OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50001;  ;Document Prepaid    ;Code20         }
   }
   KEYS
   {

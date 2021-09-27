@@ -2,9 +2,10 @@ OBJECT Page 139 Posted Purch. Invoice Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=31/07/15;
+    Time=16:30:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -28,7 +29,7 @@ OBJECT Page 139 Posted Purch. Invoice Subform
                                  FRA=&Ligne];
                       Image=Line }
       { 1901314304;2 ;Action    ;
-                      AccessByPermission=TableData 348=R;
+                      AccessByPermission=TableData 348=RM;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[ENU=Dimensions;
                                  FRA=Axes analytiques];
@@ -128,6 +129,21 @@ OBJECT Page 139 Posted Purch. Invoice Subform
     { 64  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Amount" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Posting Group" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Gen. Bus. Posting Group" }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="VAT Bus. Posting Group" }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group" }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="VAT Prod. Posting Group" }
 
     { 16  ;2   ;Field     ;
                 BlankZero=Yes;
@@ -241,7 +257,17 @@ OBJECT Page 139 Posted Purch. Invoice Subform
       DocumentTotals@1001 : Codeunit 57;
       VATAmount@1000 : Decimal;
 
+    PROCEDURE ReturnRecord@1000000000(VAR Prec_PurchInvLine@1000000000 : Record 123);
     BEGIN
+      Prec_PurchInvLine := Rec;
+    END;
+
+    BEGIN
+    {
+      ------------------------------------- V 1.2 ---------------------------------------
+      MODIF JX-XAD 23/03/2010
+      Ajout d'une fonction retournant l'enregistrement courant
+    }
     END.
   }
 }

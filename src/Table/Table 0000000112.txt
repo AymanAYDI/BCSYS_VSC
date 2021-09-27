@@ -2,9 +2,10 @@ OBJECT Table 112 Sales Invoice Header
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-LAB;
   }
   PROPERTIES
   {
@@ -388,6 +389,11 @@ OBJECT Table 112 Sales Invoice Header
                                                               FRA=Autoriser remise ligne] }
     { 7200;   ;Get Shipment Used   ;Boolean       ;CaptionML=[ENU=Get Shipment Used;
                                                               FRA=Extraire le mode d'exp‚dition utilis‚] }
+    { 50000;  ;Agent               ;Code20        ;TableRelation=Customer.No.;
+                                                   CaptionML=[ENU=Agent;
+                                                              FRA=Mandataire] }
+    { 50001;  ;Paying agent        ;Boolean       ;CaptionML=[ENU=Paying agent;
+                                                              FRA=Mandataire payeur] }
   }
   KEYS
   {
@@ -536,6 +542,11 @@ OBJECT Table 112 Sales Invoice Header
     END;
 
     BEGIN
+    {
+
+      // ajout LAB du 25/08/2010
+      // ajout des champs 50000 et 50001
+    }
     END.
   }
 }

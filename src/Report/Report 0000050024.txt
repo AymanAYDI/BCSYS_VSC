@@ -1,0 +1,164 @@
+OBJECT Report 50024 Modifier axe p‚riode avoirs
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW13.10,JX-VSC1.0-XAD,JX-VSC1.1-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Modify period dimension for credit memos;
+               FRA=Modifier axe p‚riode avoirs];
+    UseSystemPrinter=No;
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 9869;    ;DataItem;                    ;
+               DataItemTable=Table124;
+               DataItemTableView=SORTING(No.);
+               OnPreDataItem=BEGIN
+                               SETFILTER("No.",'%1',Grec_PurchCreditMemo."No.");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF NOT CONFIRM(Text001,FALSE,"No.") THEN
+                                    ERROR(Text002);
+
+                                  {
+                                  IF NOT Grec_PostedDocDim2.GET(122,"Purch. Inv. Header"."No.",0,'PERIODE') THEN
+                                  BEGIN
+                                    Grec_PostedDocDim2.INIT;
+                                    Grec_PostedDocDim2."Table ID" := 122;
+                                    Grec_PostedDocDim2."Document No." := "Purch. Inv. Header"."No.";
+                                    Grec_PostedDocDim2."Line No." := 0;
+                                    Grec_PostedDocDim2."Dimension Code" := 'PERIODE';
+                                    Grec_PostedDocDim2."Dimension Value Code" := Gcode_AxeP‚riode;
+                                    Grec_PostedDocDim2.INSERT;
+                                  END;
+                                  }
+                                END;
+                                 }
+
+    { 6719;1   ;DataItem;                    ;
+               DataItemTable=Table359;
+               DataItemTableView=SORTING(Table ID,Document No.,Line No.,Dimension Code)
+                                 WHERE(Dimension Code=CONST(PERIODE));
+               OnAfterGetRecord=BEGIN
+                                  "Posted Document Dimension"."Dimension Value Code" := Gcode_AxeP‚riode;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 7069;1   ;DataItem;                    ;
+               DataItemTable=Table17;
+               DataItemTableView=SORTING(Entry No.);
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 8832;2   ;DataItem;LedgerEntryDimension1;
+               DataItemTable=Table355;
+               DataItemTableView=SORTING(Table ID,Entry No.,Dimension Code)
+                                 WHERE(Table ID=CONST(17),
+                                       Dimension Code=CONST(PERIODE));
+               OnAfterGetRecord=BEGIN
+                                  LedgerEntryDimension1."Dimension Value Code" := Gcode_AxeP‚riode;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+    { 8894;1   ;DataItem;                    ;
+               DataItemTable=Table5802;
+               DataItemTableView=SORTING(Entry No.);
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 7880;2   ;DataItem;LedgerEntryDimension2;
+               DataItemTable=Table355;
+               DataItemTableView=SORTING(Table ID,Entry No.,Dimension Code)
+                                 WHERE(Table ID=CONST(5802),
+                                       Dimension Code=CONST(PERIODE));
+               OnAfterGetRecord=BEGIN
+                                  LedgerEntryDimension2."Dimension Value Code" := Gcode_AxeP‚riode;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+    { 4114;1   ;DataItem;                    ;
+               DataItemTable=Table25;
+               DataItemTableView=SORTING(Entry No.);
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 3897;2   ;DataItem;LedgerEntryDimension3;
+               DataItemTable=Table355;
+               DataItemTableView=SORTING(Table ID,Entry No.,Dimension Code)
+                                 WHERE(Table ID=CONST(25),
+                                       Dimension Code=CONST(PERIODE));
+               OnAfterGetRecord=BEGIN
+                                  LedgerEntryDimension3."Dimension Value Code" := Gcode_AxeP‚riode;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+    { 9888;1   ;DataItem;                    ;
+               DataItemTable=Table5601;
+               DataItemTableView=SORTING(Entry No.);
+               DataItemLink=Document No.=FIELD(No.) }
+
+    { 8806;2   ;DataItem;LedgerEntryDimension4;
+               DataItemTable=Table355;
+               DataItemTableView=SORTING(Table ID,Entry No.,Dimension Code)
+                                 WHERE(Table ID=CONST(5601),
+                                       Dimension Code=CONST(PERIODE));
+               OnAfterGetRecord=BEGIN
+                                  LedgerEntryDimension4."Dimension Value Code" := Gcode_AxeP‚riode;
+                                  MODIFY;
+                                END;
+
+               DataItemLink=Entry No.=FIELD(Entry No.) }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Grec_PurchCreditMemo@1000000000 : Record 124;
+      "Gcode_AxeP‚riode"@1000000001 : Code[20];
+      Grec_PostedDocDim@1000000002 : Record 359;
+      Grec_PostedDocDim2@1000000003 : Record 359;
+      Text001@1000000004 : TextConst 'ENU=All accounting will be updated to the credit memo %1;FRA=Toute la comptabilit‚ analytique sera mise … jour pour l''avoir %1';
+      Text002@1000000005 : TextConst 'ENU=Operation canceled !;FRA=Op‚ration annul‚e !';
+      Text003@1000000006 : TextConst 'ENU="Posted credit memo No. : ";FRA="Avoir enregistr‚ nø : "';
+
+    PROCEDURE SetPostedCreditMemo@1000000000(Lrec_PurchCreditMemo@1000000000 : Record 124);
+    BEGIN
+      Grec_PurchCreditMemo := Lrec_PurchCreditMemo;
+    END;
+
+    BEGIN
+    {
+      JX-XAD 05/06/2009
+      Traduction en Anglais
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

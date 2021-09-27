@@ -2,8 +2,9 @@ OBJECT Page 143 Posted Sales Invoices
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=17/06/15;
+    Time=09:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -64,18 +65,32 @@ OBJECT Page 143 Posted Sales Invoices
                                 }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
-      { 20      ;1   ;Action    ;
-                      Ellipsis=Yes;
-                      CaptionML=[ENU=&Print;
-                                 FRA=&Imprimer];
+      { 1000000002;1 ;Action    ;
+                      CaptionML=[ENU=Print Invoice;
+                                 FRA=Imprimer facture];
                       Promoted=Yes;
+                      PromotedIsBig=Yes;
                       Image=Print;
-                      PromotedCategory=Process;
-                      OnAction=VAR
-                                 SalesInvHeader@1102 : Record 112;
-                               BEGIN
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 07/02/2013
                                  CurrPage.SETSELECTIONFILTER(SalesInvHeader);
                                  SalesInvHeader.PrintRecords(TRUE);
+                                 //Fin modif JX-AUD du 07/02/2013
+                               END;
+                                }
+      { 1000000001;1 ;Action    ;
+                      CaptionML=[ENU="Print invoice plan ";
+                                 FRA=Imprimer facture forfait];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ConfirmAndPrint;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 07/02/2013
+                                 CurrPage.SETSELECTIONFILTER(SalesInvHeader);
+                                 REPORT.RUNMODAL(REPORT::"Facture vente forfait",TRUE,FALSE,SalesInvHeader);
+                                 //Fin modif JX-AUD du 07/02/2013
                                END;
                                 }
       { 3       ;1   ;Action    ;
@@ -114,6 +129,12 @@ OBJECT Page 143 Posted Sales Invoices
 
     { 2   ;2   ;Field     ;
                 SourceExpr="No." }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="External Document No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="Order No." }
 
     { 4   ;2   ;Field     ;
                 SourceExpr="Sell-to Customer No." }
@@ -255,6 +276,8 @@ OBJECT Page 143 Posted Sales Invoices
   }
   CODE
   {
+    VAR
+      SalesInvHeader@1000000000 : Record 112;
 
     BEGIN
     END.

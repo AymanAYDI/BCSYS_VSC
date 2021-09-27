@@ -1,0 +1,175 @@
+OBJECT Page 50043 Purchase Role Center VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,NAVFR8.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Role Center;
+               FRA=Tableau de bord];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 51      ;1   ;Action    ;
+                      CaptionML=[ENU=Aged Accou&nts Payable;
+                                 FRA=Co&mptabilitÇ fournisseur ÉgÇe];
+                      RunObject=Report 322;
+                      Image=Report }
+      { 1120010 ;1   ;Action    ;
+                      CaptionML=[ENU=Vendor Journal;
+                                 FRA=Journal comptes fournisseurs];
+                      RunObject=Report 10814;
+                      Image=Report }
+      { 1120011 ;1   ;Action    ;
+                      CaptionML=[ENU=Bank Account Journal;
+                                 FRA=Journal comptes bancaires];
+                      RunObject=Report 10815;
+                      Image=Report }
+      { 1120013 ;1   ;Separator  }
+      { 1120015 ;1   ;Action    ;
+                      CaptionML=[ENU=GL/Vend. Ledger Reconciliation;
+                                 FRA=Rapprochement cpta. gÇn./fourn.];
+                      RunObject=Report 10863;
+                      Image=Report }
+      { 1900000011;0 ;ActionContainer;
+                      ActionContainerType=HomeItems }
+      { 3       ;1   ;Action    ;
+                      CaptionML=[ENU=Vendors;
+                                 FRA=Fournisseurs];
+                      RunObject=Page 27;
+                      Image=Vendor }
+      { 1000000001;1 ;Action    ;
+                      CaptionML=FRA=Devis;
+                      RunObject=Page 9306 }
+      { 1000000005;1 ;Action    ;
+                      CaptionML=[ENU=Purchase Orders;
+                                 FRA=Commandes achat];
+                      RunObject=Page 50041 }
+      { 91      ;1   ;Action    ;
+                      CaptionML=[ENU=Purchase Invoices;
+                                 FRA=Factures achat];
+                      RunObject=Page 50045 }
+      { 1000000006;1 ;Action    ;
+                      CaptionML=FRA=Avoirs achat;
+                      RunObject=Page 50046 }
+      { 1000000007;1 ;Action    ;
+                      CaptionML=FRA=Ecritures approbation;
+                      RunObject=Page 658 }
+      { 1000000008;1 ;Action    ;
+                      CaptionML=FRA=Ecritures demande d'approbation;
+                      RunObject=Page 662 }
+      { 1900000012;0 ;ActionContainer;
+                      ActionContainerType=ActivityButtons }
+      { 1000000002;1 ;ActionGroup;
+                      CaptionML=FRA=Approbations }
+      { 1000000003;2 ;Action    ;
+                      CaptionML=FRA=êcritures approbation;
+                      RunObject=Page 658 }
+      { 1000000004;2 ;Action    ;
+                      CaptionML=FRA=êcritures approbation enreg.;
+                      RunObject=Page 659 }
+      { 39      ;1   ;ActionGroup;
+                      CaptionML=[ENU=Posted Documents;
+                                 FRA=Documents validÇs];
+                      Image=FiledPosted }
+      { 100     ;2   ;Action    ;
+                      CaptionML=[ENU=Posted Purchase Receipts;
+                                 FRA=RÇceptions achat enregistrÇes];
+                      RunObject=Page 145 }
+      { 27      ;2   ;Action    ;
+                      CaptionML=[ENU=Posted Purchase Invoices;
+                                 FRA=Factures achat enregistrÇes];
+                      RunObject=Page 146 }
+      { 101     ;2   ;Action    ;
+                      CaptionML=[ENU=Posted Return Shipments;
+                                 FRA=ExpÇditions retour enreg.];
+                      RunObject=Page 6652 }
+      { 28      ;2   ;Action    ;
+                      CaptionML=[ENU=Posted Purchase Credit Memos;
+                                 FRA=Avoirs achat enregistrÇs];
+                      RunObject=Page 147 }
+      { 16      ;0   ;ActionContainer;
+                      ActionContainerType=NewDocumentItems }
+      { 555     ;1   ;Action    ;
+                      CaptionML=[ENU=&Vendor;
+                                 FRA=&Fournisseur];
+                      RunObject=Page 50030;
+                      Promoted=No;
+                      Visible=FALSE;
+                      Enabled=FALSE;
+                      Image=Vendor;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 66      ;1   ;Action    ;
+                      CaptionML=[ENU=&Purchase Invoice;
+                                 FRA=&Devis];
+                      RunObject=Page 49;
+                      Promoted=No;
+                      Image=Invoice;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 90      ;1   ;Action    ;
+                      CaptionML=[ENU=Navi&gate;
+                                 FRA=Navig&uer];
+                      RunObject=Page 344;
+                      Image=Navigate }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group   }
+
+    { 1901197008;2;Part   ;
+                PagePartID=Page50044;
+                PartType=Page }
+
+    { 1000000000;2;Part   ;
+                CaptionML=[ENU=Company Picture;
+                           FRA=SociÇtÇ];
+                PagePartID=Page50099;
+                PartType=Page }
+
+    { 1900724708;1;Group   }
+
+    { 17  ;2   ;Part      ;
+                PagePartID=Page675;
+                Visible=false;
+                PartType=Page }
+
+    { 1902476008;2;Part   ;
+                PagePartID=Page9151;
+                PartType=Page }
+
+    { 18  ;2   ;Part      ;
+                PagePartID=Page681;
+                PartType=Page }
+
+    { 1903012608;2;Part   ;
+                PagePartID=Page9175;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1901377608;2;Part   ;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

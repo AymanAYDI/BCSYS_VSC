@@ -2,9 +2,10 @@ OBJECT Codeunit 5700 User Setup Management
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=17/10/16;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00,JX-VSC1.0-XAD;
   }
   PROPERTIES
   {
@@ -169,7 +170,67 @@ OBJECT Codeunit 5700 User Setup Management
       EXIT(UserLocation);
     END;
 
+    PROCEDURE jx_GetPurchasesFilter@1000000000() Ltxt_UserList : Text;
+    VAR
+      Lrec_UserSetup@1000000000 : Record 91;
+      Lcode_CodeService@1000000001 : Code[20];
+      Ltext_UserList@1000000002 : Text;
     BEGIN
+      //Ajout JX-XAD du 13/06/2008
+      //Filtrer les documents d'achats sur les utilisateurs dont les droits sont indiquÇs dans les paramätres utilisateurs
+      IF Lrec_UserSetup.GET(USERID) THEN
+      BEGIN
+        CASE Lrec_UserSetup."Droits accäs doc. achat" OF
+          Lrec_UserSetup."Droits accäs doc. achat"::Utilisateur:
+            Ltext_UserList := USERID;
+          Lrec_UserSetup."Droits accäs doc. achat"::Responsable:
+          BEGIN
+            Lcode_CodeService := Lrec_UserSetup.Service;
+            Ltext_UserList := '';
+            Lrec_UserSetup.RESET;
+            Lrec_UserSetup.SETFILTER(Lrec_UserSetup.Service,COPYSTR(Lcode_CodeService,1,3)+'*');
+            IF Lrec_UserSetup.FIND('-') THEN
+            BEGIN
+              REPEAT
+                IF Ltext_UserList <> '' THEN
+                  Ltext_UserList += '|' + Lrec_UserSetup."User ID"
+                ELSE
+                  Ltext_UserList += Lrec_UserSetup."User ID";
+              UNTIL Lrec_UserSetup.NEXT = 0;
+            END;
+          END;
+          Lrec_UserSetup."Droits accäs doc. achat"::"Sous-Responsable":
+          BEGIN
+            Lcode_CodeService := Lrec_UserSetup.Service;
+            Ltext_UserList := '';
+            Lrec_UserSetup.RESET;
+            Lrec_UserSetup.SETFILTER(Lrec_UserSetup.Service,Lcode_CodeService);
+            IF Lrec_UserSetup.FIND('-') THEN
+            BEGIN
+              REPEAT
+                IF Ltext_UserList <> '' THEN
+                  Ltext_UserList += '|' + Lrec_UserSetup."User ID"
+                ELSE
+                  Ltext_UserList += Lrec_UserSetup."User ID";
+              UNTIL Lrec_UserSetup.NEXT = 0;
+            END;
+          END;
+          Lrec_UserSetup."Droits accäs doc. achat"::Admin:
+            Ltext_UserList := '';
+        END;
+      END ELSE
+        Ltext_UserList := USERID;
+
+      EXIT(Ltext_UserList);
+    END;
+
+    BEGIN
+    {
+
+      Ajout JX-XAD du 13/06/2008
+      CrÇation d'une fonction jx_GetPurchasesFilter
+      But : Filtrer les documents d'achats sur les utilisateurs dont les droits sont indiquÇs dans les paramätres utilisateurs
+    }
     END.
   }
 }

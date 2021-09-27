@@ -2,9 +2,10 @@ OBJECT Table 5110 Purchase Line Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -555,6 +556,7 @@ OBJECT Table 5110 Purchase Line Archive
     { 6608;   ;Return Reason Code  ;Code10        ;TableRelation="Return Reason";
                                                    CaptionML=[ENU=Return Reason Code;
                                                               FRA=Code motif retour] }
+    { 50005;  ;Matricule No.       ;Code20        ;CaptionML=FRA=Code matricule }
     { 99000750;;Routing No.        ;Code20        ;TableRelation="Routing Header";
                                                    CaptionML=[ENU=Routing No.;
                                                               FRA=Nø gamme] }
@@ -646,6 +648,11 @@ OBJECT Table 5110 Purchase Line Archive
     END;
 
     BEGIN
+    {
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Code matricule"
+    }
     END.
   }
 }

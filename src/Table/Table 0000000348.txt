@@ -2,8 +2,9 @@ OBJECT Table 348 Dimension
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=26/01/16;
+    Time=17:30:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -400,19 +401,19 @@ OBJECT Table 348 Dimension
       Description := GetMLDescription(LanguageID);
     END;
 
-    PROCEDURE GetMLName@3(LanguageID@1001 : Integer) : Text[30];
+    PROCEDURE GetMLName@3(LanguageID@1001 : Integer) : Text[50];
     BEGIN
       GetDimTrans(LanguageID);
       EXIT(DimTrans.Name);
     END;
 
-    PROCEDURE GetMLCodeCaption@4(LanguageID@1000 : Integer) : Text[30];
+    PROCEDURE GetMLCodeCaption@4(LanguageID@1000 : Integer) : Text[50];
     BEGIN
       GetDimTrans(LanguageID);
       EXIT(DimTrans."Code Caption");
     END;
 
-    PROCEDURE GetMLFilterCaption@5(LanguageID@1000 : Integer) : Text[30];
+    PROCEDURE GetMLFilterCaption@5(LanguageID@1000 : Integer) : Text[50];
     BEGIN
       GetDimTrans(LanguageID);
       EXIT(DimTrans."Filter Caption");

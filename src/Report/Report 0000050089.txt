@@ -1,0 +1,144 @@
+OBJECT Report 50089 D‚signation Facture vente
+{
+  OBJECT-PROPERTIES
+  {
+    Date=31/08/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 17=rm,
+                TableData 25=rm;
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table112;
+               DataItemTableView=SORTING(No.)
+                                 WHERE(Posting Date=FILTER(21/07/15..));
+               OnAfterGetRecord=BEGIN
+                                  CustEntry.RESET;
+                                  CustEntry.SETCURRENTKEY("Customer No.","Document No.","Posting Date");
+                                  CustEntry.SETRANGE("Customer No.","Sales Invoice Header"."Bill-to Customer No.");
+                                  CustEntry.SETRANGE("Document No.","Sales Invoice Header"."No.");
+                                  CustEntry.SETRANGE("Document Type",CustEntry."Document Type"::Invoice);
+                                  IF CustEntry.FINDFIRST THEN BEGIN
+                                   CustEntry.Description := "Sales Invoice Header"."Your Reference";
+                                   CustEntry.MODIFY;
+                                   IF GLEntry.GET(CustEntry."Entry No.") THEN BEGIN
+                                    GLEntry.Description := CustEntry.Description;
+                                    GLEntry.MODIFY;
+                                   END;
+                                   GLEntry.RESET;
+                                   GLEntry.SETCURRENTKEY("Document Type","Document No.");
+                                   GLEntry.SETRANGE("Document Type",GLEntry."Document Type"::Invoice);
+                                   GLEntry.SETRANGE("Document No.","Sales Invoice Header"."No.");
+                                   GLEntry.SETFILTER("G/L Account No.",'>%1','41');
+                                   IF GLEntry.FINDFIRST THEN
+                                    REPEAT
+                                     IF COPYSTR(GLEntry."G/L Account No.",1,1) = '7' THEN BEGIN
+                                      InvLine.RESET;
+                                      InvLine.SETRANGE("Document No.","Sales Invoice Header"."No.");
+                                      IF GLEntry."Credit Amount" > 0 THEN
+                                       InvLine.SETRANGE(Amount,GLEntry."Credit Amount")
+                                      ELSE
+                                       InvLine.SETRANGE(Amount,GLEntry."Debit Amount");
+                                      IF InvLine.FINDFIRST THEN BEGIN
+                                       PrecDesc := InvLine.Description;
+                                       GLEntry.Description := PrecDesc;
+                                       GLEntry.MODIFY;
+                                      END;
+                                     END ELSE BEGIN
+                                      IF PrecDesc <> '' THEN
+                                       GLEntry.Description := PrecDesc
+                                      ELSE
+                                       GLEntry.Description := CustEntry.Description;
+                                      GLEntry.MODIFY;
+                                     END;
+                                    UNTIL GLEntry.NEXT = 0;
+                                  END;
+                                END;
+
+               ReqFilterFields=No. }
+
+    { 1000000001;;DataItem;                  ;
+               DataItemTable=Table114;
+               DataItemTableView=SORTING(No.)
+                                 WHERE(Posting Date=FILTER(21/07/15..));
+               OnAfterGetRecord=BEGIN
+                                  CustEntry.RESET;
+                                  CustEntry.SETCURRENTKEY("Customer No.","Document No.","Posting Date");
+                                  CustEntry.SETRANGE("Customer No.","Sales Cr.Memo Header"."Bill-to Customer No.");
+                                  CustEntry.SETRANGE("Document No.","Sales Cr.Memo Header"."No.");
+                                  CustEntry.SETRANGE("Document Type",CustEntry."Document Type"::"Credit Memo");
+                                  IF CustEntry.FINDFIRST THEN BEGIN
+                                   CustEntry.Description := "Sales Cr.Memo Header"."Your Reference";
+                                   CustEntry.MODIFY;
+                                   IF GLEntry.GET(CustEntry."Entry No.") THEN BEGIN
+                                    GLEntry.Description := CustEntry.Description;
+                                    GLEntry.MODIFY;
+                                   END;
+                                   GLEntry.RESET;
+                                   GLEntry.SETCURRENTKEY("Document Type","Document No.");
+                                   GLEntry.SETRANGE("Document Type",GLEntry."Document Type"::"Credit Memo");
+                                   GLEntry.SETRANGE("Document No.","Sales Cr.Memo Header"."No.");
+                                   GLEntry.SETFILTER("G/L Account No.",'>%1','42');
+                                   IF GLEntry.FINDFIRST THEN
+                                    REPEAT
+                                     IF COPYSTR(GLEntry."G/L Account No.",1,1) = '7' THEN BEGIN
+                                      CRLine.RESET;
+                                      CRLine.SETRANGE("Document No.","Sales Cr.Memo Header"."No.");
+                                      IF GLEntry."Credit Amount" > 0 THEN
+                                       CRLine.SETRANGE(Amount,GLEntry."Credit Amount")
+                                      ELSE
+                                       CRLine.SETRANGE(Amount,GLEntry."Debit Amount");
+                                      IF CRLine.FINDFIRST THEN BEGIN
+                                       PrecDesc := CRLine.Description;
+                                       GLEntry.Description := PrecDesc;
+                                       GLEntry.MODIFY;
+                                      END;
+                                     END ELSE BEGIN
+                                      IF PrecDesc <> '' THEN
+                                       GLEntry.Description := PrecDesc
+                                      ELSE
+                                       GLEntry.Description := CustEntry.Description;
+                                      GLEntry.MODIFY;
+                                     END;
+                                    UNTIL GLEntry.NEXT = 0;
+                                  END;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      CustEntry@1000000000 : Record 21;
+      GLEntry@1000000001 : Record 17;
+      InvLine@1000000002 : Record 113;
+      CRLine@1000000004 : Record 115;
+      PrecDesc@1000000003 : Text;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

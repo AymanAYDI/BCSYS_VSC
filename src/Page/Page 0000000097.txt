@@ -2,9 +2,10 @@ OBJECT Page 97 Purchase Quote Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=16/12/19;
+    Time=10:49:19;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-LAB,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -46,7 +47,7 @@ OBJECT Page 97 Purchase Quote Subform
 
     ActionList=ACTIONS
     {
-      { 1900000004;0 ;ActionContainer;
+      { 1000000001;  ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 1906587504;1 ;ActionGroup;
                       CaptionML=[ENU=F&unctions;
@@ -164,6 +165,11 @@ OBJECT Page 97 Purchase Quote Subform
     { 1   ;1   ;Group     ;
                 GroupType=Repeater }
 
+    { 1000000000;2;Field  ;
+                SourceExpr="Line No.";
+                Visible=FALSE;
+                Editable=FALSE }
+
     { 2   ;2   ;Field     ;
                 SourceExpr=Type;
                 OnValidate=BEGIN
@@ -207,19 +213,13 @@ OBJECT Page 97 Purchase Quote Subform
                 SourceExpr=Nonstock;
                 Visible=FALSE }
 
-    { 14  ;2   ;Field     ;
-                SourceExpr="VAT Prod. Posting Group";
-                Visible=FALSE;
-                OnValidate=BEGIN
-                             RedistributeTotalsOnAfterValidate;
-                           END;
-                            }
-
     { 6   ;2   ;Field     ;
-                SourceExpr=Description }
+                SourceExpr=Description;
+                Visible=TRUE }
 
     { 62  ;2   ;Field     ;
-                SourceExpr="Location Code" }
+                SourceExpr="Location Code";
+                Visible=FALSE }
 
     { 8   ;2   ;Field     ;
                 BlankZero=Yes;
@@ -231,6 +231,7 @@ OBJECT Page 97 Purchase Quote Subform
 
     { 24  ;2   ;Field     ;
                 SourceExpr="Unit of Measure Code";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -238,7 +239,8 @@ OBJECT Page 97 Purchase Quote Subform
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Unit of Measure";
-                Visible=FALSE;
+                Visible=TRUE;
+                Editable=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -248,6 +250,17 @@ OBJECT Page 97 Purchase Quote Subform
                 BlankZero=Yes;
                 SourceExpr="Direct Unit Cost";
                 OnValidate=BEGIN
+                             //Modif JX-AUD du 25/01/2013
+                             IF  ((COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'Agence') OR (COMPANYNAME = 'VFEC') OR
+                               (COMPANYNAME = 'VSC - RECETTE') OR (COMPANYNAME = 'VSCT - RECETTE')
+                               OR (COMPANYNAME = 'Agence - RECETTE') OR (COMPANYNAME = 'VFEC - RECETTE') OR (COMPANYNAME = 'SNCF-C25')) THEN
+                               IF Type = Type::Item THEN// Type article
+                                 IF "Unit of Measure" = 'Euros' THEN//Unit‚ EUROS
+                                 BEGIN
+                                   VALIDATE("Direct Unit Cost", 1);
+                                 END;
+                             //Fin  modif JX-AUD du 25/01/2013
+
                              RedistributeTotalsOnAfterValidate;
                            END;
                             }
@@ -263,6 +276,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 56  ;2   ;Field     ;
                 SourceExpr="Unit Cost (LCY)";
                 Visible=FALSE;
+                Editable=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -271,6 +285,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 60  ;2   ;Field     ;
                 SourceExpr="Unit Price (LCY)";
                 Visible=FALSE;
+                Editable=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -279,6 +294,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 30  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Amount";
+                Editable=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -287,6 +303,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 16  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Line Discount %";
+                Visible=FALSE;
                 OnValidate=BEGIN
                              RedistributeTotalsOnAfterValidate;
                            END;
@@ -311,6 +328,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 32  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. to Assign";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -321,6 +339,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 26  ;2   ;Field     ;
                 BlankZero=Yes;
                 SourceExpr="Qty. Assigned";
+                Visible=FALSE;
                 OnDrillDown=BEGIN
                               CurrPage.SAVERECORD;
                               ShowItemChargeAssgnt;
@@ -330,10 +349,6 @@ OBJECT Page 97 Purchase Quote Subform
 
     { 28  ;2   ;Field     ;
                 SourceExpr="Prod. Order No.";
-                Visible=FALSE }
-
-    { 18  ;2   ;Field     ;
-                SourceExpr="Blanket Order No.";
                 Visible=FALSE }
 
     { 34  ;2   ;Field     ;
@@ -355,7 +370,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 300 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[3];
                 CaptionClass='1,2,3';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(3,ShortcutDimCode[3]);
                            END;
@@ -368,7 +383,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 302 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[4];
                 CaptionClass='1,2,4';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(4,ShortcutDimCode[4]);
                            END;
@@ -381,7 +396,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 304 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[5];
                 CaptionClass='1,2,5';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(5,ShortcutDimCode[5]);
                            END;
@@ -394,7 +409,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 306 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[6];
                 CaptionClass='1,2,6';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(6,ShortcutDimCode[6]);
                            END;
@@ -420,7 +435,7 @@ OBJECT Page 97 Purchase Quote Subform
     { 310 ;2   ;Field     ;
                 SourceExpr=ShortcutDimCode[8];
                 CaptionClass='1,2,8';
-                Visible=FALSE;
+                Visible=TRUE;
                 OnValidate=BEGIN
                              ValidateShortcutDimCode(8,ShortcutDimCode[8]);
                            END;
@@ -430,89 +445,46 @@ OBJECT Page 97 Purchase Quote Subform
                          END;
                           }
 
-    { 40  ;1   ;Group     ;
-                GroupType=Group }
+    { 1000000004;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
 
-    { 31  ;2   ;Group     ;
-                GroupType=Group }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
 
-    { 33  ;3   ;Field     ;
-                Name=Invoice Discount Amount;
-                CaptionML=[ENU=Invoice Discount Amount;
-                           FRA=Montant remise facture];
-                SourceExpr=TotalPurchaseLine."Inv. Discount Amount";
-                AutoFormatType=1;
-                Editable=InvDiscAmountEditable;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled;
-                OnValidate=VAR
-                             PurchaseHeader@1000 : Record 38;
-                           BEGIN
-                             PurchaseHeader.GET("Document Type","Document No.");
-                             PurchCalcDiscByType.ApplyInvDiscBasedOnAmt(TotalPurchaseLine."Inv. Discount Amount",PurchaseHeader);
-                             CurrPage.UPDATE(FALSE);
+    { 1000000003;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group" }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="VAT Prod. Posting Group";
+                OnValidate=BEGIN
+                             RedistributeTotalsOnAfterValidate;
                            END;
                             }
 
-    { 27  ;3   ;Field     ;
-                Name=Invoice Disc. Pct.;
-                CaptionML=[ENU=Invoice Discount %;
-                           FRA=% remise facture];
-                DecimalPlaces=0:2;
-                SourceExpr=PurchCalcDiscByType.GetVendInvoiceDiscountPct(Rec);
-                Visible=TRUE;
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
-
-    { 17  ;2   ;Group     ;
-                GroupType=Group }
-
-    { 11  ;3   ;Field     ;
-                Name=Total Amount Excl. VAT;
-                DrillDown=No;
-                CaptionML=[ENU=Total Amount Excl. VAT;
-                           FRA=Montant total HT];
-                SourceExpr=TotalPurchaseLine.Amount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalExclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
-
-    { 13  ;3   ;Field     ;
-                Name=Total VAT Amount;
-                CaptionML=[ENU=Total VAT;
-                           FRA=Total TVA];
-                SourceExpr=VATAmount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
-
-    { 7   ;3   ;Field     ;
-                Name=Total Amount Incl. VAT;
-                CaptionML=[ENU=Total Amount Incl. VAT;
-                           FRA=Montant total TTC];
-                SourceExpr=TotalPurchaseLine."Amount Including VAT";
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalInclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                StyleExpr=TotalAmountStyle }
-
-    { 9   ;3   ;Field     ;
-                Name=RefreshTotals;
-                DrillDown=Yes;
-                SourceExpr=RefreshMessageText;
-                Enabled=RefreshMessageEnabled;
-                Editable=FALSE;
-                OnDrillDown=BEGIN
-                              DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
-                            END;
-
-                ShowCaption=No }
+    { 18  ;2   ;Field     ;
+                SourceExpr="Blanket Order No.";
+                Visible=FALSE }
 
   }
   CODE
@@ -525,7 +497,7 @@ OBJECT Page 97 Purchase Quote Subform
       DocumentTotals@1015 : Codeunit 57;
       TransferExtendedText@1002 : Codeunit 378;
       ItemAvailFormsMgt@1004 : Codeunit 353;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       UpdateAllowedVar@1000 : Boolean;
       Text000@1001 : TextConst 'ENU=Unable to run this function while in View mode.;FRA=Impossible d''ex‚cuter cette fonction en mode Afficher.';
       VATAmount@1011 : Decimal;
@@ -616,6 +588,18 @@ OBJECT Page 97 Purchase Quote Subform
     LOCAL PROCEDURE NoOnAfterValidate@19066594();
     BEGIN
       InsertExtendedText(FALSE);
+
+      //Modif JX-AUD du 25/01/2013
+      IF  ((COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'Agence') OR (COMPANYNAME = 'VFEC') OR
+        (COMPANYNAME = 'VSC - RECETTE') OR (COMPANYNAME = 'VSCT - RECETTE')
+        OR (COMPANYNAME = 'Agence - RECETTE') OR (COMPANYNAME = 'VFEC - RECETTE') OR (COMPANYNAME = 'SNCF-C25')) THEN
+        IF Type = Type::Item THEN// Type article
+          IF "Unit of Measure" = 'Euros' THEN//Unit‚ EUROS
+          BEGIN
+            VALIDATE("Direct Unit Cost", 1);
+          END;
+      //Fin  modif JX-AUD du 25/01/2013
+
       IF (Type = Type::"Charge (Item)") AND ("No." <> xRec."No.") AND
          (xRec."No." <> '')
       THEN
@@ -638,6 +622,16 @@ OBJECT Page 97 Purchase Quote Subform
     END;
 
     BEGIN
+    {
+      Modif JX-LAB du 18/09/2008
+      Mise en visible des champs analytiques
+
+      //Modif JX-AUD du 25/01/2013
+      //Bloquer le c“ut unitaire … 1 pour pour le type Article avec unit‚ Euros sur les soci‚t‚s VSC, VSCT, Agence, VFEC
+      //colonnes rendues non ‚ditables Montant ligne HT, Co–t unitaire DS, Prix unitaire DS
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

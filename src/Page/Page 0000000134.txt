@@ -2,9 +2,10 @@ OBJECT Page 134 Posted Sales Credit Memo
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=19/10/15;
+    Time=16:49:37;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC2.0-XAD,JX-VSC2.0-ABE;
   }
   PROPERTIES
   {
@@ -63,6 +64,32 @@ OBJECT Page 134 Posted Sales Credit Memo
                                BEGIN
                                  PostedApprovalEntries.Setfilters(DATABASE::"Sales Cr.Memo Header","No.");
                                  PostedApprovalEntries.RUN;
+                               END;
+                                }
+      { 78      ;1   ;ActionGroup;
+                      CaptionML=[ENU=&Line;
+                                 FRA=&Ligne] }
+      { 94      ;2   ;Separator  }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=[ENU=Modify dimensions;
+                                 FRA=Modifier axes analytiques];
+                      OnAction=BEGIN
+                                 //MODIF JX-AUD 24/05/2011
+                                 CurrPage.SalesCrMemoLines.PAGE.ReturnRecord(Grec_SalesCrMemoLine);
+                                 Grec_SalesCrMemoLine.ShowDimensions;
+                                 //Fin MODIF JX-AUD 24/05/2011
+                               END;
+                                }
+      { 1000000002;2 ;Action    ;
+                      CaptionML=[ENU=Modify description;
+                                 FRA=Modifier d‚signation];
+                      OnAction=BEGIN
+                                 //MODIF JX-AUD 24/05/2011
+                                 CurrPage.SalesCrMemoLines.PAGE.ReturnRecord(Grec_SalesCrMemoLine);
+                                 ModifierDesignation.SetPostedCreditMemo(Grec_SalesCrMemoLine);
+                                 ModifierDesignation.RUNMODAL;
+                                 CLEAR(ModifierDesignation);
+                                 //Fin MODIF JX-AUD 24/05/2011
                                END;
                                 }
       { 5       ;2   ;Separator  }
@@ -131,6 +158,7 @@ OBJECT Page 134 Posted Sales Credit Memo
 
     { 95  ;2   ;Field     ;
                 SourceExpr="Sell-to Contact No.";
+                Visible=FALSE;
                 Editable=FALSE }
 
     { 53  ;2   ;Field     ;
@@ -155,6 +183,7 @@ OBJECT Page 134 Posted Sales Credit Memo
 
     { 61  ;2   ;Field     ;
                 SourceExpr="Sell-to Contact";
+                Visible=FALSE;
                 Editable=FALSE }
 
     { 12  ;2   ;Field     ;
@@ -177,10 +206,12 @@ OBJECT Page 134 Posted Sales Credit Memo
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Salesperson Code";
+                Visible=FALSE;
                 Editable=FALSE }
 
     { 80  ;2   ;Field     ;
                 SourceExpr="Responsibility Center";
+                Visible=FALSE;
                 Editable=FALSE }
 
     { 18  ;2   ;Field     ;
@@ -245,20 +276,6 @@ OBJECT Page 134 Posted Sales Credit Memo
     { 16  ;2   ;Field     ;
                 SourceExpr="Applies-to Doc. No.";
                 Importance=Promoted;
-                Editable=FALSE }
-
-    { 282 ;2   ;Field     ;
-                SourceExpr="Payment Method Code";
-                Editable=FALSE }
-
-    { 127 ;2   ;Field     ;
-                SourceExpr="Credit Card No.";
-                Editable=FALSE }
-
-    { 126 ;2   ;Field     ;
-                CaptionML=[ENU=Cr. Card Number (Last 4 Digits);
-                           FRA=Num‚ro de carte de cr‚dit (4ÿderniers chiffres)];
-                SourceExpr=GetCreditcardNumber;
                 Editable=FALSE }
 
     { 1906801201;1;Group  ;
@@ -339,8 +356,21 @@ OBJECT Page 134 Posted Sales Credit Memo
     VAR
       SalesCrMemoHeader@1000 : Record 114;
       ChangeExchangeRate@1001 : Page 511;
+      Grec_SalesCrMemoLine@1000000000 : Record 115;
+      ModifierAxesAvoir@1000000001 : Report 50062;
+      ModifierDesignation@1000000002 : Page 50035;
 
     BEGIN
+    {
+      MODIF JX-XAD 24/05/2011
+      Ajout d'un bouton "Modifier axes analytiques"
+
+      //MODIF JX-AUD 24/05/2011
+      //Ajout bouton modification d‚signation
+
+      // MODIF JX-ABE du 19/10/2016
+      // Masquer les champs suivants : Nø contact , Contact donneur d'ordre, code vendeur et centre de g‚stion.
+    }
     END.
   }
 }

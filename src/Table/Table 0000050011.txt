@@ -1,0 +1,51 @@
+OBJECT Table 50011 FAP Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               Grec_PurchaseHeader.SETFILTER(Grec_PurchaseHeader."Status Code", "Status No.");
+               IF Grec_PurchaseHeader.FIND('-') THEN
+                 ERROR(STRSUBSTNO(Text001,"Status No."));
+             END;
+
+    CaptionML=[ENU=FAP Status;
+               FRA=Statuts FAP];
+    LookupPageID=Page50026;
+    DrillDownPageID=Page50026;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Status No.          ;Code10        ;CaptionML=FRA=Code statut }
+    { 2   ;   ;Description status  ;Text50        ;CaptionML=[ENU=Description qualification;
+                                                              FRA=Libell‚ statut] }
+    { 3   ;   ;Bloked              ;Boolean       ;CaptionML=FRA=Bloqu‚ }
+  }
+  KEYS
+  {
+    {    ;Status No.                              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Status No.,Description status            }
+  }
+  CODE
+  {
+    VAR
+      Grec_PurchaseHeader@1000000000 : Record 38;
+      Text001@1000000001 : TextConst 'ENU=Impossible to delete because the Qualification No. %1  is used on an Invoice;FRA=Impossible de supprimer le code qualification %1 car il est utilis‚ sur une facture';
+
+    BEGIN
+    {
+      //JX-AUD du 23/04/2013 Cr‚ation
+    }
+    END.
+  }
+}
+

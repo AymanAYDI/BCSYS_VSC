@@ -1,0 +1,59 @@
+OBJECT Page 50050 VSC Bookkeeper Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=17/07/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Activities;
+               FRA=Activit‚s];
+    SourceTable=Table9054;
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+
+                 SETFILTER("Due Date Filter",'<=%1',WORKDATE);
+                 SETFILTER("Overdue Date Filter",'<%1',WORKDATE);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 7   ;1   ;Group     ;
+                CaptionML=[ENU=Payables;
+                           FRA=Fournisseurs];
+                GroupType=CueGroup }
+
+    { 9   ;2   ;Field     ;
+                SourceExpr="Purchase Invoices Due Today";
+                DrillDownPageID=Vendor Ledger Entries }
+
+    { 8   ;1   ;Group     ;
+                CaptionML=[ENU=Receivables;
+                           FRA=Clients];
+                GroupType=CueGroup }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Overdue Sales Documents";
+                DrillDownPageID=Customer Ledger Entries }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

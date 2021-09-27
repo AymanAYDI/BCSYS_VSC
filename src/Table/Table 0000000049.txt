@@ -2,9 +2,10 @@ OBJECT Table 49 Invoice Post. Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=31/08/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=NAVW17.00,JX-VSC1.1-XAD;
   }
   PROPERTIES
   {
@@ -126,6 +127,7 @@ OBJECT Table 49 Invoice Post. Buffer
                                                               FRA=Utiliser liste duplication] }
     { 5614;   ;Fixed Asset Line No.;Integer       ;CaptionML=[ENU=Fixed Asset Line No.;
                                                               FRA=Nø ligne immobilisation] }
+    { 50000;  ;Description         ;Text50         }
   }
   KEYS
   {
@@ -169,6 +171,10 @@ OBJECT Table 49 Invoice Post. Buffer
         "Use Tax" := FALSE;
         Quantity := SalesLine."Qty. to Invoice (Base)";
       END;
+
+      //DEBUT AJOUT JX-XAD 26/05/2009
+      Description := SalesLine.Description;   // Modif JX-XAD 05/08/2010 suite migration
+      //FIN AJOUT JX-XAD 26/05/2009
     END;
 
     PROCEDURE CalcDiscount@2(PricesInclVAT@1000 : Boolean;DiscountAmount@1001 : Decimal;DiscountAmountACY@1002 : Decimal);
@@ -344,6 +350,12 @@ OBJECT Table 49 Invoice Post. Buffer
     END;
 
     BEGIN
+    {
+
+      JX-XAD 26/05/2009
+      Ajout d'un champ "Description"
+      Ce champ est uilis‚ par le Codeunit 90 afin de transf‚rer les libell‚s des lignes de factures vers les ‚critures comptables.
+    }
     END.
   }
 }

@@ -2,9 +2,10 @@ OBJECT Page 20 General Ledger Entries
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=04/05/16;
+    Time=19:20:17;
+    Modified=Yes;
+    Version List=NAVW16.00,NAVFR4.00,JX-VSC2.0-AUD-XAD;
   }
   PROPERTIES
   {
@@ -14,6 +15,55 @@ OBJECT Page 20 General Ledger Entries
     SourceTable=Table17;
     DataCaptionExpr=GetCaption;
     PageType=List;
+    OnInit=BEGIN
+             //Modif JX-AUD du 03/01/2012
+             IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                Gcode_Axe := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+             END;
+
+             //IF Grec_Dimension.GET(Gcode_Axe) THEN Gtext_ColAxe := Grec_Dimension."Code Caption";
+             //Fin modif JX-AUD du 03/01/2012
+           END;
+
+    OnAfterGetRecord=BEGIN
+                       //Modif JX-AUD du 18/01/12
+
+                       Gtext_CodeAxe := '';
+
+                       IF "Source Type" = "Source Type":: Vendor THEN
+                       BEGIN
+                         IF Grec_DefaultDimension.GET(23,"Source No.",Gcode_Axe) THEN
+                         BEGIN
+                           Gtext_CodeAxe := Grec_DefaultDimension."Dimension Value Code";
+                         END ELSE
+                           Gtext_CodeAxe := '';
+                       END;
+
+                       IF "Source Type" = "Source Type":: Customer THEN
+                       BEGIN
+                         IF Grec_DefaultDimension.GET(18,"Source No.",Gcode_Axe) THEN
+                         BEGIN
+                           Gtext_CodeAxe := Grec_DefaultDimension."Dimension Value Code";
+                         END ELSE
+                           Gtext_CodeAxe := '';
+                       END;
+
+                       //Fin modif JX-AUD du 18/01/12
+
+                       //Modif JX-AEL du 22/03/16
+
+                       IF ("Source Type" = "Source Type":: Vendor) AND
+                       ("Document Type" = "Document Type"::Invoice) THEN
+
+                           Grec_NEntetefacturefournisseur.GET("Document No.")
+                           ELSE
+
+                       CLEAR(Grec_NEntetefacturefournisseur);
+
+
+                       //Fin modif JX-AEL du 22/03/16
+                     END;
+
     ActionList=ACTIONS
     {
       { 1900000003;0 ;ActionContainer;
@@ -50,6 +100,23 @@ OBJECT Page 20 General Ledger Entries
                       Image=ValueLedger;
                       OnAction=BEGIN
                                  ShowValueEntries;
+                               END;
+                                }
+      { 1000000004;2 ;Separator  }
+      { 1000000005;2 ;Action    ;
+                      CaptionML=[ENU=Modify dimensions;
+                                 FRA=Modifier axes analytiques];
+                      OnAction=VAR
+                                 ModifierAxesFacture@1000000000 : Report 50063;
+                               BEGIN
+                                 //MODIF JX-XAD 25/05/2011
+                                 IF "Source Type" = "Source Type"::"Fixed Asset" THEN
+                                 BEGIN
+                                   ERROR(Text001);
+                                 END;
+                                 ShowDimensions;
+
+                                 //Fin MODIF JX-XAD 25/05/2011
                                END;
                                 }
       { 1900000004;0 ;ActionContainer;
@@ -113,6 +180,12 @@ OBJECT Page 20 General Ledger Entries
     { 1   ;1   ;Group     ;
                 GroupType=Repeater }
 
+    { 1000000006;2;Field  ;
+                SourceExpr="Transaction No." }
+
+    { 20  ;2   ;Field     ;
+                SourceExpr="Entry No." }
+
     { 2   ;2   ;Field     ;
                 SourceExpr="Posting Date" }
 
@@ -158,6 +231,9 @@ OBJECT Page 20 General Ledger Entries
     { 14  ;2   ;Field     ;
                 SourceExpr="Gen. Prod. Posting Group" }
 
+    { 1000000001;2;Field  ;
+                SourceExpr="VAT Prod. Posting Group" }
+
     { 5   ;2   ;Field     ;
                 SourceExpr=Quantity;
                 Visible=False }
@@ -172,6 +248,14 @@ OBJECT Page 20 General Ledger Entries
     { 1120002;2;Field     ;
                 SourceExpr="Credit Amount" }
 
+    { 1000000000;2;Field  ;
+                SourceExpr=Letter;
+                Visible=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Letter Date";
+                Visible=FALSE }
+
     { 54  ;2   ;Field     ;
                 SourceExpr="Additional-Currency Amount";
                 Visible=FALSE }
@@ -185,6 +269,13 @@ OBJECT Page 20 General Ledger Entries
 
     { 18  ;2   ;Field     ;
                 SourceExpr="Bal. Account No." }
+
+    { 1000000008;2;Field  ;
+                CaptionML=FRA="Code intragroupe ";
+                SourceExpr=Gtext_CodeAxe }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Source No." }
 
     { 46  ;2   ;Field     ;
                 SourceExpr="User ID";
@@ -218,8 +309,8 @@ OBJECT Page 20 General Ledger Entries
                 SourceExpr="FA Entry No.";
                 Visible=FALSE }
 
-    { 20  ;2   ;Field     ;
-                SourceExpr="Entry No." }
+    { 1000000007;2;Field  ;
+                SourceExpr="External Document No." }
 
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
@@ -239,6 +330,14 @@ OBJECT Page 20 General Ledger Entries
   {
     VAR
       GLAcc@1000 : Record 15;
+      Text001@1000000000 : TextConst 'ENU=This type of G/L Entry is blocked by modification of dimensions;FRA=Ce type d''‚criture est bloqu‚ en modification analytique';
+      Grecord_GeneralLedgerSetup@1000000002 : Record 98;
+      Grec_Dimension@1000000001 : Record 348;
+      Grec_DefaultDimension@1000000003 : Record 352;
+      Gtext_CodeAxe@1000000004 : Text[30];
+      Gcode_Axe@1000000005 : Code[20];
+      Gtext_ColAxe@1000000006 : Text[30];
+      Grec_NEntetefacturefournisseur@1000000007 : Record 122;
 
     LOCAL PROCEDURE GetCaption@2() : Text[250];
     BEGIN
@@ -250,6 +349,27 @@ OBJECT Page 20 General Ledger Entries
     END;
 
     BEGIN
+    {
+      //MODIF JX-AUD du 19/10/10
+      //Rajout des colonnes Lettre et Date lettrage
+
+      //MODIF JX-XAD 25/05/2011
+      //Mise … jour des axes analytiques dans les documents enregistr‚s
+      //Ajout bouton modification d‚signation
+
+      //Modif JX-AUD du 18/01/12
+      //Ajout du code axe INTRAGROUPE du Compte de contrepartie
+
+      //Modif JX-AUD du 10/02/12
+      //Ajout de la colonne Nø origine
+
+      //Modif JX-ABE du 13/08/2015
+      //Ajout de la colonne Groupe compta produit TVA
+
+
+      //Modif JX-ABE du 04/05/2016
+      //Ajout la colonne Nø doc. externe
+    }
     END.
   }
 }

@@ -1,0 +1,129 @@
+OBJECT Page 50022 Contract list - Juridical
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/06/15;
+    Time=19:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Contract list - Juridical;
+               FRA=Liste des contrats - Juridique];
+    SourceTable=Table50008;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Initial quote No";
+                Editable=FALSE }
+
+    { 1000000003;2;Field  ;
+                CaptionML=[ENU=Order No. / Contract;
+                           FRA=Nø commande / contrat];
+                SourceExpr="Order No.";
+                Editable=FALSE }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Signature status" }
+
+    { 1000000017;2;Field  ;
+                SourceExpr="Date de mise au coffre" }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Date of entry";
+                Editable=FALSE }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="End date";
+                Editable=FALSE }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Term of service";
+                Editable=FALSE }
+
+    { 1000000013;2;Field  ;
+                SourceExpr="Speaking supplier";
+                Editable=FALSE }
+
+    { 1000000015;2;Field  ;
+                SourceExpr="Speaking VSCT";
+                Editable=FALSE }
+
+    { 1000000019;2;Field  ;
+                SourceExpr=Description1;
+                Editable=FALSE }
+
+    { 1000000021;2;Field  ;
+                SourceExpr=Description2;
+                Editable=FALSE }
+
+    { 1000000023;2;Field  ;
+                SourceExpr=Description3;
+                Editable=FALSE }
+
+    { 1000000025;2;Field  ;
+                SourceExpr=Description4;
+                Editable=FALSE }
+
+    { 1000000027;2;Field  ;
+                SourceExpr=Description5;
+                Editable=FALSE }
+
+    { 1000000029;2;Field  ;
+                SourceExpr=Description6;
+                Editable=FALSE }
+
+    { 1000000031;2;Field  ;
+                SourceExpr=Description7;
+                Editable=FALSE }
+
+    { 1000000033;2;Field  ;
+                SourceExpr=Description8;
+                Editable=FALSE }
+
+    { 1000000035;2;Field  ;
+                SourceExpr=TJM;
+                Editable=FALSE }
+
+    { 1000000037;2;Field  ;
+                SourceExpr="Date de commande";
+                Editable=FALSE }
+
+    { 1000000039;2;Field  ;
+                SourceExpr=Approbateur;
+                Editable=FALSE }
+
+    { 1000000046;2;Field  ;
+                SourceExpr="Nom prestataire";
+                Editable=FALSE }
+
+    { 1000000048;2;Field  ;
+                SourceExpr="Pr‚nom prestataire";
+                Editable=FALSE }
+
+    { 1000000044;2;Field  ;
+                SourceExpr=User;
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD 06/04/2010
+      Liste des contrats pour le juridique
+    }
+    END.
+  }
+}
+

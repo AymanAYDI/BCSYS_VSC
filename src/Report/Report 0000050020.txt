@@ -1,0 +1,110 @@
+OBJECT Report 50020 Period axe update on GJL
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29/05/15;
+    Time=18:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.0-LAB;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Period axe update on GJL;
+               FRA=Mise … jour axe PERIODE sur LFC];
+    ProcessingOnly=Yes;
+    OnPreReport=BEGIN
+                  Window.OPEN('#1###/#2###');
+                END;
+
+  }
+  DATASET
+  {
+    { 7024;    ;DataItem;                    ;
+               DataItemTable=Table81;
+               DataItemTableView=SORTING(Journal Template Name,Journal Batch Name,Line No.)
+                                 WHERE(Journal Template Name=CONST(IMMOBILISA),
+                                       Journal Batch Name=CONST(DEFAUT));
+               OnPreDataItem=BEGIN
+                               GCode_DimCode[1] := 'PERIODE';
+                               GCode_DimValueCode[1] := Gcode_Periode;
+                               Window.UPDATE(2,COUNT);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  i += 1;
+                                  Window.UPDATE(1,i);
+
+                                  IF GDimSetEntry.GET("Dimension Set ID",'PERIODE') THEN BEGIN
+                                   GTempSetEntry.DELETEALL;
+                                   GOldID := "Dimension Set ID";
+                                   GDimSetEntry.SETRANGE("Dimension Set ID");
+                                   IF GDimSetEntry.FINDFIRST THEN
+                                    REPEAT
+                                     GTempSetEntry := GDimSetEntry;
+                                     IF GTempSetEntry."Dimension Code" = 'PERIODE' THEN
+                                      GTempSetEntry."Dimension Value Code" := Gcode_Periode;
+                                     IF GDimValue.GET('PERIODE',Gcode_Periode) THEN
+                                      GTempSetEntry."Dimension Value ID" := GDimValue."Dimension Value ID";
+                                     GTempSetEntry.INSERT;
+                                    UNTIL GDimSetEntry.NEXT = 0;
+                                    "Dimension Set ID" := Gcu_Dimension.GetDimensionSetID(GTempSetEntry);
+                                    MODIFY;
+                                  END ELSE BEGIN
+                                   "Dimension Set ID" := Gcu_Dimension.SetNewDimIDSpec("Dimension Set ID","Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",GCode_DimCode,GCode_DimValueCode);
+                                   MODIFY;
+                                  END;
+                                END;
+
+               OnPostDataItem=BEGIN
+                                Window.CLOSE;
+                              END;
+                               }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Section;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  Name=Section Axe P‚riode;
+                  SourceExpr=Gcode_Periode;
+                  TableRelation="Dimension Value".Code WHERE (Dimension Code=CONST('PERIODE')) }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gcode_Periode@1000000000 : Code[4];
+      Gcu_Dimension@1000000003 : Codeunit 408;
+      GCode_DimCode@1000000002 : ARRAY [50] OF Code[20];
+      GCode_DimValueCode@1000000001 : ARRAY [50] OF Code[20];
+      GDimSetEntry@1000000004 : Record 480;
+      GTempSetEntry@1000000005 : TEMPORARY Record 480;
+      GDimValue@1000000006 : Record 349;
+      GOldID@1000000007 : Integer;
+      Window@1000000008 : Dialog;
+      i@1000000009 : Integer;
+
+    BEGIN
+    {
+      //Cr‚ation LAB du 07/11/08
+      //Report de mise … jour pour LFC IMMOBILISA & DEFAUT
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

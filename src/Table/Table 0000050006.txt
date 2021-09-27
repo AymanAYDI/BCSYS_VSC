@@ -1,0 +1,133 @@
+OBJECT Table 50006 F.A. Tracking
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-LAB-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=F.A. Tracking;
+               FRA=Suivi des immos.];
+    LookupPageID=Page50016;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Fixed Asset No.     ;Code20        ;TableRelation="Fixed Asset".No.;
+                                                   OnValidate=BEGIN
+                                                                IF Grec_FixedAsset.GET("Fixed Asset No.") THEN
+                                                                BEGIN
+                                                                  Description := Grec_FixedAsset.Description;
+                                                                  "Serial No." := Grec_FixedAsset."Serial No.";
+                                                                  "type of equipment" := Grec_FixedAsset."FA Subclass Code";
+                                                                  Grec_PurchaseLine.RESET;
+                                                                  Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document Type",'%1',Grec_PurchaseLine."Document Type"::Order);
+                                                                  Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."No.",'%1',"Fixed Asset No.");
+                                                                  IF Grec_PurchaseLine.FIND('-') THEN BEGIN
+                                                                    "Order No." := Grec_PurchaseLine."Document No.";
+                                                                    IF Grec_Vendor.GET(Grec_PurchaseLine."Buy-from Vendor No.") THEN
+                                                                      "Vendor No." := Grec_Vendor.Name;
+                                                                  END;
+                                                                  Company := COMPANYNAME;
+                                                                  "Location 1" := "Location 1"::Autres;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[ENU=Fixed Asset No.;
+                                                              FRA=Nø Immobilisation];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
+                                                              FRA=D‚signation] }
+    { 3   ;   ;Serial No.          ;Text30        ;CaptionML=[ENU=Serial No.;
+                                                              FRA=Nø de  s‚rie] }
+    { 4   ;   ;type of equipment   ;Code10        ;TableRelation="FA Subclass".Code;
+                                                   CaptionML=[ENU=type of equipment;
+                                                              FRA=Type de mat‚riel] }
+    { 5   ;   ;Order No.           ;Code20        ;CaptionML=[ENU=Order No.;
+                                                              FRA=Nø de BC] }
+    { 6   ;   ;Vendor No.          ;Text50        ;CaptionML=[ENU=Vendor No.;
+                                                              FRA=Nom du fournisseur] }
+    { 7   ;   ;User name           ;Text60        ;TableRelation=Users-Staff."Full name";
+                                                   OnValidate=BEGIN
+                                                                //DEBUT MODIF JX-XAD 07/09/2010
+                                                                Grec_Users.RESET;
+                                                                Grec_Users.SETFILTER(Grec_Users."Full name",'%1',"User name");
+
+                                                                IF Grec_Users.FIND('-') THEN
+                                                                BEGIN
+                                                                  "User status" := Grec_Users."User status";
+                                                                  "release date" := Grec_Users."release date";
+                                                                  "Location 2" :=  Grec_Users."Location 2";//MODIF JX-AUD du 14/10/10
+                                                                END;
+                                                                //FIN MODIF JX-XAD 07/09/2010
+                                                              END;
+
+                                                   CaptionML=[ENU=User name;
+                                                              FRA=Nom utilisateur] }
+    { 8   ;   ;User status         ;Option        ;CaptionML=[ENU=User status;
+                                                              FRA=Statut utilisateur];
+                                                   OptionCaptionML=[ENU=External employee,Employee fixed-term contract,Employee permanent contract;
+                                                                    FRA=Presta,Salari‚ CDD,Salari‚ CDI];
+                                                   OptionString=Presta,Salari‚ CDD,Salari‚ CDI }
+    { 9   ;   ;Manager             ;Text50        ;TableRelation=Users-Staff."Full name";
+                                                   CaptionML=[ENU=Manager;
+                                                              FRA=Manager] }
+    { 10  ;   ;release date        ;Date          ;CaptionML=[ENU=release date;
+                                                              FRA=Date de sortie] }
+    { 11  ;   ;Location 1          ;Option        ;CaptionML=[ENU=Location 1;
+                                                              FRA=Emplacement 1];
+                                                   OptionCaptionML=[ENU=Lille,Nantes,Paris,Other;
+                                                                    FRA=Lille,Nantes,Paris,Autres];
+                                                   OptionString=Lille,Nantes,Paris,Autres }
+    { 12  ;   ;Location 2          ;Text50        ;CaptionML=[ENU=Location 2;
+                                                              FRA=Emplacement 2] }
+    { 13  ;   ;Fixed asst linked   ;Text30        ;CaptionML=[ENU=Fixed asst linked;
+                                                              FRA=Immobilisation raccroch‚e] }
+    { 14  ;   ;Comments            ;Text200       ;CaptionML=[ENU=Comments;
+                                                              FRA=Commentaires] }
+    { 15  ;   ;Company             ;Text30        ;CaptionML=[ENU=Company;
+                                                              FRA=Soci‚t‚];
+                                                   Editable=No }
+    { 16  ;   ;Service             ;Option        ;CaptionML=[ENU=Service;
+                                                              FRA=Service];
+                                                   OptionCaptionML=[ENU=CSI,PROD-LILLE,PROD-NANTES,PROD-PARIS,OTHER;
+                                                                    FRA=CSI,PROD-LILLE,PROD-NANTES,PROD-PARIS,AUTRE];
+                                                   OptionString=CSI,PROD-LILLE,PROD-NANTES,PROD-PARIS,AUTRE }
+  }
+  KEYS
+  {
+    {    ;Fixed Asset No.                         ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Grec_FixedAsset@1000000000 : Record 5600;
+      Grec_PurchaseLine@1000000001 : Record 39;
+      Grec_Vendor@1000000002 : Record 23;
+      Grec_Users@1000000003 : Record 50007;
+
+    BEGIN
+    {
+      ----------------------------------- V 1.2 -----------------------------------
+      CREATION JX-XAD 29/01/2010
+      Suivi des affectations immo
+
+      //MODIF LAB DU 12/02/2010
+      //ajout du champ service
+      //Inversion Option Presta et CDI
+
+      MODIF LAB DU 17/02/2010
+      ajout du test d'utilisateur
+
+      //MODIF JX-AUD du 14/10/10
+      //rajout MAJ "Location 2" de OnValidate()
+    }
+    END.
+  }
+}
+

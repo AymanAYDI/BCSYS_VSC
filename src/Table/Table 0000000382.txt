@@ -2,9 +2,10 @@ OBJECT Table 382 CV Ledger Entry Buffer
 {
   OBJECT-PROPERTIES
   {
-    Date=23/09/13;
-    Time=12:00:00;
-    Version List=NAVW17.10;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW17.10,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -225,6 +226,10 @@ OBJECT Table 382 CV Ledger Entry Buffer
                                                    CaptionML=[ENU=Dimension Set ID;
                                                               FRA=ID ensemble de dimensions];
                                                    Editable=No }
+    { 50020;  ;Document Type Prepaid;Option       ;OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50021;  ;Document Prepaid    ;Code20         }
   }
   KEYS
   {
@@ -320,6 +325,10 @@ OBJECT Table 382 CV Ledger Entry Buffer
       "Accepted Pmt. Disc. Tolerance" := VendLedgEntry."Accepted Pmt. Disc. Tolerance";
       "Amount to Apply" := VendLedgEntry."Amount to Apply";
       Prepayment := VendLedgEntry.Prepayment;
+      // PBE  PREPAID 21/07/2016
+      "Document Type Prepaid" := VendLedgEntry."Document Type Prepaid";
+      "Document Prepaid" := VendLedgEntry."Document Prepaid";
+      //
     END;
 
     PROCEDURE CopyToVendLedgEntry@3(VAR VendLedgEntry@1000 : Record 25);
@@ -385,6 +394,10 @@ OBJECT Table 382 CV Ledger Entry Buffer
       VendLedgEntry."Pmt. Tolerance (LCY)" := "Pmt. Tolerance (LCY)";
       VendLedgEntry."Amount to Apply" := "Amount to Apply";
       VendLedgEntry.Prepayment := Prepayment;
+      // PBE  PREPAID 21/07/2016
+      VendLedgEntry."Document Type Prepaid" := "Document Type Prepaid";
+      VendLedgEntry."Document Prepaid" := "Document Prepaid";
+      //
     END;
 
     PROCEDURE RecalculateAmounts@41(FromCurrencyCode@1002 : Code[10];ToCurrencyCode@1001 : Code[10];PostingDate@1000 : Date);

@@ -2,9 +2,10 @@ OBJECT Page 135 Posted Sales Cr. Memo Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=13/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC2.0-AUD-XAD;
   }
   PROPERTIES
   {
@@ -15,6 +16,84 @@ OBJECT Page 135 Posted Sales Cr. Memo Subform
     SourceTable=Table115;
     PageType=ListPart;
     AutoSplitKey=Yes;
+    OnInit=BEGIN
+             "Axe 5Visible" := TRUE;
+             "Axe 4Visible" := TRUE;
+             "Axe 3Visible" := TRUE;
+             "Axe 2Visible" := TRUE;
+             "Axe 1Visible" := TRUE;
+             "Axe 0Visible" := TRUE;
+           END;
+
+    OnOpenPage=BEGIN
+                 //DEBUT MODIF JX-AUD du 05/04/2011
+
+                 "Axe 0Visible" := TRUE;
+                 "Axe 1Visible" := TRUE;
+                 "Axe 2Visible" := TRUE;
+                 "Axe 3Visible" := TRUE;
+                 "Axe 4Visible" := TRUE;
+                 "Axe 5Visible" := TRUE;
+
+                 IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+
+                   Gcode_Axe1 := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe1) THEN Gtext_ColAxe0 := Grec_Dimension."Code Caption" ELSE "Axe 0Visible" := FALSE;
+
+                   Gcode_Axe2 := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe2) THEN Gtext_ColAxe1 := Grec_Dimension."Code Caption" ELSE "Axe 1Visible" := FALSE;
+
+                   Gcode_Axe3 := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe3) THEN Gtext_ColAxe2 := Grec_Dimension."Code Caption" ELSE "Axe 2Visible" := FALSE;
+
+                   Gcode_Axe4 := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe4) THEN Gtext_ColAxe3 := Grec_Dimension."Code Caption" ELSE "Axe 3Visible" := FALSE;
+
+                   Gcode_Axe5 := Grecord_GeneralLedgerSetup."Shortcut Dimension 7 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe5) THEN Gtext_ColAxe4 := Grec_Dimension."Code Caption" ELSE "Axe 4Visible" := FALSE;
+
+                   Gcode_Axe6 := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+                   IF Grec_Dimension.GET(Gcode_Axe6) THEN Gtext_ColAxe5 := Grec_Dimension."Code Caption" ELSE "Axe 5Visible" := FALSE;
+
+                 END;
+                  //FIN MODIF JX-AUD du 05/04/2011
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       //DEBUT MODIF JX-AUD du 05/04/2011
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe1) THEN
+                         Gtext_Axe0 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe0 :='';
+
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe2) THEN
+                         Gtext_Axe1 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe1 :='';
+
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe3) THEN
+                         Gtext_Axe2 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe2 :='';
+
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe4) THEN
+                         Gtext_Axe3 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe3 :='';
+
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe5) THEN
+                         Gtext_Axe4 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe4 :='';
+
+                       IF Grec_DimSetEntry.GET("Dimension Set ID", Gcode_Axe6) THEN
+                         Gtext_Axe5 := Grec_DimSetEntry."Dimension Value Code"
+                       ELSE
+                         Gtext_Axe5 :='';
+
+                       //FIN MODIF JX-AUD du 05/04/2011
+                     END;
+
     OnAfterGetCurrRecord=BEGIN
                            DocumentTotals.CalculatePostedSalesCreditMemoTotals(TotalSalesCrMemoHeader,VATAmount,Rec);
                          END;
@@ -151,6 +230,49 @@ OBJECT Page 135 Posted Sales Cr. Memo Subform
                 SourceExpr="Shortcut Dimension 2 Code";
                 Visible=FALSE }
 
+    { 1000000008;2;Field  ;
+                Name=Axe 0;
+                SourceExpr=Gtext_Axe0;
+                CaptionClass=Gtext_ColAxe0;
+                Visible="Axe 0Visible";
+                MultiLine=Yes }
+
+    { 1000000006;2;Field  ;
+                Name=Axe 1;
+                SourceExpr=Gtext_Axe1;
+                CaptionClass=Gtext_ColAxe1;
+                Visible="Axe 1Visible";
+                MultiLine=Yes }
+
+    { 1000000004;2;Field  ;
+                Name=Axe 2;
+                SourceExpr=Gtext_Axe2;
+                CaptionClass=Gtext_ColAxe2;
+                Visible="Axe 2Visible";
+                MultiLine=Yes }
+
+    { 1000000002;2;Field  ;
+                Name=Axe 3;
+                CaptionML=FRA=<Axe 3>;
+                SourceExpr=Gtext_Axe3;
+                CaptionClass=Gtext_ColAxe3;
+                Visible="Axe 3Visible";
+                MultiLine=Yes }
+
+    { 1000000010;2;Field  ;
+                Name=Axe 4;
+                SourceExpr=Gtext_Axe4;
+                CaptionClass=Gtext_ColAxe4;
+                Visible="Axe 4Visible";
+                MultiLine=Yes }
+
+    { 1000000000;2;Field  ;
+                Name=Axe 5;
+                SourceExpr=Gtext_Axe5;
+                CaptionClass=Gtext_ColAxe5;
+                Visible="Axe 5Visible";
+                MultiLine=Yes }
+
     { 29  ;1   ;Group     ;
                 GroupType=Group }
 
@@ -207,9 +329,36 @@ OBJECT Page 135 Posted Sales Cr. Memo Subform
   CODE
   {
     VAR
+      Gtext_Axe0@1000000020 : Text[30];
+      Gtext_Axe1@1000000019 : Text[30];
+      Gtext_Axe2@1000000018 : Text[30];
+      Gtext_Axe3@1000000017 : Text[30];
+      Gtext_Axe4@1000000016 : Text[30];
+      Gtext_Axe5@1000000015 : Text[30];
+      Gcode_Axe1@1000000014 : Code[20];
+      Gcode_Axe2@1000000013 : Code[20];
+      Gcode_Axe3@1000000012 : Code[20];
+      Gcode_Axe4@1000000011 : Code[20];
+      Gcode_Axe5@1000000010 : Code[20];
+      Gcode_Axe6@1000000009 : Code[20];
+      Grecord_GeneralLedgerSetup@1000000008 : Record 98;
+      Gtext_ColAxe0@1000000006 : Text[30];
+      Gtext_ColAxe1@1000000005 : Text[30];
+      Gtext_ColAxe2@1000000004 : Text[30];
+      Gtext_ColAxe3@1000000003 : Text[30];
+      Gtext_ColAxe4@1000000002 : Text[30];
+      Gtext_ColAxe5@1000000001 : Text[30];
+      Grec_Dimension@1000000000 : Record 348;
+      "Axe 0Visible"@19066929 : Boolean INDATASET;
+      "Axe 1Visible"@19064881 : Boolean INDATASET;
+      "Axe 2Visible"@19078129 : Boolean INDATASET;
+      "Axe 3Visible"@19076081 : Boolean INDATASET;
+      "Axe 4Visible"@19069425 : Boolean INDATASET;
+      "Axe 5Visible"@19067377 : Boolean INDATASET;
       TotalSalesCrMemoHeader@1002 : Record 114;
       DocumentTotals@1001 : Codeunit 57;
       VATAmount@1000 : Decimal;
+      Grec_DimSetEntry@1000000007 : Record 480;
 
     PROCEDURE ShowItemReturnRcptLines@1();
     BEGIN
@@ -218,7 +367,19 @@ OBJECT Page 135 Posted Sales Cr. Memo Subform
       ShowItemReturnRcptLines;
     END;
 
+    PROCEDURE ReturnRecord@1000000000(VAR Prec_SalesCrMemoLine@1000000000 : Record 115);
     BEGIN
+      //DEBUT MODIF JX-XAD 24/05/2011
+      Prec_SalesCrMemoLine := Rec;
+      //FIN MODIF JX-XAD 24/05/2011
+    END;
+
+    BEGIN
+    {
+       //MODIF JX-AUD du 05/04/2011 Traitement des axes analytiques
+
+       //MODIF JX-XAD du 24/05/2011 Modification des axes analytiques pour document enregistr‚
+    }
     END.
   }
 }

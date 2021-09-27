@@ -2,9 +2,10 @@ OBJECT Page 21 Customer Card
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00.01,KITNA6.00,NAVFR5.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -171,7 +172,6 @@ OBJECT Page 21 Customer Card
                                  ItemTrackingMgt.CallItemTrackingEntryForm(1,"No.",'','','','','');
                                END;
                                 }
-      { 140     ;2   ;Separator  }
       { 82      ;1   ;ActionGroup;
                       CaptionML=[ENU=S&ales;
                                  FRA=&Ventes];
@@ -903,6 +903,10 @@ OBJECT Page 21 Customer Card
     END;
 
     BEGIN
+    {
+        //MODIF JX-AUD 08/04/2011
+        //limitation du champ No. du formulaire Ö 10 caractäres
+    }
     END.
   }
 }

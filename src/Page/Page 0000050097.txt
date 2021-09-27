@@ -1,0 +1,151 @@
+OBJECT Page 50097 Code Coverage
+{
+  OBJECT-PROPERTIES
+  {
+    Date=29/06/15;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=CodeCoverage;
+  }
+  PROPERTIES
+  {
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table2000000049;
+    PageType=List;
+    SourceTableTemporary=Yes;
+    OnOpenPage=BEGIN
+                 CodeCoverageActive := CODECOVERAGELOG();
+                 Process();
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       HitRatio := "No. of Hits" / 100;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1010008 ;    ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1010009 ;1   ;Action    ;
+                      Name=Start Code Coverage;
+                      CaptionML=[DEU=Code Coverage starten;
+                                 ENU=Start Code Coverage];
+                      Promoted=Yes;
+                      Enabled=NOT CodeCoverageActive;
+                      PromotedIsBig=Yes;
+                      Image=Start;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CodeCoverageActive := CODECOVERAGELOG(TRUE, FALSE);
+                               END;
+                                }
+      { 1010010 ;1   ;Action    ;
+                      Name=Stop Code Coverage;
+                      CaptionML=[DEU=Code Coverage beenden;
+                                 ENU=Stop Code Coverage];
+                      Promoted=Yes;
+                      Enabled=CodeCoverageActive;
+                      PromotedIsBig=Yes;
+                      Image=Stop;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CodeCoverageActive := CODECOVERAGELOG(FALSE, FALSE);
+                                 Process();
+                               END;
+                                }
+      { 1010011 ;1   ;Action    ;
+                      Name=Code;
+                      CaptionML=[DEU=Code;
+                                 ENU=Code];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=DesignCodeBehind;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 CodeCoverage@1010000 : Record 2000000049;
+                               BEGIN
+                                 CodeCoverage := Rec;
+                                 CodeCoverage.SETRECFILTER();
+                                 CodeCoverage.SETRANGE("Line No.");
+                                 PAGE.RUN(PAGE::"Code Coverage Code", CodeCoverage);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1010000;0;Container ;
+                ContainerType=ContentArea }
+
+    { 1010001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1010006;2;Field     ;
+                SourceExpr=Line }
+
+    { 1010007;2;Field     ;
+                CaptionML=[DEU=Hit Ratio %;
+                           ENU=Hit Ratio %];
+                SourceExpr=HitRatio }
+
+  }
+  CODE
+  {
+    VAR
+      TempCodeCoverage@1010001 : TEMPORARY Record 2000000049;
+      CodeCoverageActive@1010000 : Boolean INDATASET;
+      HitRatio@1010002 : Decimal;
+
+    PROCEDURE Process@1010000();
+    VAR
+      CodeCoverage@1010000 : Record 2000000049;
+      AllHits@1010001 : Integer;
+    BEGIN
+      AllHits := 0;
+      TempCodeCoverage.RESET;
+      TempCodeCoverage.DELETEALL;
+
+      IF CodeCoverage.FINDSET THEN REPEAT
+
+        IF NOT TempCodeCoverage.GET(CodeCoverage."Object Type", CodeCoverage."Object ID", 0) THEN BEGIN
+          TempCodeCoverage.TRANSFERFIELDS(CodeCoverage);
+          TempCodeCoverage.INSERT;
+        END;
+
+        TempCodeCoverage."No. of Hits" := TempCodeCoverage."No. of Hits" + CodeCoverage."No. of Hits";
+        TempCodeCoverage.MODIFY;
+
+        AllHits := AllHits + CodeCoverage."No. of Hits";
+      UNTIL CodeCoverage.NEXT = 0;
+
+      RESET;
+      DELETEALL;
+
+      IF TempCodeCoverage.FINDSET THEN REPEAT
+        TempCodeCoverage."No. of Hits" := (ROUND(TempCodeCoverage."No. of Hits" / AllHits * 100, 0.01) * 100);
+        TempCodeCoverage.MODIFY;
+        Rec := TempCodeCoverage;
+        INSERT;
+      UNTIL TempCodeCoverage.NEXT = 0;
+    END;
+
+    BEGIN
+    {
+      **************************************************************************************************************************
+      Microsoft provides programming examples for illustration only, without warranty either expressed or implied, including,
+      but not limited to, the implied warranties of merchantability or fitness for a particular purpose. This posting assumes
+      that you are familiar with the programming language that is being demonstrated and the tools that are used to create and
+      debug procedures.
+
+      Copyright © Microsoft Corporation. All Rights Reserved.
+      This code released under the terms of the
+      Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html)
+      **************************************************************************************************************************
+    }
+    END.
+  }
+}
+

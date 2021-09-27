@@ -2,8 +2,9 @@ OBJECT Table 18 Customer
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
+    Date=18/11/15;
+    Time=18:54:19;
+    Modified=Yes;
     Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
   }
   PROPERTIES
@@ -54,7 +55,7 @@ OBJECT Table 18 Customer
                THEN BEGIN
                  MODIFY;
                  UpdateContFromCust.OnModify(Rec);
-                 FIND;
+               // FIND;
                END;
              END;
 
@@ -215,6 +216,11 @@ OBJECT Table 18 Customer
                                                                 END;
                                                                 IF "Invoice Disc. Code" = '' THEN
                                                                   "Invoice Disc. Code" := "No.";
+
+                                                                // Migration 2015 (PropriÇtÇ Maxlength Ö 10 sur le formulaire)
+                                                                IF STRLEN("No.") > 10 THEN
+                                                                 ERROR(Text50000);
+                                                                //
                                                               END;
 
                                                    CaptionML=[ENU=No.;
@@ -1296,6 +1302,7 @@ OBJECT Table 18 Customer
       Text015@1036 : TextConst 'ENU=You cannot delete %1 %2 because there is at least one %3 associated to this customer.;FRA=Vous ne pouvez pas supprimer %1 %2 car au moins un/une %3 est associÇ(e) Ö ce client.';
       AllowPaymentToleranceQst@1037 : TextConst 'ENU=Do you want to allow payment tolerance for entries that are currently open?;FRA=Souhaitez-vous autoriser les Çcarts de räglement pour les Çcritures actuellement ouvertes ?';
       RemovePaymentRoleranceQst@1019 : TextConst 'ENU=Do you want to remove payment tolerance from entries that are currently open?;FRA=Souhaitez-vous supprimer les Çcarts de räglement pour les Çcritures actuellement ouvertes ?';
+      Text50000@1000000000 : TextConst 'FRA=La longueur maximum du code client est de 10 caractäres';
 
     PROCEDURE AssistEdit@2(OldCust@1000 : Record 18) : Boolean;
     VAR
@@ -1592,6 +1599,10 @@ OBJECT Table 18 Customer
     END;
 
     BEGIN
+    {
+
+      18/11/2015- JX-ABE-On Modify () Mettre en commentaire le FIND
+    }
     END.
   }
 }

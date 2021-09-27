@@ -1,0 +1,226 @@
+OBJECT Page 50030 Vendor summary
+{
+  OBJECT-PROPERTIES
+  {
+    Date=28/08/15;
+    Time=09:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-LAB-AUD-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Vendor summary;
+               FRA=R‚capitulatif fournisseur];
+    DeleteAllowed=No;
+    SourceTable=Table23;
+    PageType=Card;
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000070;1 ;ActionGroup;
+                      CaptionML=[ENU=Ven&dor;
+                                 FRA=Fo&urnisseur] }
+      { 1000000085;2 ;Action    ;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=[ENU=Ledger E&ntries;
+                                 FRA=&Ecritures comptables];
+                      RunObject=Page 29;
+                      RunPageView=SORTING(Vendor No.);
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=LedgerEntries;
+                      PromotedCategory=Process }
+      { 1000000089;2 ;Action    ;
+                      CaptionML=[ENU=Co&mments;
+                                 FRA=Co&mmentaires];
+                      RunObject=Page 124;
+                      RunPageLink=Table Name=CONST(Vendor),
+                                  No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+      { 1000000090;2 ;Action    ;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[ENU=Dimensions;
+                                 FRA=A&xes analytiques];
+                      RunObject=Page 540;
+                      RunPageLink=Table ID=CONST(23),
+                                  No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Process }
+      { 1000000091;2 ;Action    ;
+                      CaptionML=[ENU=Bank Accounts;
+                                 FRA=Comptes &bancaires];
+                      RunObject=Page 426;
+                      RunPageLink=Vendor No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=BankAccount;
+                      PromotedCategory=Process }
+      { 1000000094;2 ;Separator  }
+      { 1000000095;2 ;Action    ;
+                      CaptionML=[ENU=&Payment Addresses;
+                                 FRA=Adresses de rŠ&glement];
+                      RunObject=Page 10875;
+                      RunPageLink=Account Type=CONST(Vendor),
+                                  Account No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ContractPayment;
+                      PromotedCategory=Process }
+      { 1000000096;2 ;Action    ;
+                      ShortCutKey=F7;
+                      CaptionML=[ENU=Statistics;
+                                 FRA=Statistiques];
+                      RunObject=Page 152;
+                      RunPageLink=No.=FIELD(No.),
+                                  Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                                  Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter);
+                      Visible=FALSE;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 1000000102;2 ;Separator  }
+      { 1000000104;2 ;Action    ;
+                      CaptionML=[ENU=Duplicate to another company;
+                                 FRA=Dupliquer vers une autre soci‚t‚];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyCostBudget;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 03/04/2009
+                                 //GForm_Dupliquer.initialiser(Gopt_TypeFiche::Vendor,"No.");
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::Vendor,"No.",'');   //MODIF JX-XAD 08/11/2010
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 03/04/2009
+                               END;
+                                }
+      { 1000000045;2 ;Action    ;
+                      CaptionML=[ENU=Duplicate the bank account to another company;
+                                 FRA=Dupliquer le compte bancaire vers une autre soci‚t‚];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyGLtoCostBudget;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 Lrec_VendorBankAccount@1000000001 : Record 288;
+                               BEGIN
+                                 //DEBUT MODIF JX-XAD 11/04/2011
+                                 CurrPage.VendorBankAccountSubform.PAGE.ReturnRecord(Lrec_VendorBankAccount);
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::VendorBankAccount,"No.",Lrec_VendorBankAccount.Code);
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 11/04/2011
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                CaptionML=FRA=G‚n‚ral }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="No." }
+
+    { 1000000003;2;Field  ;
+                SourceExpr=Name }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="Registration No." }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="VAT Registration No." }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Country/Region Code" }
+
+    { 1000000005;2;Field  ;
+                SourceExpr=Address }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Address 2" }
+
+    { 1000000021;2;Field  ;
+                SourceExpr="Post Code" }
+
+    { 1000000009;2;Field  ;
+                SourceExpr=City }
+
+    { 1000000012;2;Field  ;
+                SourceExpr="E-Mail" }
+
+    { 1000000017;2;Field  ;
+                SourceExpr="Gen. Bus. Posting Group" }
+
+    { 1000000016;2;Field  ;
+                SourceExpr="VAT Bus. Posting Group" }
+
+    { 1000000014;2;Field  ;
+                SourceExpr="Vendor Posting Group" }
+
+    { 1000000015;2;Field  ;
+                SourceExpr="Payment Method Code" }
+
+    { 1000000018;2;Field  ;
+                SourceExpr="Payment Terms Code" }
+
+    { 1000000019;2;Field  ;
+                SourceExpr="Default Bank Account Code" }
+
+    { 1000000020;2;Field  ;
+                SourceExpr="Application Method" }
+
+    { 1000000022;2;Field  ;
+                SourceExpr=Contact }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Phone No." }
+
+    { 1000000027;2;Field  ;
+                SourceExpr="Primary Contact No." }
+
+    { 1000000006;1;Part   ;
+                SubPageLink=Table ID=CONST(23),
+                            No.=FIELD(No.);
+                PagePartID=Page50031 }
+
+    { 1000000002;1;Part   ;
+                Name=VendorBankAccountSubform;
+                SubPageLink=Vendor No.=FIELD(No.);
+                PagePartID=Page50032 }
+
+  }
+  CODE
+  {
+    VAR
+      Gopt_TypeFiche@1000000000 : ',Vendor,G/L Account,Item,VendorBankAccount';
+      GForm_Dupliquer@1000000002 : Page 50013;
+
+    BEGIN
+    {
+      // Cr‚ation LAB du 15/07/2010
+      // formulaire r‚capitulatif des fournisseurs
+
+      //MODIF JX-XAD 08/11/2010
+      Ajout d'un paramŠtres … la fonction GForm_Dupliquer.initialiser
+
+      //MODIF JX-AUD 08/04/2011
+      Limitation du champ No. du formulaire … 10 caractŠres
+
+      //MODIF JX-XAD 11/04/2011
+      Ajout de la fonctionnalit‚ de duplication de RIB (duplique ou met … jour le RIB dans les autres soci‚t‚s)
+    }
+    END.
+  }
+}
+

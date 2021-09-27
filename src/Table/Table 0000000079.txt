@@ -2,9 +2,10 @@ OBJECT Table 79 Company Information
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=06/07/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368,JX-VSC2.0-XAD;
   }
   PROPERTIES
   {
@@ -238,6 +239,10 @@ OBJECT Table 79 Company Information
     { 10812;  ;Last Intrastat Declaration ID;Integer;
                                                    CaptionML=[ENU=Last Intrastat Declaration ID;
                                                               FRA=ID derniŠre D.E.B.] }
+    { 50000;  ;Leader              ;Code50        ;TableRelation="User Setup";
+                                                   CaptionML=[ENU=Leader;
+                                                              FRA=Dirigeant] }
+    { 50001;  ;CGV                 ;BLOB          ;SubType=Bitmap }
   }
   KEYS
   {
@@ -395,7 +400,7 @@ OBJECT Table 79 Company Information
     PROCEDURE IsPaymentInfoAvailble@10() : Boolean;
     BEGIN
       EXIT(
-        (("Giro No." + IBAN + "Bank Name" + "Bank Branch No." + "Bank Account No." + "SWIFT Code") <> '') OR
+        ((IBAN + "Bank Name" + "Bank Branch No." + "Bank Account No.") <> '') OR
         "Allow Blank Payment Info.");
     END;
 
@@ -520,6 +525,11 @@ OBJECT Table 79 Company Information
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 01/03/2011
+      Ajout du champ dirigeant (utilis‚ pour la gestion des signatures)
+    }
     END.
   }
 }

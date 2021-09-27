@@ -2,9 +2,10 @@ OBJECT Table 25 Vendor Ledger Entry
 {
   OBJECT-PROPERTIES
   {
-    Date=31/10/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38457,NAVFR8.00.00.38457;
+    Date=01/08/16;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38457,NAVFR8.00.00.38457,JX-YOOZ2,JX-VSC4.1-PBD,JX-VSC4.2-PBD;
   }
   PROPERTIES
   {
@@ -390,6 +391,25 @@ OBJECT Table 25 Vendor Ledger Entry
                                                    CaptionML=[ENU=Dimension Set ID;
                                                               FRA=ID ensemble de dimensions];
                                                    Editable=No }
+    { 50013;  ;BC No.              ;Code20        ;CaptionML=[ENU=BC No.;
+                                                              FRA=Nø BC];
+                                                   Editable=No }
+    { 50014;  ;Yooz No.            ;Code20        ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz];
+                                                   Editable=No }
+    { 50015;  ;Yooz Token link     ;Text250       ;ExtendedDatatype=URL;
+                                                   CaptionML=[ENU=Yooz Token link;
+                                                              FRA=Lien Token Yooz];
+                                                   Editable=No }
+    { 50016;  ;Sort Yooz No.       ;Decimal       ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz.];
+                                                   DecimalPlaces=0:0;
+                                                   Editable=No }
+    { 50020;  ;Document Type Prepaid;Option       ;CaptionML=FRA=Type Document Pr‚pay‚;
+                                                   OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50021;  ;Document Prepaid    ;Code20        ;CaptionML=FRA=Nø Document Pr‚pay‚ }
   }
   KEYS
   {
@@ -420,6 +440,8 @@ OBJECT Table 25 Vendor Ledger Entry
     {    ;Vendor No.,Document No.,Posting Date     }
     {    ;Applies-to ID                            }
     {    ;Vendor No.,Applies-to ID                 }
+    {    ;Vendor No.,Applies-to ID,Sort Yooz No.   }
+    {    ;Vendor No.,Document Type Prepaid,Document Prepaid }
   }
   FIELDGROUPS
   {
@@ -546,6 +568,15 @@ OBJECT Table 25 Vendor Ledger Entry
       "Payment Reference" := GenJnlLine."Payment Reference";
       "Payment Method Code" := GenJnlLine."Payment Method Code";
       "Exported to Payment File" := GenJnlLine."Exported to Payment File";
+      // JX-YOOZ2 13/11/15
+      "BC No." := GenJnlLine."BC No.";
+      "Yooz No." := GenJnlLine."Yooz No.";
+      "Yooz Token link" := GenJnlLine."Yooz Token link";
+      //
+      // PBE  PREPAID 21/07/2016
+      "Document Type Prepaid" := GenJnlLine."Document Type Prepaid";
+      "Document Prepaid" := GenJnlLine."Document Prepaid";
+      //
     END;
 
     PROCEDURE RecalculateAmounts@36(FromCurrencyCode@1001 : Code[10];ToCurrencyCode@1002 : Code[10];PostingDate@1003 : Date);

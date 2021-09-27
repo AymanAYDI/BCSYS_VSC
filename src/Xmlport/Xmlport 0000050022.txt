@@ -1,0 +1,82 @@
+OBJECT XMLport 50022 Yooz Export Payment Nos.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/08/16;
+    Time=14:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD,JX-YOOZ2,JX-VSC4.2-PBD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Yooz Export Payment Nos.;
+               FRA=Export des num‚ros Yooz d'un bordereau];
+    Direction=Export;
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;Yooz                ;Element ;Table   ;
+                                                  ReqFilterFields=Field1;
+                                                  SourceTable=Table10865;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             "Payment Header".FctYooz(TRUE);
+                                                                             "Payment Header".GET("Payment Header"."No.");
+                                                                             Gtext_Champ1 := '';
+                                                                             YoozTable.RESET;
+                                                                             YoozTable.SETRANGE("No.","Payment Header"."No.");
+                                                                             IF YoozTable.FINDFIRST THEN
+                                                                              REPEAT
+                                                                               Gtext_Champ1 := Gtext_Champ1 + YoozTable."Applied Yooz No.";
+                                                                              UNTIL YoozTable.NEXT = 0;
+                                                                           END;
+                                                                            }
+
+    { [{18A2A756-F084-4EBF-8689-60C1DC266417}];2 ;Gtext_Champ1        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ1 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      Text001@1000000008 : TextConst 'ENU=Yooz Invoices are integrated;FRA=Num‚ros Yooz du bordereau export‚s';
+      PaymentLine_G@1000000000 : Record 10866;
+      YoozNo_G@1000000001 : Text;
+      YoozTable@1000000002 : Record 50018;
+
+    LOCAL PROCEDURE FctYoozNo@1000000000();
+    BEGIN
+      YoozNo_G := '';
+      PaymentLine_G.RESET;
+      PaymentLine_G.SETRANGE("No.","Payment Header"."No.");
+      IF PaymentLine_G.FINDFIRST THEN
+       REPEAT
+        YoozNo_G := YoozNo_G + PaymentLine_G."Applied Yooz No.";
+       UNTIL PaymentLine_G.NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

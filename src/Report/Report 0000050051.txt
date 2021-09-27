@@ -1,0 +1,79 @@
+OBJECT Report 50051 Export Magnitude
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 5444;    ;DataItem;                    ;
+               DataItemTable=Table2000000026;
+               DataItemTableView=SORTING(Number)
+                                 WHERE(Number=CONST(1));
+               OnPreDataItem=BEGIN
+                               {
+                               IF (Gtxt_Mois < '01') OR (Gtxt_Mois > '12') THEN
+                                 ERROR(Text001);
+                               IF (Gtxt_Annee < '0000') OR (Gtxt_Annee > '9999') THEN
+                                 ERROR(Text002);
+                               }
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  XmlPortMagnitude.SetParameters(Gdate_Comptabilisation);
+                                  XmlPortMagnitude.RUN;
+                                  CLEAR(XmlPortMagnitude);
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Options;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  CaptionML=FRA=Date comptabilisation;
+                  SourceExpr=Gdate_Comptabilisation }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      XmlPortMagnitude@1000000000 : XMLport 50015;
+      Gtxt_Mois@1000000001 : Text[2];
+      Text001@1000000002 : TextConst 'ENU=Error ! month must be between 01 and 12;FRA=Erreur ! le mois doit ˆtre compris entre 01 et 12';
+      Text002@1000000003 : TextConst 'ENU=Error ! year must be 4 digits;FRA=Erreur ! l''ann‚e doit comporter 4 chiffres';
+      Gtxt_Annee@1000000004 : Text[4];
+      Gdate_Comptabilisation@1000000005 : Date;
+
+    BEGIN
+    {
+      CREATION JX-XAD 20/09/2010
+      Lanceur du dataport Magnitude
+      Le but est de permettre la saisie de la date de compta dans le RequestForm
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

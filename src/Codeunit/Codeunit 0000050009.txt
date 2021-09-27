@@ -1,0 +1,244 @@
+OBJECT Codeunit 50009 NavPad Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/07/16;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      WaldoNavPad@1000000000 : Automation "{334309EB-4AA6-497C-BABF-2AFDA61317EC} 1.0:{1B883E97-B2CB-48CF-8B47-87AAA589C289}:Unknown Automation Server.Unknown Class";
+      TextLine@1000000001 : Text[250];
+      Seperator@1000000002 : Integer;
+      OKText@1000000003 : TextConst 'ENU=&Save;FRA=&Enregistrer;NLD=&Opslaan;NLB=&Opslaan';
+      CancelText@1000000004 : TextConst 'ENU=&Cancel;FRA=&Annuler;NLD=&Annuleren;FRB=&Annuler;NLB=&Annuleren';
+      ChangedText@1000000005 : TextConst 'ENU=The text has been changed.  Are you sure?;FRA=Le texte a ‚t‚ modifi‚. Etes-vous s–r ?;NLD=De tekst werd gewijzigd. Ben je zeker?;NLB=De tekst werd gewijzigd. Ben je zeker?';
+      ChangedTitleText@1000000006 : TextConst 'ENU=Text changed!;FRA=Texte modifi‚ !;NLD=Text Gewijziged!;NLB=Text Gewijziged!';
+      ErrorWaldoInstall@1100095000 : TextConst 'ENU=Please run the setup of WaldoNavPad.;FRA=Veuillez installer NavPad';
+      WaldoNavPadMgt@1000000007 : Codeunit 50009;
+      txtTextLine@1000000009 : Text[250];
+      intSeperator@1000000008 : Integer;
+
+    PROCEDURE Init@1100095000(TextFieldLength@1100095000 : Integer;FormTitle@1100095001 : Text[1024]);
+    BEGIN
+      //Initialization of the default values for the properties
+      //creation of the dll...
+
+      IF ISCLEAR(WaldoNavPad) THEN
+        IF NOT CREATE(WaldoNavPad,TRUE,TRUE) THEN
+           ERROR(ErrorWaldoInstall);
+
+      WaldoNavPad.TextFieldLength := TextFieldLength;
+      WaldoNavPad.FormTitle := FormTitle;
+
+      WaldoNavPad.OKButtonText := OKText;
+      WaldoNavPad.CancelButtonText := CancelText;
+      WaldoNavPad.ChangedWarningText := ChangedText;
+      WaldoNavPad.ChangedWarningTitleText := ChangedTitleText;
+
+      WaldoNavPad.FontSize := 11;
+      WaldoNavPad.FontName := 'Times New Roman';
+    END;
+
+    PROCEDURE AppendText@1100095002(ptxtText@1100095000 : Text[1024]);
+    BEGIN
+      //Append piece of text to (probably) be displayed in the textpad
+      WaldoNavPad.AppendText(ptxtText);
+    END;
+
+    PROCEDURE GetNextTextField@1100095007(VAR ReturnText@1100095000 : Text[1024];VAR ReturnSeparator@1100095001 : Integer);
+    BEGIN
+      //Get next piece of text (taking the max field length into account)
+      WaldoNavPad.GetNextTextField(ReturnText,ReturnSeparator);
+    END;
+
+    PROCEDURE ShowDialog@1100095011();
+    BEGIN
+      //Duh...
+      WaldoNavPad.ShowDialog;
+    END;
+
+    PROCEDURE GetEOS@1100095003() : Boolean;
+    BEGIN
+      //Used when looping to check if end of string
+      EXIT(WaldoNavPad.EOS);
+    END;
+
+    PROCEDURE GetCount@1100095004() : Integer;
+    BEGIN
+      //Returns number of characters
+      EXIT(WaldoNavPad.Count);
+    END;
+
+    PROCEDURE GetTextChanged@1100095005() : Boolean;
+    BEGIN
+      //Returns wether text was changed or not
+      //Beware: it's a good idea to use the DialogResultOK instead of this property.  Read comment on GetDialogResultOK.
+      EXIT(WaldoNavPad.TextChanged);
+    END;
+
+    PROCEDURE GetDialogResultOK@1100095013() : Boolean;
+    BEGIN
+      //If pressed "OK".
+      //When nothing changed, and pressed OK, the DialogResultOK WILL be false!  This case, you don't have to worry about an extra check
+      //on "TextChanged"
+      EXIT(WaldoNavPad.DialogResultOK);
+    END;
+
+    PROCEDURE SetReadOnly@1100095008(ReadOnly@1100095000 : Boolean);
+    BEGIN
+      //Set pane to ReadOnly to just display the text
+      WaldoNavPad.ReadonlyPane := ReadOnly;
+    END;
+
+    PROCEDURE SetFontSize@1100095009(FontSize@1100095000 : Integer);
+    BEGIN
+      //Set Font Size: Default = 20
+      WaldoNavPad.FontSize := FontSize;
+    END;
+
+    PROCEDURE SetFontName@1100095010(FontName@1100095000 : Text[1024]);
+    BEGIN
+      //Set Font Name: Default = Times New Roman
+      WaldoNavPad.FontName := FontName;
+    END;
+
+    PROCEDURE SetButtonText@1100095006(OKButtonText@1100095003 : Text[1024];CancelButtonText@1100095002 : Text[1024]);
+    BEGIN
+      //To change the text on the OK-button and Cancel-button
+      WaldoNavPad.OKButtonText := OKButtonText;
+      WaldoNavPad.CancelButtonText := CancelButtonText;
+    END;
+
+    PROCEDURE SetChangedWarningText@1100095012(ChangedWarningTitle@1100095000 : Text[1024];ChangedWarningText@1100095001 : Text[1024]);
+    BEGIN
+      //To change the title and text of the warning message.
+      WaldoNavPad.ChangedWarningText := ChangedWarningText;
+      WaldoNavPad.ChangedWarningTitleText := ChangedWarningTitle;
+    END;
+
+    PROCEDURE ResetText@1100095001();
+    BEGIN
+      //Empty the text
+      WaldoNavPad.Text := '';
+    END;
+
+    PROCEDURE EditMailText@1000000003(pMail@1000000000 : Record 50016);
+    VAR
+      lrecMailTexts@1000000001 : Record 50016;
+    BEGIN
+      WaldoNavPadMgt.Init(80, STRSUBSTNO('Texte Mail - %1 - %2', FORMAT(pMail."Mail Type"), pMail.Subject));
+
+      lrecMailTexts.SETRANGE("Mail Type", pMail."Mail Type");
+      IF NOT lrecMailTexts.FINDFIRST THEN BEGIN
+       lrecMailTexts.INIT;
+       lrecMailTexts."Mail Type" := pMail."Mail Type";
+      END;
+
+      //*** GET THE TEXT FROM THE TABLE ***
+      GetMailTexts(lrecMailTexts."Mail Type");
+
+      //*** SET FORM PROPERTIES
+      //WaldoNavPadMgt.SetButtonText(OKText,CancelText);
+      //WaldoNavPadMgt.SetChangedWarningText(ChangedTitleText,ChangedText);
+
+      //*** IF YOU WANT THE PAD TO BE READONLY
+      //WaldoNavPadMgt.SetReadOnly := TRUE;
+
+      //*** SET FONT
+      //WaldoNavPadMgt.SetFontSize := 10;
+      //WaldoNavPadMgt.SetFontName := 'Courier New';
+
+      //*** OPEN FORM TO EDIT THE TEXT  ***
+      WaldoNavPadMgt.ShowDialog;
+
+      IF WaldoNavPadMgt.GetDialogResultOK THEN BEGIN
+        //MESSAGE('Number of characters: ' + FORMAT(WaldoNavPadMgt.GetCount));
+
+        //*** SAVE THE EDITED TEXT        ***
+        //First delete all text-lines in the tabel
+        DeleteMailTexts(lrecMailTexts."Mail Type");
+
+        //Insert the Texts
+        SaveMailTexts(lrecMailTexts."Mail Type");
+      END;
+
+
+      CLEAR(WaldoNavPadMgt);
+    END;
+
+    LOCAL PROCEDURE GetMailTexts@1000000002(pMail@1000000000 : 'Fourn. non cr‚‚,DA … cr‚er,DA non envoy‚ en appro.,DA non approuv‚e,DA non transorm‚e,DA Cplmt,BC … r‚ceptionner,Fact. … approuver');
+    VAR
+      lrecMailTexts@1000000001 : Record 50017;
+      char13@1000000002 : Char;
+      char10@1000000003 : Char;
+    BEGIN
+      // This function gets the text form te table, and puts it in the text-property of WaldoNavPad
+      char13 := 13;
+      char10 := 10;
+      CLEAR(lrecMailTexts);
+      lrecMailTexts.SETRANGE("Mail Type", pMail);
+      IF lrecMailTexts.FINDFIRST THEN BEGIN
+        REPEAT
+          WaldoNavPadMgt.AppendText(lrecMailTexts.Textline);
+          CASE lrecMailTexts.Seperator OF
+            lrecMailTexts.Seperator::Space:
+                    WaldoNavPadMgt.AppendText(' ');
+            lrecMailTexts.Seperator::"Carriage Return":
+              WaldoNavPadMgt.AppendText(FORMAT(char13) + FORMAT(char10));
+          END;
+        UNTIL lrecMailTexts.NEXT = 0;
+      END
+      ELSE BEGIN
+        WaldoNavPadMgt.ResetText;
+      END;
+    END;
+
+    LOCAL PROCEDURE DeleteMailTexts@1000000001(pMail@1000000000 : 'Fourn. non cr‚‚,DA … cr‚er,DA non envoy‚ en appro.,DA non approuv‚e,DA non transorm‚e,DA Cplmt,BC … r‚ceptionner,Fact. … approuver');
+    VAR
+      lrecMailTexts@1000000001 : Record 50017;
+    BEGIN
+      // Before Inserting all lines, the current lines need to be deleted
+      CLEAR(lrecMailTexts);
+      lrecMailTexts.SETRANGE("Mail Type", pMail);
+      IF lrecMailTexts.FINDFIRST THEN
+        lrecMailTexts.DELETEALL(TRUE);
+    END;
+
+    LOCAL PROCEDURE SaveMailTexts@1000000000(pMail@1000000000 : 'Fourn. non cr‚‚,DA … cr‚er,DA non envoy‚ en appro.,DA non approuv‚e,DA non transorm‚e,DA Cplmt,BC … r‚ceptionner,Fact. … approuver');
+    VAR
+      lrecMailTexts@1000000001 : Record 50017;
+      lintLineNo@1000000002 : Integer;
+    BEGIN
+      lintLineNo := 0;
+
+      WHILE NOT (WaldoNavPadMgt.GetEOS) DO BEGIN
+        WaldoNavPadMgt.GetNextTextField(txtTextLine, intSeperator);
+        lintLineNo += 10000;
+
+        lrecMailTexts.INIT;
+
+        lrecMailTexts."Mail Type" := pMail;
+        lrecMailTexts."Line No." := lintLineNo;
+        lrecMailTexts.Textline := txtTextLine;
+        lrecMailTexts.Seperator := intSeperator;
+
+        lrecMailTexts.INSERT(TRUE);
+
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

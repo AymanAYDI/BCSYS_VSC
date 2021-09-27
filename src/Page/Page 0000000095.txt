@@ -2,8 +2,9 @@ OBJECT Page 95 Sales Quote Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -524,6 +525,33 @@ OBJECT Page 95 Sales Quote Subform
                          END;
                           }
 
+    { 1000000001;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
+
+    { 1000000000;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
+
     { 53  ;1   ;Group     ;
                 GroupType=Group }
 
@@ -621,7 +649,7 @@ OBJECT Page 95 Sales Quote Subform
       SalesCalcDiscByType@1015 : Codeunit 56;
       DocumentTotals@1014 : Codeunit 57;
       VATAmount@1013 : Decimal;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       ItemPanelVisible@19014573 : Boolean INDATASET;
       InvDiscAmountEditable@1010 : Boolean;
       TotalAmountStyle@1009 : Text;
@@ -766,6 +794,9 @@ OBJECT Page 95 Sales Quote Subform
     END;
 
     BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

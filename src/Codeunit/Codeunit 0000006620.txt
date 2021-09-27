@@ -2,9 +2,10 @@ OBJECT Codeunit 6620 Copy Document Mgt.
 {
   OBJECT-PROPERTIES
   {
-    Date=31/10/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38457;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38457,VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -859,6 +860,14 @@ OBJECT Codeunit 6620 Copy Document Mgt.
         LinesNotCopied <> 0:
           MESSAGE(Text004);
       END;
+
+      //MODIF JX-AUD du 26/11/10
+      IF (IncludeHeader) AND (ToPurchHeader."Document Type" = ToPurchHeader."Document Type"::Invoice) THEN
+        BEGIN
+        ToPurchHeader."Original user":= USERID;
+        ToPurchHeader.MODIFY;
+        END;
+      //FIN MODIF JX-AUD du 26/11/10
     END;
 
     PROCEDURE ShowSalesDoc@15(ToSalesHeader@1000 : Record 36);
@@ -4938,6 +4947,12 @@ OBJECT Codeunit 6620 Copy Document Mgt.
     END;
 
     BEGIN
+    {
+
+      //MODFI JX-AUD du 26/11/10
+      //Lors de la copie de document de type "facture" le Champ "original user" sur la facture copi‚e est celui de
+      //l'utilisateur actuel qui demande la copie et non plus celui initial qui se trouve sur la facture … copier
+    }
     END.
   }
 }

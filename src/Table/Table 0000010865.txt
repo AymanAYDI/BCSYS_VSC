@@ -2,21 +2,33 @@ OBJECT Table 10865 Payment Header
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVFR8.00;
+    Date=28/10/16;
+    Time=17:42:25;
+    Modified=Yes;
+    Version List=NAVFR8.00,JX-VSC3.0-PBD,JX-VSC4.1-PBD,JX-VSC4.2-PBD;
   }
   PROPERTIES
   {
     OnInsert=BEGIN
                IF "No." = '' THEN BEGIN
-                 IF PAGE.RUNMODAL(PAGE::"Payment Class List",GetProcess) = ACTION::LookupOK THEN
+               // PBE  VIRAUTO 21/07/16
+                 GLSetup.GET;
+                 IF GLSetup."Default Payment Class" <> '' THEN
+                  Process.GET(GLSetup."Default Payment Class")
+                 ELSE
+               //
+                  IF PAGE.RUNMODAL(PAGE::"Payment Class List",GetProcess) = ACTION::LookupOK THEN
                    Process := GetProcess;
                  Process.TESTFIELD("Header No. Series");
                  NoSeriesMgt.InitSeries(Process."Header No. Series",xRec."No. Series",0D,"No.","No. Series");
                  VALIDATE("Payment Class",Process.Code);
                END;
                InitHeader;
+             END;
+
+    OnModify=BEGIN
+               MODIFY;
+               FctYooz(TRUE);
              END;
 
     OnDelete=VAR
@@ -51,7 +63,7 @@ OBJECT Table 10865 Payment Header
 
                                                    CaptionML=[ENU=No.;
                                                               FRA=Nø];
-                                                   Editable=No }
+                                                   Editable=Yes }
     { 2   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
                                                    OnValidate=VAR
                                                                 PaymentLine@1120000 : Record 10866;
@@ -369,11 +381,23 @@ OBJECT Table 10865 Payment Header
                                                    CaptionML=[ENU=Dimension Set ID;
                                                               FRA=ID ensemble de dimensions];
                                                    Editable=No }
+    { 50000;  ;User ID             ;Code50        ;CaptionML=FRA=Code Utilisateur }
+    { 50001;  ;Creation Date       ;Date          ;CaptionML=FRA=Date Cr‚ation }
+    { 50002;  ;Modifcation Date    ;Date          ;CaptionML=FRA=Date Modification }
+    { 50010;  ;Alone Payment       ;Boolean       ;CaptionML=FRA=Bordereau Manuel }
+    { 50020;  ;Yooz No.            ;Text250       ;CaptionML=FRA=Nø Yooz }
+    { 50021;  ;Yooz No. 2          ;Text250       ;CaptionML=FRA=Nø Yooz 2 }
+    { 50022;  ;Yooz No. 3          ;Text250       ;CaptionML=FRA=Nø Yooz 3 }
+    { 50023;  ;Yooz No. 4          ;Text250       ;CaptionML=FRA=Nø Yooz 4 }
+    { 50024;  ;Yooz No. 5          ;Text250       ;CaptionML=FRA=Nø Yooz 5 }
+    { 50025;  ;Yooz No. 6          ;Text250       ;CaptionML=FRA=Nø Yooz 6 }
+    { 50026;  ;Motif               ;Text30         }
   }
   KEYS
   {
     {    ;No.                                     ;Clustered=Yes }
     {    ;Posting Date                             }
+    {    ;User ID,Status No.                       }
   }
   FIELDGROUPS
   {
@@ -391,6 +415,7 @@ OBJECT Table 10865 Payment Header
       CurrExchRate@1120008 : Record 330;
       CompanyBank@1120007 : Record 270;
       PostCode@1120005 : Record 225;
+      GLSetup@1000000000 : Record 98;
       DimManagement@1120004 : Codeunit 408;
       NoSeriesMgt@1120006 : Codeunit 396;
       RibKey@1120015 : Codeunit 10801;
@@ -472,10 +497,16 @@ OBJECT Table 10865 Payment Header
     END;
 
     PROCEDURE InitHeader@1120007();
+    VAR
+      CompanyInfo@1000000000 : Record 79;
     BEGIN
       "Posting Date" := WORKDATE;
       "Document Date" := WORKDATE;
       VALIDATE("Account Type","Account Type"::"Bank Account");
+      // JX-VSC3.0-PBD Banque info. Soci‚t‚ par d‚faut
+      CompanyInfo.GET;
+      VALIDATE("Account No.",CompanyInfo."Default Bank Account No.");
+      //
     END;
 
     PROCEDURE DimensionSetup@1120010();
@@ -556,7 +587,75 @@ OBJECT Table 10865 Payment Header
         UNTIL PaymentLine.NEXT = 0;
     END;
 
+    PROCEDURE FctYooz@1000000000(ReCalc@1000000005 : Boolean);
+    VAR
+      PayLine@1000000000 : Record 10866;
+      SortTable@1000000001 : TEMPORARY Record 370;
+      YoozTable@1000000006 : Record 50018;
+      YoozNo@1000000007 : Text;
+      LineNo@1000000008 : Integer;
+      TextYooz@1000000003 : Text;
+      IntYooz@1000000004 : Integer;
+      x@1000000002 : Integer;
     BEGIN
+      PayLine.RESET;
+      PayLine.SETRANGE("No.","No.");
+      IF PayLine.FINDFIRST THEN
+       REPEAT
+        IF ReCalc THEN
+         PayLine.FctYooz(FALSE);
+        IF PayLine."Applied Yooz No." <> '' THEN BEGIN
+         TextYooz := PayLine."Applied Yooz No.";
+         REPEAT
+          x := STRPOS(TextYooz,';');
+          IF x <> 0 THEN
+           IF EVALUATE(IntYooz,COPYSTR(TextYooz,1,x - 1)) THEN BEGIN
+            SortTable.INIT;
+            SortTable."Row No." := IntYooz;
+            SortTable."Cell Value as Text" := COPYSTR(TextYooz,1,x - 1);
+            IF SortTable.INSERT THEN;
+           END;
+          TextYooz := COPYSTR(TextYooz,x + 1);
+         UNTIL x = 0;
+        END;
+       UNTIL PayLine.NEXT = 0;
+
+      GET("No.");
+      YoozTable.RESET;
+      YoozTable.SETRANGE("No.","No.");
+      YoozTable.DELETEALL;
+      YoozTable.RESET;
+      YoozNo := '';
+      LineNo := 0;
+      IF SortTable.FINDFIRST THEN
+       REPEAT
+        IF STRLEN(YoozNo + SortTable."Cell Value as Text" + ';') <= 250 THEN
+         YoozNo := YoozNo + SortTable."Cell Value as Text" + ';'
+        ELSE BEGIN
+         FctInsertYoozNo(YoozNo,LineNo);
+         YoozNo := SortTable."Cell Value as Text" + ';';
+        END;
+       UNTIL SortTable.NEXT = 0;
+       FctInsertYoozNo(YoozNo,LineNo);
+      MODIFY;
+    END;
+
+    LOCAL PROCEDURE FctInsertYoozNo@1000000001(VAR YoozNo@1000000001 : Text;VAR LineNo@1000000000 : Integer);
+    VAR
+      YoozTable@1000000002 : Record 50018;
+    BEGIN
+      LineNo += 10000;
+      YoozTable.INIT;
+      YoozTable."No." := "No.";
+      YoozTable."Line No." := LineNo;
+      YoozTable."Applied Yooz No." := YoozNo;
+      YoozTable.INSERT;
+    END;
+
+    BEGIN
+    {
+      // JX-VSC3.0-PBD Banque info. Soci‚t‚ par d‚faut
+    }
     END.
   }
 }

@@ -2,8 +2,9 @@ OBJECT Page 9002 Acc. Payables Coordinator RC
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
     Version List=NAVW18.00,NAVFR8.00;
   }
   PROPERTIES
@@ -294,6 +295,12 @@ OBJECT Page 9002 Acc. Payables Coordinator RC
 
     { 1905989608;2;Part   ;
                 PagePartID=Page9152;
+                PartType=Page }
+
+    { 1000000001;2;Part   ;
+                CaptionML=[ENU=Company Picture;
+                           FRA=Soci‚t‚];
+                PagePartID=Page50099;
                 PartType=Page }
 
     { 1900724708;1;Group   }

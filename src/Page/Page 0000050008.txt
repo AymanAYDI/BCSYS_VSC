@@ -1,0 +1,143 @@
+OBJECT Page 50008 G/L Account List VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/06/15;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=NAVW13.70,NAVFR5.00,JX-VSC1.0-LAB;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=G/L Account List;
+               FRA=Liste des comptes g‚n‚raux];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table15;
+    DataCaptionFields=Search Name;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 //SETRANGE("G/L Entry Type Filter","G/L Entry Type Filter"::Definitives);
+                 SETRANGE("G/L Entry Type Filter","G/L Entry Type Filter"::Definitive);
+                 //FILTERGROUP(2);
+                 //SETFILTER("No.",'%1|%2','2*','6*');     //MODIF JX-XAD du 08/11/10
+                 //FILTERGROUP(0);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       NameIndent := 0;
+                       NoOnFormat;
+                       NameOnFormat;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                IndentationColumnName=NameIndent;
+                IndentationControls=Name;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="No." }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name;
+                Visible=FALSE }
+
+    { 30  ;2   ;Field     ;
+                SourceExpr="Direct Posting";
+                Visible=FALSE }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="Reconciliation Account";
+                Visible=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      "No.Emphasize"@19074284 : Boolean INDATASET;
+      NameEmphasize@19018670 : Boolean INDATASET;
+      NameIndent@19079073 : Integer INDATASET;
+
+    PROCEDURE SetSelection@1(VAR GLAcc@1000000000 : Record 15);
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(GLAcc);
+    END;
+
+    PROCEDURE GetSelectionFilter@2() : Code[80];
+    VAR
+      GLAcc@1000000000 : Record 15;
+      FirstAcc@1000000001 : Text[20];
+      LastAcc@1000000002 : Text[20];
+      SelectionFilter@1000000003 : Code[80];
+      GLAccCount@1000000004 : Integer;
+      More@1000000005 : Boolean;
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(GLAcc);
+      GLAcc.SETCURRENTKEY("No.");
+      GLAccCount := GLAcc.COUNT;
+      IF GLAccCount > 0 THEN BEGIN
+        GLAcc.FIND('-');
+        WHILE GLAccCount > 0 DO BEGIN
+          GLAccCount := GLAccCount - 1;
+          GLAcc.MARKEDONLY(FALSE);
+          FirstAcc := GLAcc."No.";
+          LastAcc := FirstAcc;
+          More := (GLAccCount > 0);
+          WHILE More DO
+            IF GLAcc.NEXT = 0 THEN
+              More := FALSE
+            ELSE
+              IF NOT GLAcc.MARK THEN
+                More := FALSE
+              ELSE BEGIN
+                LastAcc := GLAcc."No.";
+                GLAccCount := GLAccCount - 1;
+                IF GLAccCount = 0 THEN
+                  More := FALSE;
+              END;
+          IF SelectionFilter <> '' THEN
+            SelectionFilter := SelectionFilter + '|';
+          IF FirstAcc = LastAcc THEN
+            SelectionFilter := SelectionFilter + FirstAcc
+          ELSE
+            SelectionFilter := SelectionFilter + FirstAcc + '..' + LastAcc;
+          IF GLAccCount > 0 THEN BEGIN
+            GLAcc.MARKEDONLY(TRUE);
+            GLAcc.NEXT;
+          END;
+        END;
+      END;
+      EXIT(SelectionFilter);
+    END;
+
+    LOCAL PROCEDURE NoOnFormat@19031395();
+    BEGIN
+      "No.Emphasize" := "Account Type" <> "Account Type"::Posting;
+    END;
+
+    LOCAL PROCEDURE NameOnFormat@19039177();
+    BEGIN
+      NameIndent := Indentation;
+      NameEmphasize := "Account Type" <> "Account Type"::Posting;
+    END;
+
+    BEGIN
+    {
+      //CREATION LAB du 07/11/08
+      //Nouveau formulaire pour ligne achat
+
+      //MODIF JX-XAD du 08/11/10
+      Suppression filtre (annul‚)
+    }
+    END.
+  }
+}
+

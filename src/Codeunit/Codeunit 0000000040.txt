@@ -2,14 +2,16 @@ OBJECT Codeunit 40 LogInManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=21/07/15;
+    Time=10:08:40;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC3.0-PBD;
   }
   PROPERTIES
   {
     Permissions=TableData 17=r,
-                TableData 51=rimd;
+                TableData 51=rimd,
+                TableData 50014=rimd;
     OnRun=BEGIN
           END;
 
@@ -51,6 +53,7 @@ OBJECT Codeunit 40 LogInManagement
       ConfPersonalizationMgt@1004 : Codeunit 9170;
       IdentityManagement@1002 : Codeunit 9801;
       JobQueueRestartUserSession@1001 : Codeunit 455;
+      LVSCSettings@1000000000 : Record 50014;
     BEGIN
       IF (STRPOS(COMPANYNAME,Text000) < 1) AND LicenseAgreement.GET THEN
         IF (TODAY >= LicenseAgreement."Effective Date") AND NOT LicenseAgreement.Accepted THEN BEGIN
@@ -108,6 +111,16 @@ OBJECT Codeunit 40 LogInManagement
       LogInWorkDate := 0D;
 
       WORKDATE := GetDefaultWorkDate;
+
+      // JX-VSC3.0-PBD Check VSC Settings
+      IF NOT LVSCSettings.GET THEN BEGIN
+       LVSCSettings.INIT;
+       LVSCSettings."On Client" := TRUE;
+       LVSCSettings."New Server" := TRUE;
+       LVSCSettings."BC Path" := '\\10.16.34.109\Pdf\Fournisseurs\';
+       LVSCSettings.INSERT;
+      END;
+      //
     END;
 
     LOCAL PROCEDURE LogInEnd@4();

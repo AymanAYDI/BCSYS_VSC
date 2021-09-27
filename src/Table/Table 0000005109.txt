@@ -2,9 +2,10 @@ OBJECT Table 5109 Purchase Header Archive
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=13/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
@@ -478,6 +479,35 @@ OBJECT Table 5109 Purchase Header Archive
     { 9000;   ;Assigned User ID    ;Code50        ;TableRelation="User Setup";
                                                    CaptionML=[ENU=Assigned User ID;
                                                               FRA=Code utilisateur affect‚] }
+    { 50000;  ;Lines Amount        ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Purchase Line"."Line Amount" WHERE (Document Type=FIELD(Document Type),
+                                                                                                        Document No.=FIELD(No.)));
+                                                   CaptionML=FRA=Montant des lignes;
+                                                   Editable=No;
+                                                   AutoFormatExpr="Currency Code" }
+    { 50001;  ;Original user       ;Code50        ;TableRelation="User Setup";
+                                                   CaptionML=[ENU=Original user;
+                                                              FRA=Utilisateur initial];
+                                                   Editable=Yes }
+    { 50002;  ;Creation date       ;Date          ;CaptionML=[ENU=Creation date;
+                                                              FRA=Date de cr‚ation];
+                                                   Editable=Yes }
+    { 50003;  ;Invoice receipt date;Date          ;CaptionML=[ENU=Invoice receipt date;
+                                                              FRA=Date r‚ception facture] }
+    { 50005;  ;Matricule No.       ;Code20        ;CaptionML=FRA=Code matricule }
+    { 50006;  ;Free comment        ;Text50        ;CaptionML=[ENU=Free comment;
+                                                              FRA=Commentaire libre] }
+    { 50007;  ;Status Code         ;Code30        ;TableRelation="FAP Status";
+                                                   CaptionML=[ENU=Qualification Code;
+                                                              FRA=Code statut] }
+    { 50008;  ;Status description  ;Text50        ;CaptionML=[ENU=Qualification Description;
+                                                              FRA=Libell‚ statut] }
+    { 50009;  ;Register amount     ;Decimal       ;CaptionML=FRA=Montant … enregistrer }
+    { 50010;  ;Import              ;Boolean       ;CaptionML=[ENU=Import;
+                                                              FRA=Import] }
+    { 50011;  ;Import Vendor Email ;Text250       ;CaptionML=[ENU=Import vendor email;
+                                                              FRA=Email import fournisseur] }
+    { 50012;  ;Litige              ;Boolean        }
   }
   KEYS
   {
@@ -501,6 +531,11 @@ OBJECT Table 5109 Purchase Header Archive
     END;
 
     BEGIN
+    {
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Code Matricule"
+    }
     END.
   }
 }

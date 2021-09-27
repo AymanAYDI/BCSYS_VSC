@@ -1,0 +1,41 @@
+OBJECT Page 50024 User code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=User code;
+               FRA=Code utilisateur];
+    SourceTable=Table91;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                Editable=FALSE;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="User ID" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      CREATION JX-XAD 17/04/2010
+      Formulaire des codes utilisateurs utilis‚ pour la gestion des contrats
+    }
+    END.
+  }
+}
+

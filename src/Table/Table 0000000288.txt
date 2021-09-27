@@ -2,13 +2,35 @@ OBJECT Table 288 Vendor Bank Account
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,NAVFR8.00,JX-VSC1.2-XAD-LAB,JX-VSC2.0-AUD;
   }
   PROPERTIES
   {
     DataCaptionFields=Vendor No.,Code,Name;
+    OnModify=BEGIN
+
+               //DEBUT MODIF JX-XAD 19/05/2010
+               IF ("Bank Branch No." <> xRec."Bank Branch No.") OR ("Agency Code" <> xRec."Agency Code") OR
+                  ("Bank Account No." <> xRec."Bank Account No.") OR ("RIB Key" <> xRec."RIB Key") OR
+                  ("SWIFT Code" <> xRec."SWIFT Code") OR (IBAN <> xRec.IBAN) THEN
+                    "Change RIB/IBAN" := TODAY;
+               //FIN MODIF JX-XAD 19/05/2010
+
+               //Modif JX-AUD du 27/04/2011
+               IF(Grec_Vendor.GET("Vendor No.")) THEN
+               BEGIN
+                 IF((Code = '1') AND ((Grec_Vendor."Default Bank Account Code" = '1') OR (Grec_Vendor."Default Bank Account Code" = '')))  THEN
+                 BEGIN
+                  Grec_Vendor.VALIDATE("Default Bank Account Code",'1');
+                  Grec_Vendor.MODIFY;
+                 END;
+               END;
+               //Fin modif JX-AUd du 27/04/2011
+             END;
+
     CaptionML=[ENU=Vendor Bank Account;
                FRA=Compte bancaire fournisseur];
     LookupPageID=Page426;
@@ -126,6 +148,9 @@ OBJECT Table 288 Vendor Bank Account
     { 10853;  ;RIB Checked         ;Boolean       ;CaptionML=[ENU=RIB Checked;
                                                               FRA=V‚rification RIB];
                                                    Editable=No }
+    { 50000;  ;Change RIB/IBAN     ;Date          ;CaptionML=[ENU=Change RIB/IBAN;
+                                                              FRA=Modification du RIB/IBAN];
+                                                   Editable=No }
   }
   KEYS
   {
@@ -142,6 +167,7 @@ OBJECT Table 288 Vendor Bank Account
       PostCode@1000 : Record 225;
       RIBKey@1120000 : Codeunit 10801;
       BankAccIdentifierIsEmptyErr@1001 : TextConst 'ENU=You must specify either a Bank Account No. or an IBAN.;FRA=Vous devez sp‚cifier un nø compte bancaire ou un IBAN.';
+      Grec_Vendor@1000000000 : Record 23;
 
     PROCEDURE GetBankAccountNoWithCheck@14() AccountNo : Text;
     BEGIN
@@ -160,6 +186,20 @@ OBJECT Table 288 Vendor Bank Account
     END;
 
     BEGIN
+    {
+
+      -------------------------------------- V1.2 --------------------------------------
+
+      DEBUT MODIF JX-XAD 19/05/2010
+      Ajout du champ "Modification du RIB" qui doit contenir la date de modification du RIB ou IBAN
+
+      //modif LAB du 26/05/2010
+      //remplacement label champ modification RIB en modification RIB/IBAN
+      //champ mis en non ‚ditable
+
+      //Modif JX-AUD du 27/04/2011
+      //Ajout de code pour le champ Code m‚thode OnValidate
+    }
     END.
   }
 }

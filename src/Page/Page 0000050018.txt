@@ -1,0 +1,205 @@
+OBJECT Page 50018 Contract
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23/10/15;
+    Time=17:30:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Contract;
+               FRA=Contrat];
+    InsertAllowed=Yes;
+    DeleteAllowed=Yes;
+    SourceTable=Table50008;
+    PageType=Card;
+    OnInit=BEGIN
+             TextInfoVisible := TRUE;
+           END;
+
+    OnOpenPage=VAR
+                 Gcu_ContractManagement@1000000000 : Codeunit 50005;
+               BEGIN
+                 IF COUNT > 1 THEN
+                   TextInfoVisible := TRUE
+                 ELSE
+                   TextInfoVisible := FALSE;
+
+                 Gcu_ContractManagement.AutoInit("Initial quote No");
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1000000027;1 ;ActionGroup;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat] }
+      { 1000000038;2 ;Action    ;
+                      CaptionML=[ENU=Copy contract;
+                                 FRA=Copier contrat];
+                      OnAction=BEGIN
+                                 CopierContrat.SetContract(Rec);
+                                 CopierContrat.RUNMODAL;
+                                 CLEAR(CopierContrat);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                CaptionML=FRA=G‚n‚ral }
+
+    { 1000000015;2;Group  ;
+                Name=Informations Contrat;
+                GroupType=Group }
+
+    { 1000000001;3;Field  ;
+                SourceExpr="Initial quote No";
+                Editable=FALSE }
+
+    { 1000000003;3;Field  ;
+                CaptionML=[ENU=Order / Contract No.;
+                           FRA=Nø Commande / Contrat];
+                SourceExpr="Order No.";
+                Editable=FALSE }
+
+    { 1000000005;3;Field  ;
+                SourceExpr="Signature status";
+                Editable=FALSE }
+
+    { 1000000007;3;Field  ;
+                CaptionML=[ENU=Date of entry;
+                           FRA=* Date d'entr‚e en vigueur];
+                SourceExpr="Date of entry";
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000002;3;Field  ;
+                CaptionML=[ENU=End date;
+                           FRA=* Date de fin];
+                SourceExpr="End date";
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000004;3;Field  ;
+                CaptionML=[ENU=Term of service;
+                           FRA=Dur‚e de la prestation (Jours Homme)];
+                SourceExpr="Term of service";
+                Editable=FALSE }
+
+    { 1000000006;3;Field  ;
+                CaptionML=[ENU=Speaking supplier;
+                           FRA=* Intervenant fournisseur];
+                SourceExpr="Speaking supplier";
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000008;3;Field  ;
+                CaptionML=[ENU=Speaking VSCT;
+                           FRA=* Intervenant VSCT];
+                SourceExpr="Speaking VSCT";
+                LookupPageID=User code;
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000009;3;Field  ;
+                SourceExpr="Date de mise au coffre";
+                Editable=FALSE }
+
+    { 1000000013;3;Field  ;
+                CaptionML=FRA=TJM;
+                SourceExpr=TJM;
+                Editable=FALSE }
+
+    { 1000000011;3;Field  ;
+                CaptionML=[ENU=Provider name;
+                           FRA=* Nom prestataire];
+                SourceExpr="Nom prestataire";
+                Editable=FALSE;
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000010;3;Field  ;
+                CaptionML=[ENU=Provider first name;
+                           FRA=* Pr‚nom prestataire];
+                SourceExpr="Pr‚nom prestataire";
+                Editable=FALSE;
+                Style=Strong;
+                StyleExpr=TRUE;
+                ShowMandatory=TRUE }
+
+    { 1000000016;2;Group  ;
+                Name=* Description;
+                GroupType=Group }
+
+    { 1000000030;3;Field  ;
+                SourceExpr=Description1;
+                MultiLine=Yes;
+                ShowMandatory=TRUE }
+
+    { 1000000031;3;Field  ;
+                SourceExpr=Description2;
+                MultiLine=Yes }
+
+    { 1000000032;3;Field  ;
+                SourceExpr=Description3;
+                MultiLine=Yes }
+
+    { 1000000033;3;Field  ;
+                SourceExpr=Description4;
+                MultiLine=Yes }
+
+    { 1000000034;3;Field  ;
+                SourceExpr=Description5;
+                MultiLine=Yes }
+
+    { 1000000035;3;Field  ;
+                SourceExpr=Description6;
+                MultiLine=Yes }
+
+    { 1000000036;3;Field  ;
+                SourceExpr=Description7;
+                MultiLine=Yes }
+
+    { 1000000037;3;Field  ;
+                SourceExpr=Description8;
+                MultiLine=Yes }
+
+  }
+  CODE
+  {
+    VAR
+      Gcu_ContractManagement@1000000000 : Codeunit 50005;
+      Text001@1000000001 : TextConst 'ENU=" Contracts are attached to this bill. Use ''Prev'' and ''Next'' to navigate.";FRA=" contrats sont rattach‚s … cette facture. Utilisez ''Pr‚c.'' et ''Suiv.'' pour naviguer."';
+      CopierContrat@1000000002 : Report 50042;
+      TextInfoVisible@19058489 : Boolean INDATASET;
+      Text19052004@19057318 : TextConst 'ENU=Service description :;FRA=* Description de la prestation :';
+      Text19015020@19003669 : TextConst 'FRA=*';
+      Text19037455@19047824 : TextConst 'ENU=Mandatory field;FRA=Champ obligatoire';
+      Text19080001@19069732 : TextConst 'FRA=*';
+
+    BEGIN
+    {
+      ------------------------------ V1.2 ---------------------------
+      CREATION 22/02/2010
+      Formulaire de saisie des informations concernant les contrats
+
+      //JX-AUD du 20/02/2012
+      //Rendu des champs "nom prestataire" et " pr‚nom prestataire" en non Editable
+    }
+    END.
+  }
+}
+

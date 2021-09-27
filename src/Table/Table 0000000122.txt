@@ -2,9 +2,10 @@ OBJECT Table 122 Purch. Inv. Header
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,JX-VSC1.2-XAD,JX-VSC2.0-AUD,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -377,6 +378,36 @@ OBJECT Table 122 Purch. Inv. Header
     { 5700;   ;Responsibility Center;Code10       ;TableRelation="Responsibility Center";
                                                    CaptionML=[ENU=Responsibility Center;
                                                               FRA=Centre de gestion] }
+    { 50001;  ;Original user       ;Code50        ;TableRelation="User Setup";
+                                                   CaptionML=[ENU=Original user;
+                                                              FRA=Utilisateur initial];
+                                                   Editable=Yes }
+    { 50002;  ;Creation date       ;Date          ;CaptionML=[ENU=Creation date;
+                                                              FRA=Date de cr‚ation];
+                                                   Editable=Yes }
+    { 50003;  ;Invoice receipt date;Date          ;CaptionML=[ENU=Invoice receipt date;
+                                                              FRA=Date r‚ception facture] }
+    { 50005;  ;Matricule No.       ;Code20        ;TableRelation=Matricule;
+                                                   OnValidate=BEGIN
+                                                                //Modif JX-AUD du 17/02/2012
+                                                                //Ajout du Champs "Code matricule"
+                                                              END;
+
+                                                   CaptionML=FRA=Code matricule }
+    { 50012;  ;Litige              ;Boolean        }
+    { 50013;  ;BC No.              ;Code20        ;CaptionML=[ENU=BC No.;
+                                                              FRA=Nø BC] }
+    { 50014;  ;Yooz No.            ;Code20        ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz] }
+    { 50015;  ;Yooz Token link     ;Text250       ;CaptionML=[ENU=Yooz Token link;
+                                                              FRA=Lien Token Yooz] }
+    { 50030;  ;Document Prepaid    ;Boolean       ;CaptionML=FRA=Document Pr‚Pay‚ }
+    { 50031;  ;Amount Prepaid      ;Decimal       ;CaptionML=FRA=Montant Pr‚Pay‚ }
+    { 50032;  ;Document Type Prepaid;Option       ;CaptionML=FRA=Type Document Pr‚pay‚;
+                                                   OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50033;  ;Document No. Prepaid;Code20        ;CaptionML=FRA=Nø Document Pr‚pay‚ }
   }
   KEYS
   {
@@ -441,6 +472,22 @@ OBJECT Table 122 Purch. Inv. Header
     END;
 
     BEGIN
+    {
+
+      ----------------------- V1.2 -----------------------
+
+      Ajout JX-XAD le 19/11/2009
+      Ajout des champs :
+      - Original user
+      - Creation date
+      - Invoice receipt date
+
+      //JX-AUD du 01/07/2013
+      //Ajout du champ Litige
+
+      //JX-AUD du 24/02/2015
+      Ajout des champs NøBC, Nø Yooz, Lien token Yooz
+    }
     END.
   }
 }

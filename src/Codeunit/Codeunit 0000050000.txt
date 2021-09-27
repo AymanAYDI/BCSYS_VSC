@@ -1,0 +1,1386 @@
+OBJECT Codeunit 50000 Duplicating records
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/02/16;
+    Time=15:45:00;
+    Modified=Yes;
+    Version List=JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Grec_DuplicatingList@1000000000 : Record 50003;
+      Grec_CompanyList@1000000001 : Record 2000000006;
+      text001@1000000002 : TextConst 'ENU=ERROR !\\No company has been checked !;FRA=Attention\Aucune soci‚t‚ n''a ‚t‚ coch‚e !';
+      text002@1000000101 : TextConst 'ENU=ERROR !\\Vendor %1 already exists in company %2;FRA=ERREUR !\\La fiche fournisseur %1 existe d‚j… dans la soci‚t‚ %2 !';
+      text003@1000000004 : TextConst 'ENU=ERROR !\\Vendor %1 does not exists in company %2 !;FRA=ERREUR !\\La fiche fournisseur %1 n''existe pas dans la soci‚t‚ %2 !';
+      text004@1000000005 : TextConst 'ENU=The vendor %1 has been duplicated in company %2;FRA=La fiche fournisseur %1 a ‚t‚ dupliqu‚e dans la soci‚t‚ %2';
+      text005@1000000006 : TextConst 'ENU=ERROR !\\Vendor posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta fournisseur %1 est inexistant dans la soci‚t‚ %2';
+      text006@1000000007 : TextConst 'ENU=G/L account %1 has been duplicated in company %2;FRA=La fiche compte g‚n‚ral %1 a ‚t‚ dupliqu‚e dans la soci‚t‚ %2';
+      text007@1000000008 : TextConst 'ENU=ERROR in %1 !\\unable to create account bank %2 related to vendor %3;FRA=ERREUR dans %1 !\Impossible de cr‚er le compte bancaire %2 pour le fournisseur %3';
+      text008@1000000009 : TextConst 'ENU=ERROR in %1 !\\unable to create post code/city %2/%3 related to account bank;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code postal/Ville %2/%3 li‚ au compte bancaire';
+      text009@1000000010 : TextConst 'ENU=ERROR in %1 !\\Currency code %2, related to account bank, does not exists;FRA=ERREUR dans %1 !\\Le code devise %2 li‚ au compte bancaire est inexistant';
+      text010@1000000011 : TextConst 'ENU=ERROR in %1 !\\unable to create country code %2 related to vendor;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code pays %2 li‚ au fournisseur';
+      text011@1000000012 : TextConst 'ENU=ERROR in %1 !\\unable to create language code %2 related to account bank;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code langue %2 li‚ au compte bancaire';
+      text012@1000000013 : TextConst 'ENU=ERROR !\\Payment terms code %1 does not exists in company %2;FRA=ERREUR !\\Le code conditions de paiement %1 est inexistant dans la soci‚t‚ %2';
+      text013@1000000014 : TextConst 'ENU=ERROR !\\Invoice discount code %1 does not exists in company %2;FRA=ERREUR !\\Le code remise facture %1 est inexistant dans la soci‚t‚ %2';
+      text014@1000000015 : TextConst 'ENU=ERROR !\\Pay-to vendor code %1 does not exists in company %2;FRA=ERREUR !\\Le code fournisseur … payer %1 est inexistant dans la soci‚t‚ %2';
+      text015@1000000016 : TextConst 'ENU=ERROR !\\Payment method code %1 does not exists in company %2;FRA=ERREUR !\\Le code mode de rŠglement %1 est inexistant dans la soci‚t‚ %2';
+      text016@1000000017 : TextConst 'ENU=ERROR !\\Business posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta march‚ %1 est inexistant dans la soci‚t‚ %2';
+      text017@1000000018 : TextConst 'ENU=ERROR !\\VAT business posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta march‚ TVA %1 est inexistant dans la soci‚t‚ %2';
+      text018@1000000019 : TextConst 'ENU=ERROR !\\Purchaser %1 does not exists in company %2;FRA=ERREUR !\\Le code acheteur %1 est inexistant dans la soci‚t‚ %2';
+      text019@1000000020 : TextConst 'ENU=ERROR !\\Responsability center %1 does not exists in company %2;FRA=ERREUR !\\Le centre de gestion %1 est inexistant dans la soci‚t‚ %2';
+      text020@1000000021 : TextConst 'ENU=ERROR !\\IC partner code %1 does not exists in company %2;FRA=ERREUR !\\Le code du partenaire IC  %1 est inexistant dans la soci‚t‚ %2';
+      text021@1000000022 : TextConst 'ENU=ERROR !\\Location code %1 does not exists in company %2;FRA=ERREUR !\\Le code magasin %1 est inexistant dans la soci‚t‚ %2';
+      text022@1000000023 : TextConst 'ENU=ERROR !\\Shipment method code %1 does not exists in company %2;FRA=ERREUR !\\Le code condition livraison %1 est inexistant dans la soci‚t‚ %2';
+      text023@1000000024 : TextConst 'ENU=ERROR !\\Base calendar code %1 does not exists in company %2;FRA=ERREUR !\\Le code calendrier principal %1 est inexistant dans la soci‚t‚ %2';
+      text024@1000000025 : TextConst 'ENU=ERROR !\\Currency code %1 does not exists in company %2;FRA=ERREUR !\\Le code devise %1 est inexistant dans la soci‚t‚ %2';
+      text025@1000000026 : TextConst 'ENU=ERROR in %1!\\unable to create language code %2 related to vendor;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code langue %2 li‚ au fournisseur';
+      text026@1000000027 : TextConst 'ENU=ERROR in %1!\\unable to create post code/city %2 related to primary contact;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code postal/Ville %2/%3 li‚ au contact principal';
+      text027@1000000028 : TextConst 'ENU=ERROR in %1!\\Currency code %2, related to primary contact, does not exists;FRA=ERREUR dans %1 !\\Le code devise %2 li‚ au contact principal est inexistant';
+      text028@1000000029 : TextConst 'ENU=ERROR in %1!\\unable to create country code %2 related to primary contact;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code pays %2 li‚ au contact principal';
+      text029@1000000030 : TextConst 'ENU=ERROR in %1!\\unable to create language code %2 related to primary contact;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code langue %2 li‚ au contact principal';
+      text030@1000000031 : TextConst 'ENU=ERROR in %1!\\unable to create territory code %2 related to primary contact;FRA=ERREUR dans %1 !\\Le code secteur %2 li‚ au contact principal est inexistant';
+      text031@1000000032 : TextConst 'ENU=ERROR in %1!\\Vendor %2, related to primary contact, does not exists;FRA=ERREUR dans %1 !\\Le code vendeur %2 li‚ au contact principal est inexistant';
+      text032@1000000033 : TextConst 'ENU=ERROR in %1!\\Series No. %2, related to primary contact, does not exists;FRA=ERREUR dans %1 !\\Le code souche %2 li‚ au contact principal est inexistant';
+      text033@1000000034 : TextConst 'ENU=ERROR in %1!\\Organizationnal level code %2, related to primary contact, does not exists;FRA=ERREUR dans %1 !\\Le code de niveaux organisationnels %2 li‚ au contact principal est inexistant';
+      text034@1000000035 : TextConst 'ENU=ERROR in %1!\\Salutation code %2, related to primary contact, does not exists;FRA=ERREUR dans %1 !\\Le code appellation %2 li‚ au contact principal est inexistant';
+      text035@1000000036 : TextConst 'FRA=ERREUR dans %1 !\\Impossible de cr‚er le contact principal %2 de la fiche fournisseur';
+      text036@1000000037 : TextConst 'ENU=CAREFUL !in %1 !\\unable to create business relation between vendor %2 and contact %3;FRA=ATTENTION dans %1!\\Impossible de cr‚er la relation d''affaire  entre fournisseur %2 et contact %3';
+      text037@1000000038 : TextConst 'ENU=CAREFUL in %1! Dimension code %2 was not created;FRA=ATTENTION dans %1!\\Le code axe %2 n''a pas ‚t‚ cr‚‚';
+      text038@1000000039 : TextConst 'ENU=CAREFUL in %1 !\\Dimension value code %2 was not created for dimension code %3;FRA=ATTENTION dans %1!\\Le code section %2 n''a pas ‚t‚ cr‚‚ pour le l''axe analytique %3';
+      text039@1000000040 : TextConst 'ENU=ERROR !\\G/L account %1 already exists in company %2;FRA=ERREUR !\\La fiche compte g‚n‚ral %1 existe d‚j… dans la soci‚t‚ %2 !';
+      text040@1000000041 : TextConst 'ENU=ERROR !\\G/L account %1 does not exists in company %2;FRA=ERREUR !\\La fiche compte g‚n‚ral %1 n''existe pas dans la soci‚t‚ %2 !';
+      text041@1000000042 : TextConst 'ENU=ERROR !\\Business posting group%1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta march‚ %1 est inexistant dans la soci‚t‚ %2';
+      text042@1000000043 : TextConst 'ENU=ERROR !\\Product posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta produit %1 est inexistant dans la soci‚t‚ %2';
+      text043@1000000044 : TextConst 'ENU=ERROR !\\Tax Area Code %1 does not exists in company %2;FRA=ERREUR !\\Le code zone de recouvrement %1 est inexistant dans la soci‚t‚ %2';
+      text044@1000000045 : TextConst 'ENU=ERROR !\\Tax group code %1 does not exists in company %2;FRA=ERREUR !\\Le code groupe taxes %1 est inexistant dans la soci‚t‚ %2';
+      text045@1000000046 : TextConst 'ENU=ERROR !\\VAT business posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta march‚ TVA %1 est inexistant dans la soci‚t‚ %2';
+      text046@1000000047 : TextConst 'ENU=ERROR !\\VAT product posting group %1 does not exists in company %2;FRA=ERREUR !\\Le groupe compta produit TVA %1 est inexistant dans la soci‚t‚ %2';
+      text047@1000000048 : TextConst 'ENU=ERROR !\\Default IC partner G/L account %1 doest not exists in company %2;FRA=ERREUR !\\Le code "compte g‚n‚ral par d‚faut partenaire IC" %1 est inexistant dans la soci‚t‚ %2';
+      text048@1000000049 : TextConst 'ENU=ERROR !\\rubrique code %1 does not exists in company;FRA=ERREUR !\\Le code rubrique %1 est inexistant dans la soci‚t‚ %2';
+      text049@1000000050 : TextConst 'ENU=ERROR !\\General product posting group %1 does not exist in company %2;FRA=ERREUR !\\Le groupe compta produit %1 est inexistant dans la soci‚t‚ %2';
+      text050@1000000051 : TextConst 'ENU=ERROR in %1 !\\unable to create origin country code %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code pays origine %2 li‚ … cet article';
+      text051@1000000052 : TextConst 'ENU=ERROR !\\Item %1 already exists in company %2;FRA=ERREUR !\\La fiche article %1 existe d‚j… dans la soci‚t‚ %2 !';
+      text052@1000000053 : TextConst 'ENU=ERROR !\\Item %1 does not exists in company %2 !;FRA=ERREUR !\\La fiche article %1 n''existe pas dans la soci‚t‚ %2 !';
+      text053@1000000054 : TextConst 'ENU=ERROR in %1 !\\unable to create purch. country code %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code pays achat %2 li‚ … cet article';
+      text054@1000000055 : TextConst 'ENU=ERROR in %1!\\unable to create unit of measure %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code d''unit‚ de mesure %2 li‚ … cet article';
+      text055@1000000056 : TextConst 'ENU=ERROR in %1!\\unable to create sale unit of measure %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code d''unit‚ de vente %2 li‚ … cet article';
+      text056@1000000057 : TextConst 'ENU=ERROR in %1!\\unable to create purch. unit of measure %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code d''unit‚ d''achat %2 li‚ … cet article';
+      text057@1000000058 : TextConst 'ENU=ERROR in %1 !\\unable to create unit code %2;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code unit‚ %2';
+      text058@1000000059 : TextConst 'ENU=ERROR !\\Inventory posting group %1 does not exist in company %2;FRA=ERREUR !\\Le groupe compta stock %1 est inexistant dans la soci‚t‚ %2';
+      text059@1000000060 : TextConst 'ENU=ERROR !\\Item Discount Group No. %1 does not exist in company %2;FRA=ERREUR !\\Le groupe remise article %1 est inexistant dans la soci‚t‚ %2';
+      text060@1000000061 : TextConst 'ENU=ERROR !\\Vendor Nø %1 does not exist in company %2;FRA=ERREUR !\\Le nø fournisseur %1 est inexistant dans la soci‚t‚ %2';
+      text061@1000000062 : TextConst 'ENU=ERROR !\\Alternative Item No. %1 does not exist in company %2;FRA=ERREUR !\\La r‚f‚rence de remplacement %1 est inexistante dans la soci‚t‚ %2';
+      text062@1000000063 : TextConst 'ENU=ERROR !\\Tariff No. %1 does not exist in company %2;FRA=ERREUR !\\La nomenclature produits %1 est inexistante dans la soci‚t‚ %2';
+      text063@1000000064 : TextConst 'ENU=ERROR !\\VAT business posting group (price) %1 does not exist in company %2;FRA=ERREUR !\\Le groupe compta march‚ TVA (prix) %1 est inexistant dans la soci‚t‚ %2';
+      text064@1000000065 : TextConst 'ENU=ERROR !\\No. series %1 does not exist in company %2;FRA=ERREUR !\\Le code souche de nø %1 est inexistant dans la soci‚t‚ %2';
+      text065@1000000066 : TextConst 'ENU=ERROR !\\Tax group %1 does not exist in company %2;FRA=ERREUR !\\Le code groupe taxes %1 est inexistant dans la soci‚t‚ %2';
+      text066@1000000067 : TextConst 'ENU=ERROR !\\VAT product posting group %1 does not exist in company %2;FRA=ERREUR !\\Le groupe compta produit TVA %1 est inexistant dans la soci‚t‚ %2';
+      text067@1000000068 : TextConst 'ENU=ERROR !\\Serial Nos. %1 does not exist in company %2;FRA=ERREUR !\\Le nø de s‚rie %1 est inexistant dans la soci‚t‚ %2';
+      text068@1000000069 : TextConst 'ENU=ERROR !\\Manufacturer code %1 does not exist in company %2;FRA=ERREUR !\\Le code fabricant %1 est inexistant dans la soci‚t‚ %2';
+      text069@1000000070 : TextConst 'ENU=ERROR !\\Item category code %1 does not exist in company %2;FRA=ERREUR !\\Le code de cat‚gorie d''article %1 est inexistant dans la soci‚t‚ %2';
+      text070@1000000071 : TextConst 'ENU=ERROR !\\Product group code %1 does not exist in company %2;FRA=ERREUR !\\Le code groupe produits %1 est inexistant dans la soci‚t‚ %2';
+      text071@1000000072 : TextConst 'ENU=ERROR !\\Service item group %1 does not exist in company %2;FRA=ERREUR !\\Le code article de service %1 est inexistant dans la soci‚t‚ %2';
+      text072@1000000073 : TextConst 'ENU=ERROR !\\Item tracking code %1 does not exist in company %2;FRA=ERREUR !\\Le code tra‡abilit‚ %1 est inexistant dans la soci‚t‚ %2';
+      text073@1000000074 : TextConst 'ENU=ERROR !\\Lot No. %1 does not exist in company %2;FRA=ERREUR !\\Le nø lot %1 est inexistant dans la soci‚t‚ %2';
+      text074@1000000075 : TextConst 'ENU=ERROR !\\Special equipment %1 does not exist in company %2;FRA=ERREUR !\\Le code ‚quipement sp‚cial %1 est inexistant dans la soci‚t‚ %2';
+      text075@1000000076 : TextConst 'ENU=ERROR !\\Put-away template %1 does not exist in company %2;FRA=ERREUR !\\Le modŠle de rangement %1 est inexistant dans la soci‚t‚ %2';
+      text076@1000000077 : TextConst 'ENU=ERROR !\\Phys invt counting period code %1 does not exist in company %2;FRA=ERREUR !\\Le modŠle de rangement %1 est inexistant dans la soci‚t‚ %2';
+      text077@1000000078 : TextConst 'ENU=ERROR in %1 !\\Unable to create put-away unit of measure %2 related to this item;FRA=ERREUR dans %1 !\\Impossible de cr‚er le code d''unit‚ d''achat %2 li‚ … cet article';
+      text078@1000000079 : TextConst 'ENU=ERROR !\\KIT BOM No. %1 does not exist in company %2;FRA=ERREUR !\\Nø nomenclature KIT %1 est inexistant dans la soci‚t‚ %2';
+      text079@1000000080 : TextConst 'ENU=ERROR !\\Production BOM No. %1 does not exist in company %2;FRA=ERREUR !\\Nø nomenclature KIT %1 est inexistant dans la soci‚t‚ %2';
+      text080@1000000081 : TextConst 'ENU=ERROR !\\Routing No. %1 does not exist in company %2;FRA=ERREUR !\\Nø gamme %1 est inexistant dans la soci‚t‚ %2';
+      text081@1000000082 : TextConst 'ENU=ERROR !\\Production BOM No. %1 does not exist in company %2;FRA=ERREUR !\\Nø nomenclature production %1 est inexistant dans la soci‚t‚ %2';
+      text082@1000000083 : TextConst 'ENU=Vendor;FRA=Fournisseur';
+      text083@1000000084 : TextConst 'ENU=G/L Account;FRA=Compte g‚n‚ral';
+      text084@1000000085 : TextConst 'ENU=Item;FRA=Article';
+      text085@1000000086 : TextConst 'ENU=The card;FRA=La fiche';
+      text086@1000000087 : TextConst 'ENU=will be duplicated in the following company :;FRA=sera dupliqu‚e dans la (ou les) soci‚t‚(s) suivante(s) :';
+      text087@1000000088 : TextConst 'ENU=[with dimensions];FRA=[avec analytique]';
+      text088@1000000089 : TextConst 'ENU=Can you confirm the duplication ?;FRA=Confirmez-vous la duplication ?';
+      text089@1000000090 : TextConst 'ENU=CAREFUL in %1 !\\Global dimension 1 %2 code %3 can not be duplicated;FRA=ATTENTION dans %1 !\\L''axe principal 1 %2 section %3 ne peut pas ˆtre dupliqu‚';
+      text090@1000000091 : TextConst 'ENU=CAREFUL in %1 !\\Global dimension 2 %2 code %3 can not be duplicated;FRA=ATTENTION dans %1 !\\L''axe principal  %2 section %3 ne peut pas ˆtre dupliqu‚';
+      text091@1000000096 : TextConst 'ENU=Bank account;FRA=Compte bancaire';
+      text092@1000000095 : TextConst 'ENU=The bank account %1 has been duplicated in company %2;FRA=Le compte bancaire %1 %2 a ‚t‚ dupliqu‚ dans la soci‚t‚ %3';
+      text093@1000000094 : TextConst 'ENU=ERROR !\\Vendor %1 already exists in company %2;FRA=ERREUR !\\La fiche compte bancaire %1 %2 existe d‚j… dans la soci‚t‚ %3 !';
+      text094@1000000093 : TextConst 'ENU=ERROR !\\Vendor %1 does not exists in company %2 !;FRA=ERREUR !\\La fiche compte bancaire %1 %2 n''existe pas dans la soci‚t‚ %3 !';
+      text095@1000000092 : TextConst 'ENU=ERROR !\\Vendor %1 does not exists in company %2;FRA=ERREUR !\\Le fournisseur %1 est inexistant dans la soci‚t‚ %2';
+      text096@1000000097 : TextConst 'ENU=The bank account %1 %2 already exists. He has been updated in company %3;FRA=Le compte bancaire %1 %2 existe d‚j…. Il a ‚t‚ mis … jour dans la soci‚t‚ %3';
+      Grec_UserSetup@1000000098 : Record 91;
+      text097@1000000099 : TextConst 'FRA=Utilisateur';
+      text098@1000000003 : TextConst 'ENU=ERROR !\\Vendor %1 already exists in company %2;FRA=ERREUR !\\L''utilisateur %1 existe d‚j… dans la soci‚t‚ %2 !';
+      text099@1000000100 : TextConst 'ENU=ERROR !\\Vendor %1 does not exists in company %2 !;FRA=ERREUR !\\L''utilisateur %1 n''existe pas dans la soci‚t‚ %2 !';
+      text100@1000000102 : TextConst 'FRA=ERREUR !\\Le code utilisateur n''est pas saisi.';
+      text103@1000000105 : TextConst 'FRA=Attention !\Le champ "Service" est vide, souhaitez- vous continuer ?';
+      text104@1000000106 : TextConst 'FRA=Attention !\Le champ "Nom (signature)" est vide, souhaitez-vous continuer ?';
+      text105@1000000107 : TextConst 'FRA=Attention !\Le champ "ID Approbateur" est vide, souhaitez-vous continuer ?';
+      text106@1000000108 : TextConst 'FRA=ERREUR !\L''email utilisateur n''est pas saisi.';
+      text107@1000000103 : TextConst 'FRA=ERREUR !\L''utilisateur a des ‚critures approbations ouvertes dans la soci‚t‚ %1';
+      text108@1000000104 : TextConst 'FRA=sera supprim‚e dans la (ou les) soci‚t‚(s) suivante(s) :';
+      text109@1000000109 : TextConst 'ENU=Can you confirm the duplication ?;FRA=Confirmez-vous la suppression ?';
+      text110@1000000110 : TextConst 'FRA=L''utilisateur %1 a ‚t‚ supprim‚ de la soci‚t‚ %2';
+      text111@1000000111 : TextConst 'FRA=D''autre part, confirmez-vous la suppression de l''utilisateur %1 pour la soci‚t‚ actuelle: %2';
+      text112@1000000112 : TextConst 'FRA=Confirmez-vous la validation des p‚riodes sur la soci‚t‚ %1 ?';
+
+    PROCEDURE Dupliquer@1000000000(Lopt_TypeFiche@1000000000 : ',Vendor,G/L Account,Item,VendorBankAccount,User,UserDelete,UserDeleteActualSociety';Lcode_Fiche@1000000001 : Code[50];Lcode_Fiche2@1000000005 : Code[50]) Lint_DuplicationNumber : Integer;
+    VAR
+      Ltxt_Confirmation@1000000002 : Text[1024];
+      Ltxt_TypeFiche@1000000003 : Text[30];
+      Lint_NbSte@1000000004 : Integer;
+    BEGIN
+      // Cr‚er un message afin de demander la confirmation de la duplication … l'utilisateur
+      Lint_DuplicationNumber := 0;
+      Lint_NbSte := 0;
+      CASE Lopt_TypeFiche OF
+        Lopt_TypeFiche::Vendor : Ltxt_TypeFiche := text082;
+        Lopt_TypeFiche::"G/L Account" : Ltxt_TypeFiche := text083;
+        Lopt_TypeFiche::Item : Ltxt_TypeFiche := text084;
+        Lopt_TypeFiche::VendorBankAccount : Ltxt_TypeFiche := text091; //MODIF JX-XAD 15/06/2010
+        Lopt_TypeFiche::User : Ltxt_TypeFiche := text097; //MODIF JX-AUD 07/04/14
+        Lopt_TypeFiche::UserDelete : Ltxt_TypeFiche := text097; //MODIF JX-AUD 07/04/14
+      END;
+
+      IF Lopt_TypeFiche = Lopt_TypeFiche::UserDelete THEN  //JX-AUD du 07/04/14
+       Ltxt_Confirmation := text085+' '+Ltxt_TypeFiche+' '+Lcode_Fiche+' '+text108+'\' //JX-AUD du 07/04/14
+      ELSE IF Lopt_TypeFiche <> Lopt_TypeFiche::UserDeleteActualSociety THEN
+          Ltxt_Confirmation := text085+' '+Ltxt_TypeFiche+' '+Lcode_Fiche+' '+text086+'\';
+
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Lint_NbSte += 1;
+          Ltxt_Confirmation := Ltxt_Confirmation + '\'+Grec_DuplicatingList.Name;
+      //    IF Grec_DuplicatingList.Dimension THEN
+      //      Ltxt_Confirmation := Ltxt_Confirmation + ' '+text087;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+
+      // Si au moins une soci‚t‚ a ‚t‚ coch‚e dans le form 50013 alors effectuer le traitement de duplication
+      IF Lint_NbSte > 0 THEN
+      BEGIN
+      IF Lopt_TypeFiche = Lopt_TypeFiche::UserDelete THEN  //JX-AUD du 07/04/14
+        Ltxt_Confirmation := Ltxt_Confirmation + '\\'+text109//JX-AUD du 07/04/14
+      ELSE
+         Ltxt_Confirmation := Ltxt_Confirmation + '\\'+text088;
+        IF CONFIRM(Ltxt_Confirmation) THEN
+        BEGIN
+          CASE Lopt_TypeFiche OF
+            Lopt_TypeFiche::Vendor : Lint_DuplicationNumber := CreateVendor(Lcode_Fiche);
+            Lopt_TypeFiche::"G/L Account" : Lint_DuplicationNumber := CreateAccount(Lcode_Fiche);
+            Lopt_TypeFiche::Item : Lint_DuplicationNumber := CreateItem(Lcode_Fiche);
+            //DEBUT MODIF JX-XAD 15/06/2010
+            Lopt_TypeFiche::VendorBankAccount : Lint_DuplicationNumber := CreateBankAccount(Lcode_Fiche,Lcode_Fiche2);
+            //FIN MODIF JX-XAD 15/06/2010
+            //DEBUT MODIF JX-AUD 07/04/14
+            Lopt_TypeFiche::User : Lint_DuplicationNumber := CreateUser(Lcode_Fiche);
+            Lopt_TypeFiche::UserDelete : Lint_DuplicationNumber := DeleteUser(Lcode_Fiche);
+            //FIN MODIF JX-AUD 07/04/14
+          END;
+        END;
+      END ELSE
+      BEGIN
+        MESSAGE(text001);     // Aucune soci‚t‚ n'a ‚t‚ coch‚e !
+      END;
+    END;
+
+    PROCEDURE Initialiser@1000000001();
+    BEGIN
+      Grec_DuplicatingList.DELETEALL;
+      Grec_CompanyList.RESET;
+      IF Grec_CompanyList.FIND('-') THEN
+      REPEAT
+        IF Grec_CompanyList.Name <> COMPANYNAME THEN
+        BEGIN
+          Grec_DuplicatingList.INIT;
+          Grec_DuplicatingList.Name := Grec_CompanyList.Name;
+          Grec_DuplicatingList.Duplication := TRUE;
+          Grec_DuplicatingList.Dimension := TRUE;
+          Grec_DuplicatingList.Echec := FALSE;
+          Grec_DuplicatingList.INSERT;
+        END;
+      UNTIL Grec_CompanyList.NEXT = 0;
+
+      COMMIT;  //AJOUT JX-XAD 07/06/2011
+    END;
+
+    PROCEDURE CreateVendor@1000000002(Lcode_Vendor@1000000000 : Code[20]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_DestVendor@1000000001 : Record 23;
+      Lrec_SourceVendor@1000000002 : Record 23;
+      Lrec_DestVendorPostingGroup@1000000003 : Record 93;
+      Lrec_DestPaymentTerms@1000000004 : Record 3;
+      Lrec_DestPaymentMethod@1000000005 : Record 289;
+      Lrec_DestGenBusPostGroup@1000000006 : Record 250;
+      Lrec_DestVATBusPostGroup@1000000007 : Record 323;
+      Lrec_DestPurchaser@1000000008 : Record 13;
+      Lrec_DestRespCenter@1000000009 : Record 5714;
+      Lrec_DestICPartner@1000000010 : Record 413;
+      Lrec_DestLocation@1000000011 : Record 14;
+      Lrec_DestShipmentMethod@1000000012 : Record 10;
+      Lrec_DestBaseCalendar@1000000013 : Record 7600;
+      Lrec_DestCurrency@1000000014 : Record 4;
+      Lrec_SourceGenLedgerSetup@1000000015 : Record 98;
+      Lrec_DestDimensionValue@1000000016 : Record 349;
+    BEGIN
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestVendor.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            Lrec_DestVendorPostingGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestPaymentTerms.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestPaymentMethod.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestGenBusPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVATBusPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestPurchaser.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestRespCenter.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestICPartner.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestLocation.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestShipmentMethod.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestBaseCalendar.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestCurrency.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestDimensionValue.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            IF Lrec_SourceVendor.GET(Lcode_Vendor) THEN
+            BEGIN
+              IF NOT Lrec_DestVendor.GET(Lcode_Vendor) THEN
+              BEGIN
+                // Tests concernant les autres champs puis insertion de l'enregistrement si pas d'erreur
+                IF (Lrec_SourceVendor."Vendor Posting Group" <> '') AND
+                   (NOT Lrec_DestVendorPostingGroup.GET(Lrec_SourceVendor."Vendor Posting Group")) THEN
+                  MESSAGE(text005,Lrec_SourceVendor."Vendor Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Payment Terms Code" <> '') AND
+                        (NOT Lrec_DestPaymentTerms.GET(Lrec_SourceVendor."Payment Terms Code")) THEN
+                  MESSAGE(text012,Lrec_SourceVendor."Payment Terms Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Invoice Disc. Code" <> '') AND
+                        (Lrec_SourceVendor."Invoice Disc. Code" <> Lrec_SourceVendor."No.") AND
+                        (NOT Lrec_DestVendor.GET(Lrec_SourceVendor."Invoice Disc. Code")) THEN
+                  MESSAGE(text013,Lrec_SourceVendor."Invoice Disc. Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Pay-to Vendor No." <> '') AND
+                        (NOT Lrec_DestVendor.GET(Lrec_SourceVendor."Pay-to Vendor No.")) THEN
+                  MESSAGE(text014,Lrec_SourceVendor."Pay-to Vendor No.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Payment Method Code" <> '') AND
+                        (NOT Lrec_DestPaymentMethod.GET(Lrec_SourceVendor."Payment Method Code")) THEN
+                  MESSAGE(text015,Lrec_SourceVendor."Payment Method Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Gen. Bus. Posting Group" <> '') AND
+                        (NOT Lrec_DestGenBusPostGroup.GET(Lrec_SourceVendor."Gen. Bus. Posting Group")) THEN
+                  MESSAGE(text016,Lrec_SourceVendor."Gen. Bus. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."VAT Bus. Posting Group" <> '') AND
+                        (NOT Lrec_DestVATBusPostGroup.GET(Lrec_SourceVendor."VAT Bus. Posting Group")) THEN
+                  MESSAGE(text017,Lrec_SourceVendor."VAT Bus. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Purchaser Code" <> '') AND
+                        (NOT Lrec_DestPurchaser.GET(Lrec_SourceVendor."Purchaser Code")) THEN
+                  MESSAGE(text018,Lrec_SourceVendor."Purchaser Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Responsibility Center" <> '') AND
+                        (NOT Lrec_DestRespCenter.GET(Lrec_SourceVendor."Responsibility Center")) THEN
+                  MESSAGE(text019,Lrec_SourceVendor."Responsibility Center",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."IC Partner Code" <> '') AND
+                        (NOT Lrec_DestICPartner.GET(Lrec_SourceVendor."IC Partner Code")) THEN
+                  MESSAGE(text020,Lrec_SourceVendor."IC Partner Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Location Code" <> '') AND
+                        (NOT Lrec_DestLocation.GET(Lrec_SourceVendor."Location Code")) THEN
+                  MESSAGE(text021,Lrec_SourceVendor."Location Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Shipment Method Code" <> '') AND
+                        (NOT Lrec_DestShipmentMethod.GET(Lrec_SourceVendor."Shipment Method Code")) THEN
+                  MESSAGE(text022,Lrec_SourceVendor."Shipment Method Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Base Calendar Code" <> '') AND
+                        (NOT Lrec_DestBaseCalendar.GET(Lrec_SourceVendor."Base Calendar Code")) THEN
+                  MESSAGE(text023,Lrec_SourceVendor."Base Calendar Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceVendor."Currency Code" <> '') AND
+                        (NOT Lrec_DestCurrency.GET(Lrec_SourceVendor."Currency Code")) THEN
+                  MESSAGE(text024,Lrec_SourceVendor."Currency Code",Grec_DuplicatingList.Name)
+                ELSE
+                BEGIN
+                  //Test Code postal, ville, compte bancaire, contact principal, pays et langue (avec cr‚ation automatique)
+                  TestPostCode(Lrec_SourceVendor."Post Code",Lrec_SourceVendor.City);
+                  IF NOT TestDefaultBankAccountCode(Lcode_Vendor,Lrec_SourceVendor."Default Bank Account Code") THEN
+                    MESSAGE(text007,Grec_DuplicatingList.Name,Lrec_SourceVendor."Default Bank Account Code",Lcode_Vendor)
+                  ELSE IF NOT TestCountryRegion(Lrec_SourceVendor."Country/Region Code") THEN
+                    MESSAGE(text010,Grec_DuplicatingList.Name,Lrec_SourceVendor."Country/Region Code")
+                  ELSE IF NOT TestLanguage(Lrec_SourceVendor."Language Code") THEN
+                    MESSAGE(text025,Grec_DuplicatingList.Name,Lrec_SourceVendor."Language Code")
+                  ELSE IF NOT TestContactPrincipal(Lrec_SourceVendor."Primary Contact No.",Lcode_Vendor) THEN
+                    MESSAGE(text035,Grec_DuplicatingList.Name,Lrec_SourceVendor."Primary Contact No.")
+                  ELSE
+                  BEGIN
+                    // Insertion de l'enregistrement
+                    Lrec_DestVendor.INIT;
+                    Lrec_DestVendor.TRANSFERFIELDS(Lrec_SourceVendor);
+                    Lrec_DestVendor.INSERT;
+                    COMMIT;
+                    //***** D‚but Dupliquer analytique *****
+                    IF Grec_DuplicatingList.Dimension THEN
+                    BEGIN
+                      DupliquerAnalytique(23,Lcode_Vendor);
+                      IF Lrec_SourceGenLedgerSetup.FIND('-') THEN
+                      BEGIN
+                        IF (Lrec_SourceVendor."Global Dimension 1 Code" <> '') THEN
+                          IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                                         Lrec_SourceVendor."Global Dimension 1 Code") THEN
+                          BEGIN
+                            IF Lrec_DestVendor.GET(Lcode_Vendor) THEN
+                            BEGIN
+                              Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 1 Code",'');
+                              Lrec_DestVendor.MODIFY;
+                            END;
+                            MESSAGE(text089,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                            Lrec_SourceVendor."Global Dimension 1 Code");
+                          END;
+                        IF (Lrec_SourceVendor."Global Dimension 2 Code" <> '') THEN
+                          IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                                         Lrec_SourceVendor."Global Dimension 2 Code") THEN
+                          BEGIN
+                            IF Lrec_DestVendor.GET(Lcode_Vendor) THEN
+                            BEGIN
+                              Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 2 Code",'');
+                              Lrec_DestVendor.MODIFY;
+                            END;
+                            MESSAGE(text090,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                            Lrec_SourceVendor."Global Dimension 2 Code");
+                          END;
+                      END;
+                    END ELSE IF Lrec_DestVendor.GET(Lcode_Vendor) THEN
+                    BEGIN
+                      Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 1 Code",'');
+                      Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 2 Code",'');
+                      Lrec_DestVendor.MODIFY;
+                    END;
+                    //***** Fin Dupliquer analytique *****
+                    Lint_DuplicationNumber += 1;
+                    Grec_DuplicatingList.Echec := FALSE;
+                    Grec_DuplicatingList.MODIFY;
+      //              MESSAGE(text004,Lcode_Vendor,Grec_DuplicatingList.Name);   // La fiche fournisseur a ‚t‚ dupliqu‚e
+                  END;
+                END;
+              END ELSE
+                MESSAGE(text002,Lcode_Vendor,Grec_DuplicatingList.Name);   // La fiche fournisseur existe d‚j… dans la soci‚t‚ !
+            END ELSE
+              MESSAGE(text003,Lcode_Vendor,COMPANYNAME);   // La fiche fournisseur n'existe pas dans la soci‚t‚
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE CreateAccount@1000000003(Lcode_Account@1000000000 : Code[20]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_SourceAccount@1000000001 : Record 15;
+      Lrec_DestAccount@1000000002 : Record 15;
+      Lrec_DestGenBusPostGroup@1000000003 : Record 250;
+      Lrec_DestGenProdPostGroup@1000000004 : Record 251;
+      Lrec_DestTaxArea@1000000005 : Record 318;
+      Lrec_DestTaxGroup@1000000006 : Record 321;
+      Lrec_DestVATBusPostGroup@1000000007 : Record 323;
+      Lrec_DestVATProdPostGroup@1000000008 : Record 324;
+      Lrec_DestIC_GL_Account@1000000009 : Record 410;
+      Lrec_SourceGenLedgerSetup@1000000011 : Record 98;
+      Lrec_DestDimensionValue@1000000012 : Record 349;
+    BEGIN
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestAccount.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            Lrec_DestGenBusPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestGenProdPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestTaxArea.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestTaxGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVATBusPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVATProdPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestIC_GL_Account.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestDimensionValue.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            IF Lrec_SourceAccount.GET(Lcode_Account) THEN
+            BEGIN
+              IF NOT Lrec_DestAccount.GET(Lcode_Account) THEN
+              BEGIN
+                // Tests concernant les autres champs puis insertion de l'enregistrement si pas d'erreur
+                IF (Lrec_SourceAccount."Gen. Bus. Posting Group" <> '') AND
+                   (NOT Lrec_DestGenBusPostGroup.GET(Lrec_SourceAccount."Gen. Bus. Posting Group")) THEN
+                  MESSAGE(text041,Lrec_SourceAccount."Gen. Bus. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."Gen. Prod. Posting Group" <> '') AND
+                   (NOT Lrec_DestGenProdPostGroup.GET(Lrec_SourceAccount."Gen. Prod. Posting Group")) THEN
+                  MESSAGE(text042,Lrec_SourceAccount."Gen. Prod. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."Tax Area Code" <> '') AND
+                   (NOT Lrec_DestTaxArea.GET(Lrec_SourceAccount."Tax Area Code")) THEN
+                  MESSAGE(text043,Lrec_SourceAccount."Tax Area Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."Tax Group Code" <> '') AND
+                   (NOT Lrec_DestTaxGroup.GET(Lrec_SourceAccount."Tax Group Code")) THEN
+                  MESSAGE(text044,Lrec_SourceAccount."Tax Group Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."VAT Bus. Posting Group" <> '') AND
+                   (NOT Lrec_DestVATBusPostGroup.GET(Lrec_SourceAccount."VAT Bus. Posting Group")) THEN
+                  MESSAGE(text045,Lrec_SourceAccount."VAT Bus. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."VAT Prod. Posting Group" <> '') AND
+                   (NOT Lrec_DestVATProdPostGroup.GET(Lrec_SourceAccount."VAT Prod. Posting Group")) THEN
+                  MESSAGE(text046,Lrec_SourceAccount."VAT Prod. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceAccount."Default IC Partner G/L Acc. No" <> '') AND
+                   (NOT Lrec_DestIC_GL_Account.GET(Lrec_SourceAccount."Default IC Partner G/L Acc. No")) THEN
+                  MESSAGE(text047,Lrec_SourceAccount."Default IC Partner G/L Acc. No",Grec_DuplicatingList.Name)
+                ELSE
+                BEGIN
+                  // Insertion de l'enregistrement
+                  Lrec_DestAccount.INIT;
+                  Lrec_DestAccount.TRANSFERFIELDS(Lrec_SourceAccount);
+                  Lrec_DestAccount.INSERT;
+                  COMMIT;
+                  //***** D‚but Dupliquer analytique *****
+                  IF Grec_DuplicatingList.Dimension THEN
+                  BEGIN
+                  DupliquerAnalytique(15,Lcode_Account);
+                    IF Lrec_SourceGenLedgerSetup.FIND('-') THEN
+                    BEGIN
+                      IF (Lrec_SourceAccount."Global Dimension 1 Code" <> '') THEN
+                        IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                                       Lrec_SourceAccount."Global Dimension 1 Code") THEN
+                        BEGIN
+                          IF Lrec_DestAccount.GET(Lcode_Account) THEN
+                          BEGIN
+                            Lrec_DestAccount.VALIDATE(Lrec_DestAccount."Global Dimension 1 Code",'');
+                            Lrec_DestAccount.MODIFY;
+                          END;
+                          MESSAGE(text089,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                          Lrec_SourceAccount."Global Dimension 1 Code");
+                        END;
+                      IF (Lrec_SourceAccount."Global Dimension 2 Code" <> '') THEN
+                        IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                                       Lrec_SourceAccount."Global Dimension 2 Code") THEN
+                        BEGIN
+                          IF Lrec_DestAccount.GET(Lcode_Account) THEN
+                          BEGIN
+                            Lrec_DestAccount.VALIDATE(Lrec_DestAccount."Global Dimension 2 Code",'');
+                            Lrec_DestAccount.MODIFY;
+                          END;
+                          MESSAGE(text090,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                          Lrec_SourceAccount."Global Dimension 2 Code");
+                        END;
+                    END;
+                    END ELSE IF Lrec_DestAccount.GET(Lcode_Account) THEN
+                    BEGIN
+                      Lrec_DestAccount.VALIDATE(Lrec_DestAccount."Global Dimension 1 Code",'');
+                      Lrec_DestAccount.VALIDATE(Lrec_DestAccount."Global Dimension 2 Code",'');
+                      Lrec_DestAccount.MODIFY;
+                    END;
+                  //***** Fin Dupliquer analytique *****
+                  Lint_DuplicationNumber += 1;
+                  Grec_DuplicatingList.Echec := FALSE;
+                  Grec_DuplicatingList.MODIFY;
+      //            MESSAGE(text006,Lcode_Account,Grec_DuplicatingList.Name);   // La fiche compte g‚n‚ral a ‚t‚ dupliqu‚e
+                END;
+              END ELSE
+                MESSAGE(text039,Lcode_Account,Grec_DuplicatingList.Name);   // La fiche compte g‚n‚ral existe d‚j… dans la soci‚t‚ !
+            END ELSE
+              MESSAGE(text040,Lcode_Account,COMPANYNAME);   // La fiche compte g‚n‚ral n'existe pas dans la soci‚t‚
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE CreateItem@1000000004(Lcode_Item@1000000000 : Code[20]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_SourceItem@1000000001 : Record 27;
+      Lrec_DestItem@1000000002 : Record 27;
+      Lrec_DestGenProdPostingGroup@1000000003 : Record 251;
+      Lrec_DestInvPostGroup@1000000004 : Record 94;
+      Lrec_DestItemDiscGroup@1000000005 : Record 341;
+      Lrec_DestVendor@1000000006 : Record 23;
+      Lrec_DestAlternativeItem@1000000007 : Record 27;
+      Lrec_DestTariffNumber@1000000008 : Record 260;
+      Lrec_DestVATBusPostGroup@1000000009 : Record 323;
+      Lrec_DestNoSeries@1000000010 : Record 308;
+      Lrec_DestTaxGroup@1000000011 : Record 321;
+      Lrec_DestVATProdPostGroup@1000000012 : Record 324;
+      Lrec_DestManufacturer@1000000013 : Record 5720;
+      Lrec_DestItemCategory@1000000014 : Record 5722;
+      Lrec_DestProductGroup@1000000015 : Record 5723;
+      Lrec_DestServiceItemGroup@1000000016 : Record 5904;
+      Lrec_DestItemTracking@1000000017 : Record 6502;
+      Lrec_DestSpecialEquipment@1000000018 : Record 7305;
+      Lrec_DestPutawayTemplate@1000000019 : Record 7307;
+      Lrec_DestPhysInvtCountPeriod@1000000020 : Record 7381;
+      Lrec_DestProdBOM@1000000021 : Record 99000771;
+      Lrec_DestRouting@1000000022 : Record 99000763;
+      Lrec_SourceGenLedgerSetup@1000000023 : Record 98;
+      Lrec_DestDimensionValue@1000000024 : Record 349;
+    BEGIN
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestItem.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            Lrec_DestGenProdPostingGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestInvPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestItemDiscGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVendor.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestAlternativeItem.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestTariffNumber.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVATBusPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestNoSeries.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestTaxGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVATProdPostGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestManufacturer.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestItemCategory.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestProductGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestServiceItemGroup.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestItemTracking.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestSpecialEquipment.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestPutawayTemplate.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestPhysInvtCountPeriod.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestProdBOM.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestRouting.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestDimensionValue.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            IF Lrec_SourceItem.GET(Lcode_Item) THEN
+            BEGIN
+              IF NOT Lrec_DestItem.GET(Lcode_Item) THEN
+              BEGIN
+                // Tests concernant les autres champs puis insertion de l'enregistrement si pas d'erreur
+                IF (Lrec_SourceItem."Gen. Prod. Posting Group" <> '') AND
+                   (NOT Lrec_DestGenProdPostingGroup.GET(Lrec_SourceItem."Gen. Prod. Posting Group")) THEN
+                  MESSAGE(text049,Lrec_SourceItem."Gen. Prod. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Inventory Posting Group" <> '') AND
+                   (NOT Lrec_DestInvPostGroup.GET(Lrec_SourceItem."Inventory Posting Group")) THEN
+                  MESSAGE(text058,Lrec_SourceItem."Inventory Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Item Disc. Group" <> '') AND
+                   (NOT Lrec_DestItemDiscGroup.GET(Lrec_SourceItem."Item Disc. Group")) THEN
+                  MESSAGE(text059,Lrec_SourceItem."Item Disc. Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Vendor No." <> '') AND
+                   (NOT Lrec_DestVendor.GET(Lrec_SourceItem."Vendor No.")) THEN
+                  MESSAGE(text060,Lrec_SourceItem."Vendor No.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Alternative Item No." <> '') AND
+                   (NOT Lrec_DestAlternativeItem.GET(Lrec_SourceItem."Alternative Item No.")) THEN
+                  MESSAGE(text061,Lrec_SourceItem."Alternative Item No.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Tariff No." <> '') AND
+                   (NOT Lrec_DestTariffNumber.GET(Lrec_SourceItem."Tariff No.")) THEN
+                  MESSAGE(text062,Lrec_SourceItem."Tariff No.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."VAT Bus. Posting Gr. (Price)" <> '') AND
+                   (NOT Lrec_DestVATBusPostGroup.GET(Lrec_SourceItem."VAT Bus. Posting Gr. (Price)")) THEN
+                  MESSAGE(text063,Lrec_SourceItem."VAT Bus. Posting Gr. (Price)",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."No. Series" <> '') AND
+                   (NOT Lrec_DestNoSeries.GET(Lrec_SourceItem."No. Series")) THEN
+                  MESSAGE(text064,Lrec_SourceItem."No. Series",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Tax Group Code" <> '') AND
+                   (NOT Lrec_DestTaxGroup.GET(Lrec_SourceItem."Tax Group Code")) THEN
+                  MESSAGE(text065,Lrec_SourceItem."Tax Group Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."VAT Prod. Posting Group" <> '') AND
+                   (NOT Lrec_DestVATProdPostGroup.GET(Lrec_SourceItem."VAT Prod. Posting Group")) THEN
+                  MESSAGE(text066,Lrec_SourceItem."VAT Prod. Posting Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Serial Nos." <> '') AND
+                   (NOT Lrec_DestNoSeries.GET(Lrec_SourceItem."Serial Nos.")) THEN
+                  MESSAGE(text067,Lrec_SourceItem."Serial Nos.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Manufacturer Code" <> '') AND
+                   (NOT Lrec_DestManufacturer.GET(Lrec_SourceItem."Manufacturer Code")) THEN
+                  MESSAGE(text068,Lrec_SourceItem."Manufacturer Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Item Category Code" <> '') AND
+                   (NOT Lrec_DestItemCategory.GET(Lrec_SourceItem."Item Category Code")) THEN
+                  MESSAGE(text069,Lrec_SourceItem."Item Category Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Product Group Code" <> '') AND
+                   (NOT Lrec_DestProductGroup.GET(Lrec_SourceItem."Item Category Code",Lrec_SourceItem."Product Group Code")) THEN
+                  MESSAGE(text070,Lrec_SourceItem."Product Group Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Service Item Group" <> '') AND
+                   (NOT Lrec_DestServiceItemGroup.GET(Lrec_SourceItem."Service Item Group")) THEN
+                  MESSAGE(text071,Lrec_SourceItem."Service Item Group",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Item Tracking Code" <> '') AND
+                   (NOT Lrec_DestItemTracking.GET(Lrec_SourceItem."Item Tracking Code")) THEN
+                  MESSAGE(text072,Lrec_SourceItem."Item Tracking Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Lot Nos." <> '') AND
+                   (NOT Lrec_DestNoSeries.GET(Lrec_SourceItem."Lot Nos.")) THEN
+                  MESSAGE(text073,Lrec_SourceItem."Lot Nos.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Special Equipment Code" <> '') AND
+                   (NOT Lrec_DestSpecialEquipment.GET(Lrec_SourceItem."Special Equipment Code")) THEN
+                  MESSAGE(text074,Lrec_SourceItem."Special Equipment Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Put-away Template Code" <> '') AND
+                   (NOT Lrec_DestPutawayTemplate.GET(Lrec_SourceItem."Put-away Template Code")) THEN
+                  MESSAGE(text075,Lrec_SourceItem."Put-away Template Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Phys Invt Counting Period Code" <> '') AND
+                   (NOT Lrec_DestPhysInvtCountPeriod.GET(Lrec_SourceItem."Phys Invt Counting Period Code")) THEN
+                  MESSAGE(text076,Lrec_SourceItem."Phys Invt Counting Period Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Routing No." <> '') AND
+                   (NOT Lrec_DestRouting.GET(Lrec_SourceItem."Routing No.")) THEN
+                  MESSAGE(text080,Lrec_SourceItem."Routing No.",Grec_DuplicatingList.Name)
+                ELSE IF (Lrec_SourceItem."Production BOM No." <> '') AND
+                   (NOT Lrec_DestProdBOM.GET(Lrec_SourceItem."Production BOM No.")) THEN
+                  MESSAGE(text081,Lrec_SourceItem."Production BOM No.",Grec_DuplicatingList.Name)
+                ELSE
+                BEGIN
+                  //Test code pays et code unit‚ (avec cr‚ation automatique)
+                  IF NOT TestCountryRegion(Lrec_SourceItem."Country/Region of Origin Code") THEN
+                    MESSAGE(text050,Grec_DuplicatingList.Name,Lrec_SourceItem."Country/Region of Origin Code")
+                  ELSE IF NOT TestCountryRegion(Lrec_SourceItem."Country/Region Purchased Code") THEN
+                    MESSAGE(text053,Grec_DuplicatingList.Name,Lrec_SourceItem."Country/Region Purchased Code")
+                  ELSE IF NOT TestUnitItem(Lcode_Item,Lrec_SourceItem."Base Unit of Measure") THEN
+                    MESSAGE(text054,Grec_DuplicatingList.Name,Lrec_SourceItem."Base Unit of Measure")
+                  ELSE IF NOT TestUnitItem(Lcode_Item,Lrec_SourceItem."Sales Unit of Measure") THEN
+                    MESSAGE(text055,Grec_DuplicatingList.Name,Lrec_SourceItem."Sales Unit of Measure")
+                  ELSE IF NOT TestUnitItem(Lcode_Item,Lrec_SourceItem."Purch. Unit of Measure") THEN
+                    MESSAGE(text056,Grec_DuplicatingList.Name,Lrec_SourceItem."Purch. Unit of Measure")
+                  ELSE IF NOT TestUnitItem(Lcode_Item,Lrec_SourceItem."Put-away Unit of Measure Code") THEN
+                    MESSAGE(text077,Grec_DuplicatingList.Name,Lrec_SourceItem."Put-away Unit of Measure Code")
+                  ELSE
+                  BEGIN
+                    // Insertion de l'enregistrement
+                    Lrec_DestItem.INIT;
+                    Lrec_DestItem.TRANSFERFIELDS(Lrec_SourceItem);
+                    Lrec_DestItem.INSERT;
+                    COMMIT;
+                    //***** D‚but Dupliquer analytique *****
+                    IF Grec_DuplicatingList.Dimension THEN
+                    BEGIN
+                      DupliquerAnalytique(27,Lcode_Item);
+                      IF Lrec_SourceGenLedgerSetup.FIND('-') THEN
+                      BEGIN
+                        IF (Lrec_SourceItem."Global Dimension 1 Code" <> '') THEN
+                          IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                                         Lrec_SourceItem."Global Dimension 1 Code") THEN
+                          BEGIN
+                            IF Lrec_DestVendor.GET(Lcode_Item) THEN
+                            BEGIN
+                              Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 1 Code",'');
+                              Lrec_DestVendor.MODIFY;
+                            END;
+                            MESSAGE(text089,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 1 Code",
+                                            Lrec_SourceItem."Global Dimension 1 Code");
+                          END;
+                        IF (Lrec_SourceItem."Global Dimension 2 Code" <> '') THEN
+                          IF NOT Lrec_DestDimensionValue.GET(Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                                         Lrec_SourceItem."Global Dimension 2 Code") THEN
+                          BEGIN
+                            IF Lrec_DestVendor.GET(Lcode_Item) THEN
+                            BEGIN
+                              Lrec_DestVendor.VALIDATE(Lrec_DestVendor."Global Dimension 2 Code",'');
+                              Lrec_DestVendor.MODIFY;
+                            END;
+                            MESSAGE(text090,Grec_DuplicatingList.Name,Lrec_SourceGenLedgerSetup."Global Dimension 2 Code",
+                                            Lrec_SourceItem."Global Dimension 2 Code");
+                          END;
+                      END;
+                    END ELSE IF Lrec_DestItem.GET(Lcode_Item) THEN
+                    BEGIN
+                      Lrec_DestItem.VALIDATE(Lrec_DestItem."Global Dimension 1 Code",'');
+                      Lrec_DestItem.VALIDATE(Lrec_DestItem."Global Dimension 2 Code",'');
+                      Lrec_DestItem.MODIFY;
+                    END;
+                    //***** Fin Dupliquer analytique *****
+                    Lint_DuplicationNumber += 1;
+                    Grec_DuplicatingList.Echec := FALSE;
+                    Grec_DuplicatingList.MODIFY;
+                  END;
+                END;
+              END ELSE
+                MESSAGE(text051,Lcode_Item,Grec_DuplicatingList.Name);   // La fiche article existe d‚j… dans la soci‚t‚ !
+            END ELSE
+              MESSAGE(text052,Lcode_Item,COMPANYNAME);   // La fiche article n'existe pas dans la soci‚t‚
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE CreateBankAccount@1000000015(Lcode_Account1@1000000000 : Code[20];Lcode_Account2@1000000001 : Code[10]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_DestVendorBankAccount@1000000002 : Record 288;
+      Lrec_SourceVendorBankAccount@1000000003 : Record 288;
+      Lrec_DestCurrency@1000000004 : Record 4;
+      Lrec_DestVendor@1000000005 : Record 23;
+      Lrec_SourceVendor@1000000006 : Record 23;
+    BEGIN
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestVendorBankAccount.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            Lrec_DestCurrency.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            Lrec_DestVendor.CHANGECOMPANY(Grec_DuplicatingList.Name);
+            IF Lrec_SourceVendorBankAccount.GET(Lcode_Account1,Lcode_Account2) THEN
+            BEGIN
+              IF Lrec_DestVendorBankAccount.GET(Lcode_Account1,Lcode_Account2) THEN
+              BEGIN
+                //DEBUT MODIF JX-XAD 31/03/2011
+                IF Lrec_SourceVendorBankAccount.Name <> Lrec_DestVendorBankAccount.Name THEN
+                   Lrec_DestVendorBankAccount.Name := Lrec_SourceVendorBankAccount.Name;
+                IF Lrec_SourceVendorBankAccount."Name 2" <> Lrec_DestVendorBankAccount."Name 2" THEN
+                   Lrec_DestVendorBankAccount."Name 2" := Lrec_SourceVendorBankAccount."Name 2";
+                IF Lrec_SourceVendorBankAccount.Address <> Lrec_DestVendorBankAccount.Address THEN
+                   Lrec_DestVendorBankAccount.Address := Lrec_SourceVendorBankAccount.Address;
+                TestPostCode(Lrec_SourceVendorBankAccount."Post Code",Lrec_SourceVendorBankAccount.City);
+                IF Lrec_SourceVendorBankAccount.City <> Lrec_DestVendorBankAccount.City THEN
+                   Lrec_DestVendorBankAccount.City := Lrec_SourceVendorBankAccount.City;
+                IF Lrec_SourceVendorBankAccount."Post Code" <> Lrec_DestVendorBankAccount."Post Code" THEN
+                   Lrec_DestVendorBankAccount."Post Code" := Lrec_SourceVendorBankAccount."Post Code";
+                IF Lrec_SourceVendorBankAccount.Contact <> Lrec_DestVendorBankAccount.Contact THEN
+                   Lrec_DestVendorBankAccount.Contact := Lrec_SourceVendorBankAccount.Contact;
+                IF Lrec_SourceVendorBankAccount."Phone No." <> Lrec_DestVendorBankAccount."Phone No." THEN
+                   Lrec_DestVendorBankAccount."Phone No." := Lrec_SourceVendorBankAccount."Phone No.";
+                IF Lrec_SourceVendorBankAccount."Telex No." <> Lrec_DestVendorBankAccount."Telex No." THEN
+                   Lrec_DestVendorBankAccount."Telex No." := Lrec_SourceVendorBankAccount."Telex No.";
+                IF Lrec_SourceVendorBankAccount."Bank Branch No." <> Lrec_DestVendorBankAccount."Bank Branch No." THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount."Bank Branch No." := Lrec_SourceVendorBankAccount."Bank Branch No.";
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."Bank Account No." <> Lrec_DestVendorBankAccount."Bank Account No." THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount."Bank Account No." := Lrec_SourceVendorBankAccount."Bank Account No.";
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."Transit No." <> Lrec_DestVendorBankAccount."Transit No." THEN
+                   Lrec_DestVendorBankAccount."Transit No." := Lrec_SourceVendorBankAccount."Transit No.";
+                IF Lrec_SourceVendorBankAccount."Currency Code" <> Lrec_DestVendorBankAccount."Currency Code" THEN
+                BEGIN
+                   IF (Lrec_SourceVendorBankAccount."Currency Code" <> '') AND
+                      (NOT Lrec_DestCurrency.GET(Lrec_SourceVendorBankAccount."Currency Code")) THEN
+                     MESSAGE(text024,Lrec_SourceVendorBankAccount."Currency Code",Grec_DuplicatingList.Name)
+                   ELSE
+                     Lrec_DestVendorBankAccount."Currency Code" := Lrec_SourceVendorBankAccount."Currency Code";
+                END;
+                IF Lrec_SourceVendorBankAccount."Country/Region Code" <> Lrec_DestVendorBankAccount."Country/Region Code" THEN
+                BEGIN
+                  IF NOT TestCountryRegion(Lrec_SourceVendorBankAccount."Country/Region Code") THEN
+                    MESSAGE(text010,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Country/Region Code")
+                  ELSE
+                    Lrec_DestVendorBankAccount."Country/Region Code" := Lrec_SourceVendorBankAccount."Country/Region Code";
+                END;
+                IF Lrec_SourceVendorBankAccount.County <> Lrec_DestVendorBankAccount.County THEN
+                   Lrec_DestVendorBankAccount.County := Lrec_SourceVendorBankAccount.County;
+                IF Lrec_SourceVendorBankAccount."Fax No." <> Lrec_DestVendorBankAccount."Fax No." THEN
+                   Lrec_DestVendorBankAccount."Fax No." := Lrec_SourceVendorBankAccount."Fax No.";
+                IF Lrec_SourceVendorBankAccount."Telex Answer Back" <> Lrec_DestVendorBankAccount."Telex Answer Back" THEN
+                   Lrec_DestVendorBankAccount."Telex Answer Back" := Lrec_SourceVendorBankAccount."Telex Answer Back";
+                IF Lrec_SourceVendorBankAccount."Language Code" <> Lrec_DestVendorBankAccount."Language Code" THEN
+                BEGIN
+                  IF NOT TestLanguage(Lrec_SourceVendorBankAccount."Language Code") THEN
+                    MESSAGE(text025,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Language Code")
+                  ELSE
+                    Lrec_DestVendorBankAccount."Language Code" := Lrec_SourceVendorBankAccount."Language Code";
+                END;
+                IF Lrec_SourceVendorBankAccount."E-Mail" <> Lrec_DestVendorBankAccount."E-Mail" THEN
+                   Lrec_DestVendorBankAccount."E-Mail" := Lrec_SourceVendorBankAccount."E-Mail";
+                IF Lrec_SourceVendorBankAccount."Home Page" <> Lrec_DestVendorBankAccount."Home Page" THEN
+                   Lrec_DestVendorBankAccount."Home Page" := Lrec_SourceVendorBankAccount."Home Page";
+                IF Lrec_SourceVendorBankAccount.IBAN <> Lrec_DestVendorBankAccount.IBAN THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount.IBAN := Lrec_SourceVendorBankAccount.IBAN;
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."SWIFT Code" <> Lrec_DestVendorBankAccount."SWIFT Code" THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount."SWIFT Code" := Lrec_SourceVendorBankAccount."SWIFT Code";
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."Agency Code" <> Lrec_DestVendorBankAccount."Agency Code" THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount."Agency Code" := Lrec_SourceVendorBankAccount."Agency Code";
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."RIB Key" <> Lrec_DestVendorBankAccount."RIB Key" THEN
+                BEGIN
+                   Lrec_DestVendorBankAccount."RIB Key" := Lrec_SourceVendorBankAccount."RIB Key";
+                   Lrec_DestVendorBankAccount."Change RIB/IBAN" := TODAY;
+                END;
+                IF Lrec_SourceVendorBankAccount."RIB Checked" <> Lrec_DestVendorBankAccount."RIB Checked" THEN
+                   Lrec_DestVendorBankAccount."RIB Checked" := Lrec_SourceVendorBankAccount."RIB Checked";
+                Lrec_DestVendorBankAccount.MODIFY;
+                COMMIT;
+                Lint_DuplicationNumber += 1;
+                Grec_DuplicatingList.Echec := FALSE;
+                Grec_DuplicatingList.MODIFY;
+      //          MESSAGE(text096,Lcode_Account1,Lcode_Account2,Grec_DuplicatingList.Name); //La fiche compte bancaire a ‚t‚ mise … jour
+                //FIN MODIF JX-XAD 31/03/2011 : Modification du RIB si d‚j… existant
+              END ELSE
+              BEGIN
+                // Tests concernant les autres champs puis insertion de l'enregistrement si pas d'erreur
+                IF (Lrec_SourceVendorBankAccount."Currency Code" <> '') AND
+                        (NOT Lrec_DestCurrency.GET(Lrec_SourceVendorBankAccount."Currency Code")) THEN
+                  MESSAGE(text024,Lrec_SourceVendorBankAccount."Currency Code",Grec_DuplicatingList.Name)
+                ELSE IF (Lcode_Account1 <> '') AND
+                        (NOT Lrec_DestVendor.GET(Lcode_Account1)) THEN
+                  MESSAGE(text095,Lcode_Account1,Grec_DuplicatingList.Name)
+                ELSE
+                BEGIN
+                  //Test Code postal, ville, compte bancaire, contact principal, pays et langue (avec cr‚ation automatique)
+                  TestPostCode(Lrec_SourceVendorBankAccount."Post Code",Lrec_SourceVendorBankAccount.City);
+                  IF NOT TestCountryRegion(Lrec_SourceVendorBankAccount."Country/Region Code") THEN
+                    MESSAGE(text010,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Country/Region Code")
+                  ELSE IF NOT TestLanguage(Lrec_SourceVendorBankAccount."Language Code") THEN
+                    MESSAGE(text025,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Language Code")
+                  ELSE
+                  BEGIN
+                    // Insertion de l'enregistrement
+                    Lrec_DestVendorBankAccount.INIT;
+                    Lrec_DestVendorBankAccount.TRANSFERFIELDS(Lrec_SourceVendorBankAccount);
+                    Lrec_DestVendorBankAccount.INSERT;
+                    COMMIT;
+                    Lint_DuplicationNumber += 1;
+                    Grec_DuplicatingList.Echec := FALSE;
+                    Grec_DuplicatingList.MODIFY;
+                    MESSAGE(text092,Lcode_Account1,Lcode_Account2,Grec_DuplicatingList.Name); //La fiche compte bancaire a ‚t‚ dupliqu‚e
+                  END;
+                END;
+              END;
+              //END; ELSE
+              //  MESSAGE(text093,Lcode_Account1,Lcode_Account2,Grec_DuplicatingList.Name); //Le compte bancaire existe d‚j… !
+            END ELSE
+              MESSAGE(text094,Lcode_Account1,Lcode_Account2,COMPANYNAME);   // Le compte bancaire n'existe pas dans la soci‚t‚
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE DupliquerAnalytique@1000000005(Lint_Table@1000000000 : Integer;Lcode_Fiche@1000000001 : Code[20]);
+    VAR
+      Lint_NbAxe@1000000002 : Integer;
+      i@1000000003 : Integer;
+      Lcode_Axe@1000000004 : ARRAY [10] OF Code[20];
+      Lcode_Section@1000000005 : ARRAY [10] OF Code[20];
+      Lopt_ValuePosting@1000000006 : ARRAY [10] OF ' ,Code Mandatory,Same Code,No Code';
+      Lrec_DefaultDimension@1000000007 : Record 352;
+      Lrec_DestDefaultDimension@1000000008 : Record 352;
+      Lrec_DestDimension@1000000009 : Record 348;
+      Lrec_DestDimensionValue@1000000010 : Record 349;
+    BEGIN
+      Lrec_DestDefaultDimension.CHANGECOMPANY(Grec_DuplicatingList.Name);
+      Lrec_DestDimension.CHANGECOMPANY(Grec_DuplicatingList.Name);
+      Lrec_DestDimensionValue.CHANGECOMPANY(Grec_DuplicatingList.Name);
+      Lint_NbAxe := 0;
+      Lrec_DefaultDimension.RESET;
+      Lrec_DefaultDimension.SETFILTER(Lrec_DefaultDimension."Table ID",'%1',Lint_Table);
+      Lrec_DefaultDimension.SETFILTER(Lrec_DefaultDimension."No.",'%1',Lcode_Fiche);
+      IF Lrec_DefaultDimension.COUNT > 0 THEN
+      BEGIN
+        IF Lrec_DefaultDimension.FIND('-') THEN
+        REPEAT
+          Lint_NbAxe += 1;
+          Lcode_Axe[Lint_NbAxe] := Lrec_DefaultDimension."Dimension Code";
+          Lcode_Section[Lint_NbAxe] := Lrec_DefaultDimension."Dimension Value Code";
+          Lopt_ValuePosting[Lint_NbAxe] := Lrec_DefaultDimension."Value Posting";
+        UNTIL Lrec_DefaultDimension.NEXT = 0;
+
+        FOR i := 1 TO Lint_NbAxe DO
+        BEGIN
+          IF Lrec_DestDimension.GET(Lcode_Axe[i]) THEN
+          BEGIN
+            IF Lrec_DestDimensionValue.GET(Lcode_Axe[i],Lcode_Section[i]) THEN
+            BEGIN
+              Lrec_DestDefaultDimension.INIT;
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Table ID",Lint_Table);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."No.",Lcode_Fiche);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Dimension Code",Lcode_Axe[i]);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Dimension Value Code",Lcode_Section[i]);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Value Posting",Lopt_ValuePosting[i]);
+              Lrec_DestDefaultDimension.INSERT;
+            END ELSE IF Lcode_Section[i] = '' THEN
+            BEGIN
+              Lrec_DestDefaultDimension.INIT;
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Table ID",Lint_Table);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."No.",Lcode_Fiche);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Dimension Code",Lcode_Axe[i]);
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Dimension Value Code",'');
+              Lrec_DestDefaultDimension.VALIDATE(Lrec_DestDefaultDimension."Value Posting",Lopt_ValuePosting[i]);
+              Lrec_DestDefaultDimension.INSERT;
+            END ELSE
+              MESSAGE(text038,Grec_DuplicatingList.Name,Lcode_Section[i],Lcode_Axe[i]);
+          END ELSE
+            MESSAGE(text037,Grec_DuplicatingList.Name,Lcode_Axe[i]);
+        END;
+        COMMIT;
+      END;
+    END;
+
+    PROCEDURE TestPostCode@1000000007(Lcode_PostCode@1000000000 : Code[20];Ltxt_City@1000000001 : Text[30]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourcePostCode@1000000002 : Record 225;
+      Lrec_DestPostCode@1000000003 : Record 225;
+    BEGIN
+      IF (Lcode_PostCode <> '') THEN // si pas de code postal, inutile de le dupliquer
+      BEGIN
+        Lrec_DestPostCode.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestPostCode.GET(Lcode_PostCode,Ltxt_City) THEN
+        BEGIN
+          IF Lrec_SourcePostCode.GET(Lcode_PostCode,Ltxt_City) THEN
+          BEGIN
+            Lrec_DestPostCode.INIT;
+            Lrec_DestPostCode.TRANSFERFIELDS(Lrec_SourcePostCode);
+            Lrec_DestPostCode.INSERT;
+            Lbool_OK := TRUE;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestDefaultBankAccountCode@1000000006(Lcode_Vendor@1000000000 : Code[20];Lcode_Bank@1000000001 : Code[10]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceVendorBankAccount@1000000002 : Record 288;
+      Lrec_DestVendorBankAccount@1000000003 : Record 288;
+      Lrec_DestCurrency@1000000004 : Record 4;
+    BEGIN
+      IF Lcode_Bank <> '' THEN // si pas de code banque, inutile de le dupliquer
+      BEGIN
+        Lrec_DestVendorBankAccount.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestCurrency.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestVendorBankAccount.GET(Lcode_Vendor,Lcode_Bank) THEN
+        BEGIN
+          IF Lrec_SourceVendorBankAccount.GET(Lcode_Vendor,Lcode_Bank) THEN
+          BEGIN
+            Lbool_OK := TestPostCode(Lrec_SourceVendorBankAccount."Post Code",Lrec_SourceVendorBankAccount.City);
+            IF NOT Lbool_OK THEN
+              MESSAGE(text008,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Post Code",Lrec_SourceVendorBankAccount.City)
+            ELSE IF (Lrec_SourceVendorBankAccount."Currency Code" <> '') AND
+                    (NOT Lrec_DestCurrency.GET(Lrec_SourceVendorBankAccount."Currency Code")) THEN
+            BEGIN
+              MESSAGE(text009,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Currency Code");
+              Lbool_OK := FALSE;
+            END ELSE IF NOT TestCountryRegion(Lrec_SourceVendorBankAccount."Country/Region Code") THEN
+            BEGIN
+              MESSAGE(text010,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Country/Region Code");
+              Lbool_OK := FALSE;
+            END ELSE IF NOT TestLanguage(Lrec_SourceVendorBankAccount."Language Code") THEN
+            BEGIN
+              MESSAGE(text011,Grec_DuplicatingList.Name,Lrec_SourceVendorBankAccount."Language Code");
+              Lbool_OK := FALSE;
+            END ELSE
+            BEGIN
+              Lrec_DestVendorBankAccount.INIT;
+              Lrec_DestVendorBankAccount.TRANSFERFIELDS(Lrec_SourceVendorBankAccount);
+              Lrec_DestVendorBankAccount.INSERT;
+              Lbool_OK := TRUE;
+            END;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestCountryRegion@1000000008(Lcode_Country@1000000000 : Code[10]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceCountryRegion@1000000001 : Record 9;
+      Lrec_DestCountryRegion@1000000002 : Record 9;
+    BEGIN
+      IF (Lcode_Country <> '') THEN // si pas de code pays, inutile de le dupliquer
+      BEGIN
+        Lrec_DestCountryRegion.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestCountryRegion.GET(Lcode_Country) THEN
+        BEGIN
+          IF Lrec_SourceCountryRegion.GET(Lcode_Country) THEN
+          BEGIN
+            Lrec_DestCountryRegion.INIT;
+            Lrec_DestCountryRegion.TRANSFERFIELDS(Lrec_SourceCountryRegion);
+            Lrec_DestCountryRegion.INSERT;
+            Lbool_OK := TRUE;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestLanguage@1000000009(Lcode_Language@1000000000 : Code[10]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceLanguage@1000000001 : Record 8;
+      Lrec_DestLanguage@1000000002 : Record 8;
+    BEGIN
+      IF (Lcode_Language <> '') THEN // si pas de code langue, inutile de le dupliquer
+      BEGIN
+        Lrec_DestLanguage.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestLanguage.GET(Lcode_Language) THEN
+        BEGIN
+          IF Lrec_SourceLanguage.GET(Lcode_Language) THEN
+          BEGIN
+            Lrec_DestLanguage.INIT;
+            Lrec_DestLanguage.TRANSFERFIELDS(Lrec_SourceLanguage);
+            Lrec_DestLanguage.INSERT;
+            Lbool_OK := TRUE;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestContactPrincipal@1000000010(Lcode_Contact@1000000000 : Code[20];Lcode_Vendor@1000000001 : Code[20]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceContact@1000000002 : Record 5050;
+      Lrec_DestContact@1000000003 : Record 5050;
+      Lrec_DestCurrency@1000000004 : Record 4;
+      Lrec_DestTerritory@1000000005 : Record 286;
+      Lrec_DestSalesperson@1000000006 : Record 13;
+      Lrec_DestNoSeries@1000000007 : Record 308;
+      Lrec_DestOrganizationalLevel@1000000008 : Record 5070;
+      Lrec_DestSalutation@1000000009 : Record 5068;
+      Lrec_SourceContBusRel@1000000010 : Record 5054;
+      Lrec_DestContBusRel@1000000011 : Record 5054;
+      Lrec_DestBuinesssRelation@1000000012 : Record 5053;
+    BEGIN
+      IF Lcode_Contact <> '' THEN // si pas de code contact, inutile de le dupliquer
+      BEGIN
+        Lrec_DestContact.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestCurrency.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestTerritory.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestSalesperson.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestNoSeries.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestSalutation.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestOrganizationalLevel.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        Lrec_DestContBusRel.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestContact.GET(Lcode_Contact) THEN
+        BEGIN
+          IF Lrec_SourceContact.GET(Lcode_Contact) THEN
+          BEGIN
+            Lbool_OK := TestPostCode(Lrec_SourceContact."Post Code",Lrec_SourceContact.City);
+            IF NOT Lbool_OK THEN
+              MESSAGE(text026,Grec_DuplicatingList.Name,Lrec_SourceContact."Post Code",Lrec_SourceContact.City)
+            ELSE IF (Lrec_SourceContact."Currency Code" <> '') AND
+                    (NOT Lrec_DestCurrency.GET(Lrec_SourceContact."Currency Code")) THEN
+            BEGIN
+              MESSAGE(text027,Grec_DuplicatingList.Name,Lrec_SourceContact."Currency Code");
+              Lbool_OK := FALSE;
+            END ELSE IF (Lrec_SourceContact."Territory Code" <> '') AND
+                    (NOT Lrec_DestTerritory.GET(Lrec_SourceContact."Territory Code")) THEN
+            BEGIN
+              MESSAGE(text030,Grec_DuplicatingList.Name,Lrec_SourceContact."Territory Code");
+              Lbool_OK := FALSE;
+            END ELSE IF (Lrec_SourceContact."Salesperson Code" <> '') AND
+                    (NOT Lrec_DestSalesperson.GET(Lrec_SourceContact."Salesperson Code")) THEN
+            BEGIN
+              MESSAGE(text031,Grec_DuplicatingList.Name,Lrec_SourceContact."Salesperson Code");
+              Lbool_OK := FALSE;
+            END ELSE IF (Lrec_SourceContact."No. Series" <> '') AND
+                    (NOT Lrec_DestNoSeries.GET(Lrec_SourceContact."No. Series")) THEN
+            BEGIN
+              MESSAGE(text032,Grec_DuplicatingList.Name,Lrec_SourceContact."No. Series");
+              Lbool_OK := FALSE;
+            END ELSE IF (Lrec_SourceContact."Organizational Level Code" <> '') AND
+                    (NOT Lrec_DestOrganizationalLevel.GET(Lrec_SourceContact."Organizational Level Code")) THEN
+            BEGIN
+              MESSAGE(text033,Grec_DuplicatingList.Name,Lrec_SourceContact."Organizational Level Code");
+              Lbool_OK := FALSE;
+            END ELSE IF (Lrec_SourceContact."Salutation Code" <> '') AND
+                    (NOT Lrec_DestSalutation.GET(Lrec_SourceContact."Salutation Code")) THEN
+            BEGIN
+              MESSAGE(text034,Grec_DuplicatingList.Name,Lrec_SourceContact."Salutation Code");
+              Lbool_OK := FALSE;
+            END ELSE IF NOT TestCountryRegion(Lrec_SourceContact."Country/Region Code") THEN
+            BEGIN
+              MESSAGE(text028,Grec_DuplicatingList.Name,Lrec_SourceContact."Country/Region Code");
+              Lbool_OK := FALSE;
+            END ELSE IF NOT TestLanguage(Lrec_SourceContact."Language Code") THEN
+            BEGIN
+              MESSAGE(text029,Grec_DuplicatingList.Name,Lrec_SourceContact."Language Code");
+              Lbool_OK := FALSE;
+            END ELSE
+            BEGIN
+              Lrec_DestContact.INIT;
+              Lrec_DestContact.TRANSFERFIELDS(Lrec_SourceContact);
+              Lrec_DestContact.INSERT;
+              Lbool_OK := TRUE;
+              //***** Duplication des relations d'affaire *****
+              Lrec_SourceContBusRel.RESET;
+              Lrec_SourceContBusRel.SETFILTER(Lrec_SourceContBusRel."Contact No.",'%1',Lrec_SourceContact."No.");
+              Lrec_SourceContBusRel.SETFILTER(Lrec_SourceContBusRel."Link to Table",'%1',Lrec_SourceContBusRel."Link to Table"::Vendor);
+              Lrec_SourceContBusRel.SETFILTER(Lrec_SourceContBusRel."No.",'%1',Lcode_Vendor);
+              IF Lrec_SourceContBusRel.COUNT > 0 THEN
+                IF Lrec_SourceContBusRel.FIND('-') THEN
+                REPEAT
+                  IF Lrec_DestBuinesssRelation.GET(Lrec_SourceContBusRel."Business Relation Code") THEN
+                  BEGIN
+                    Lrec_DestContBusRel.INIT;
+                    Lrec_DestContBusRel.TRANSFERFIELDS(Lrec_SourceContBusRel);
+                    Lrec_DestContBusRel.INSERT;
+                  END
+                  ELSE
+                    MESSAGE(text036,Grec_DuplicatingList.Name,Lcode_Vendor,Lrec_SourceContact."No.");
+                UNTIL Lrec_SourceContBusRel.NEXT = 0;
+            END;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestUnitItem@1000000012(Lcode_Item@1000000000 : Code[20];Lcode_Unit@1000000001 : Code[10]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceUnitItem@1000000002 : Record 5404;
+      Lrec_DestUnitItem@1000000003 : Record 5404;
+    BEGIN
+      IF (Lcode_Unit <> '') THEN // si pas de code unit‚, inutile de le dupliquer
+      BEGIN
+        Lrec_DestUnitItem.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestUnitItem.GET(Lcode_Item,Lcode_Unit) THEN
+        BEGIN
+          IF Lrec_SourceUnitItem.GET(Lcode_Item,Lcode_Unit) THEN
+          BEGIN
+            Lbool_OK := TestUnit(Lcode_Unit);
+            IF NOT Lbool_OK THEN
+              MESSAGE(text057,Grec_DuplicatingList.Name,Lcode_Unit)
+            ELSE
+            BEGIN
+              Lrec_DestUnitItem.INIT;
+              Lrec_DestUnitItem.TRANSFERFIELDS(Lrec_SourceUnitItem);
+              Lrec_DestUnitItem.INSERT;
+              Lbool_OK := TRUE;
+            END
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE TestUnit@1000000013(Lcode_Unit@1000000000 : Code[10]) Lbool_OK : Boolean;
+    VAR
+      Lrec_SourceUnit@1000000001 : Record 204;
+      Lrec_DestUnit@1000000002 : Record 204;
+    BEGIN
+      IF (Lcode_Unit <> '') THEN // si pas de code unit‚, inutile de le dupliquer
+      BEGIN
+        Lrec_DestUnit.CHANGECOMPANY(Grec_DuplicatingList.Name);
+        IF NOT Lrec_DestUnit.GET(Lcode_Unit) THEN
+        BEGIN
+          IF Lrec_SourceUnit.GET(Lcode_Unit) THEN
+          BEGIN
+            Lrec_DestUnit.INIT;
+            Lrec_DestUnit.TRANSFERFIELDS(Lrec_SourceUnit);
+            Lrec_DestUnit.INSERT;
+            Lbool_OK := TRUE;
+          END ELSE
+            Lbool_OK := FALSE;
+        END ELSE
+          Lbool_OK := TRUE;
+      END ELSE
+        Lbool_OK := TRUE;
+    END;
+
+    PROCEDURE CopierPeriodesValidation@1000000016(DateDebutPeriod@1000000000 : Date;DateFinPeriod@1000000001 : Date);
+    VAR
+      Grec_Society@1000000002 : Record 2000000006;
+      Text001@1000000003 : TextConst 'ENU=Users have been updated on all companies;FRA=Les utilisateurs ont ‚t‚ mis … jour sur toutes les soci‚t‚s';
+      GLSetup@1000000004 : Record 98;
+      Text10800@1000000005 : TextConst 'ENU=%1 must be within the allowed posting range: %2..%3;FRA="Erreur validation soci‚t‚ %4 \\""%1"" = %5 doit se situer dans la plage de validation autoris‚e : %2..%3\\Veuillez changer les p‚riodes de validation dans la table ""ParamŠtres comptabilit‚"" de la soci‚t‚ %4 et recommencer le traitement."';
+    BEGIN
+      //MODIF JX-AUD 28/03/14
+      IF Grec_Society.FIND('-') THEN
+      REPEAT
+        IF CONFIRM(STRSUBSTNO(text112,Grec_Society.Name)) THEN
+        BEGIN
+          Grec_UserSetup.CHANGECOMPANY(Grec_Society.Name);
+          GLSetup.FIND('-');
+          GLSetup.CHANGECOMPANY(Grec_Society.Name);
+          GLSetup.CALCFIELDS("Posting Allowed From","Posting Allowed To");
+
+          IF ((DateDebutPeriod < GLSetup."Posting Allowed From") OR (DateDebutPeriod >= GLSetup."Posting Allowed To")) THEN
+          ERROR(Text10800,GLSetup.FIELDCAPTION("Allow Posting From"),
+            GLSetup."Posting Allowed From",CALCDATE('<-1D>',GLSetup."Posting Allowed To"),Grec_Society.Name,DateDebutPeriod);
+
+          IF ((DateFinPeriod < GLSetup."Posting Allowed From") OR (DateFinPeriod >= GLSetup."Posting Allowed To")) THEN
+          ERROR(Text10800,GLSetup.FIELDCAPTION("Allow Posting To"),
+            GLSetup."Posting Allowed From",CALCDATE('<-1D>',GLSetup."Posting Allowed To"),Grec_Society.Name, DateFinPeriod);
+
+          IF Grec_UserSetup.FIND('-') THEN
+          REPEAT
+           Grec_UserSetup.VALIDATE("Allow Posting From",DateDebutPeriod);
+           Grec_UserSetup.VALIDATE("Allow Posting To", DateFinPeriod);
+           Grec_UserSetup.MODIFY;
+          UNTIL Grec_UserSetup.NEXT=0;
+        END;
+      UNTIL Grec_Society.NEXT=0;
+
+      MESSAGE(Text001);
+      //Fin MODIF JX-AUD 28/03/14
+    END;
+
+    PROCEDURE CreateUser@1000000011(Lcode_User@1000000000 : Code[50]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_DestUser@1000000001 : Record 91;
+      Lrec_SourceUser@1000000002 : Record 91;
+      Lbool_Ok@1000000003 : Boolean;
+    BEGIN
+      Lbool_Ok := TRUE;
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestUser.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            IF Lrec_SourceUser.GET(Lcode_User) THEN
+            BEGIN
+              IF NOT Lrec_DestUser.GET(Lcode_User) THEN
+              BEGIN
+                // Tests concernant les autres champs puis insertion de l'enregistrement si pas d'erreur
+                IF Lrec_SourceUser."User ID" = '' THEN
+                BEGIN
+                  MESSAGE(text100);
+                  Lbool_Ok := FALSE;
+                END;
+                IF Lrec_SourceUser.Service =  '' THEN
+                  IF NOT CONFIRM(text103) THEN Lbool_Ok := FALSE;
+                IF Lrec_SourceUser.Nom =  '' THEN
+                  IF NOT CONFIRM(text104) THEN Lbool_Ok := FALSE;
+                IF Lrec_SourceUser."Approver ID" =  '' THEN
+                  IF NOT CONFIRM(text105) THEN Lbool_Ok := FALSE;
+                IF Lrec_SourceUser."E-Mail"=  '' THEN
+                BEGIN
+                  MESSAGE(text106);
+                  Lbool_Ok := FALSE;
+                END;
+
+                IF Lbool_Ok THEN
+                BEGIN
+                  // Insertion de l'enregistrement
+                  Lrec_DestUser.INIT;
+                  Lrec_DestUser.TRANSFERFIELDS(Lrec_SourceUser);
+                  Lrec_DestUser.INSERT;
+                  COMMIT;
+
+                  Lint_DuplicationNumber += 1;
+                  Grec_DuplicatingList.Echec := FALSE;
+                  Grec_DuplicatingList.MODIFY;
+                END;
+
+              END ELSE
+                MESSAGE(text098,Lcode_User,Grec_DuplicatingList.Name);   // L'utilisateur existe d‚j… dans la soci‚t‚ !
+            END ELSE
+              MESSAGE(text099,Lcode_User,COMPANYNAME);   // L'utilisateur n'existe pas dans la soci‚t‚
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE DeleteUser@1000000014(Lcode_User@1000000000 : Code[50]) Lint_DuplicationNumber : Integer;
+    VAR
+      Lrec_DestUser@1000000001 : Record 91;
+      Lbool_Ok@1000000003 : Boolean;
+      Lrec_ApprovalEntry@1000000004 : Record 454;
+    BEGIN
+      Lbool_Ok := TRUE;
+      Lint_DuplicationNumber := 0;
+      IF Grec_DuplicatingList.FIND('-') THEN
+      REPEAT
+        IF Grec_DuplicatingList.Duplication THEN
+        BEGIN
+          Grec_DuplicatingList.Echec := TRUE;
+          Grec_DuplicatingList.MODIFY;
+          IF Lrec_DestUser.CHANGECOMPANY(Grec_DuplicatingList.Name) THEN
+          BEGIN
+            IF Lrec_DestUser.GET(Lcode_User) THEN
+            BEGIN
+              //V‚rification des approbations en cours
+              Lrec_ApprovalEntry.CHANGECOMPANY(Grec_DuplicatingList.Name);
+              Lrec_ApprovalEntry.SETFILTER(Lrec_ApprovalEntry."Approver ID",Lcode_User);
+              Lrec_ApprovalEntry.SETFILTER(Lrec_ApprovalEntry.Status, FORMAT(Lrec_ApprovalEntry.Status::Open));
+              IF Lrec_ApprovalEntry.FIND('-') THEN
+              BEGIN
+                MESSAGE(text107,Grec_DuplicatingList.Name);
+                Lbool_Ok := FALSE;
+              END;
+
+              IF Lbool_Ok THEN
+              BEGIN
+               //On supprime l'utilisateur
+                Lrec_DestUser.DELETE;
+                COMMIT;
+
+                Lint_DuplicationNumber += 1;
+                Grec_DuplicatingList.Echec := FALSE;
+                Grec_DuplicatingList.MODIFY;
+              END;
+            END ELSE
+              MESSAGE(text099,Lcode_User,Grec_DuplicatingList.Name);
+          END;
+        END;
+      UNTIL Grec_DuplicatingList.NEXT = 0;
+    END;
+
+    PROCEDURE DeleteUserActualSociety@1000000021(Lcode_User@1000000000 : Code[50]);
+    VAR
+      Lrec_DestUser@1000000001 : Record 91;
+      Lbool_Ok@1000000003 : Boolean;
+      Lrec_ApprovalEntry@1000000004 : Record 454;
+    BEGIN
+      Lbool_Ok := TRUE;
+      IF CONFIRM(STRSUBSTNO(text111,Lcode_User, COMPANYNAME)) THEN
+      BEGIN
+        //V‚rification des approbations en cours
+        Lrec_ApprovalEntry.SETFILTER(Lrec_ApprovalEntry."Approver ID",Lcode_User);
+        Lrec_ApprovalEntry.SETFILTER(Lrec_ApprovalEntry.Status, FORMAT(Lrec_ApprovalEntry.Status::Open));
+        IF Lrec_ApprovalEntry.FIND('-') THEN
+        BEGIN
+          MESSAGE(text107,COMPANYNAME);
+          Lbool_Ok := FALSE;
+        END;
+
+        IF Lbool_Ok THEN
+        BEGIN
+         //On supprime l'utilisateur
+          IF Lrec_DestUser.GET(Lcode_User) THEN
+          BEGIN
+            Lrec_DestUser.DELETE;
+            COMMIT;
+            MESSAGE(text110,Lcode_User, COMPANYNAME);
+          END;
+        END;
+      END;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD LE 06/04/2009
+      Permet la duplication de fiches fournisseur, compte g‚n‚ral et article d'une soci‚t‚ vers une autre.
+      Objets li‚s modifi‚s ou cr‚‚s : Form 16, 26, 30, 50013 ; Table 50003
+      MODIFICATION JX-XAD LE 08/06/2009 : traitement des axes analytiques principaux 1 et 2.
+
+      MODIF JX-XAD 03/07/2009
+      Correction bug sur code groupe produits dans la duplication d'un article
+
+      ---------------------------- V1.2 ----------------------------
+
+      MODIF JX-XAD 15/06/2010 (fait le 15/10/2010 dans Nav 2009)
+      Ajout de la duplication de la fiche compte bancaire
+
+      MODIF JX-XAD 31/03/2011
+      Lors de la duplication de la fiche bancaire, modification de celle-ci si elle existe d‚j…
+
+      MODIF JX-XAD 07/06/2011
+      Ajout d'une instruction "COMMIT" lors de l'initialisation des coches pour le formuulaire de duplication
+      et ceci dans le cadre de l'ajout des fonctions SelectAll et SelectAllWithDim dans la table de duplication
+
+      //MODIF JX-AUD 28/03/14
+      //Ajout de la fonction CopierPeriodesValidation: cette fonction s'applique … toutes les soci‚t‚s
+
+      //MODIF JX-AUD 07/04/14
+      //Ajout de la fonction CreateUser
+      //Modification de la fonction Dupliquer
+    }
+    END.
+  }
+}
+

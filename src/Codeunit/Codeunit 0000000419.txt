@@ -519,7 +519,7 @@ OBJECT Codeunit 419 File Management
       ActiveSession@1000 : Record 2000000110;
     BEGIN
       IF ActiveSession.GET(SERVICEINSTANCEID,SESSIONID) THEN
-        EXIT(ActiveSession."Client Type" IN [ActiveSession."Client Type"::"Windows Client",ActiveSession."Client Type"::Unknown]);
+        EXIT(ActiveSession."Client Type" IN [ActiveSession."Client Type"::"Client Windows",ActiveSession."Client Type"::Inconnu]);
 
       EXIT(FALSE);
     END;
@@ -529,7 +529,7 @@ OBJECT Codeunit 419 File Management
       ActiveSession@1000 : Record 2000000110;
     BEGIN
       IF ActiveSession.GET(SERVICEINSTANCEID,SESSIONID) THEN
-        EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Web Client");
+        EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Client web");
 
       EXIT(FALSE);
     END;
@@ -539,7 +539,7 @@ OBJECT Codeunit 419 File Management
       ActiveSession@1000 : Record 2000000110;
     BEGIN
       IF ActiveSession.GET(SERVICEINSTANCEID,SESSIONID) THEN
-        EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Windows Client");
+        EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Client Windows");
 
       EXIT(FALSE);
     END;

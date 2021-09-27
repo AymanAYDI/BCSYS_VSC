@@ -1,0 +1,1083 @@
+OBJECT Page 50103 Purchase Invoice VSC (Old)
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/07/16;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.0-LAB,JX-VSC1.2-XAD,JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=Purchase Invoice;
+               FRA=Facture achat];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    SourceTable=Table38;
+    SourceTableView=WHERE(Document Type=FILTER(Invoice));
+    PageType=Card;
+    RefreshOnActivate=Yes;
+    OnInit=BEGIN
+             PurchHistoryBtn1Visible := TRUE;
+             PayToCommentBtnVisible := TRUE;
+             PayToCommentPictVisible := TRUE;
+             PurchHistoryBtnVisible := TRUE;
+           END;
+
+    OnOpenPage=VAR
+                 CodeService@1000000000 : Code[20];
+                 UserList@1000000001 : Text[200];
+               BEGIN
+                 IF UserMgt.GetPurchasesFilter <> '' THEN BEGIN
+                   FILTERGROUP(2);
+                   SETRANGE("Responsibility Center",UserMgt.GetPurchasesFilter);
+                   FILTERGROUP(0);
+                 END;
+
+                 //D‚but Modif JX-XAD du 11/06/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("Assigned User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 11/06/2008
+               END;
+
+    OnNewRecord=BEGIN
+                  "Responsibility Center" := UserMgt.GetPurchasesFilter;
+                END;
+
+    OnDeleteRecord=BEGIN
+                     CurrPage.SAVERECORD;
+                     EXIT(ConfirmDeletion);
+                   END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1000000000;1 ;ActionGroup;
+                      CaptionML=[ENU=&Invoice;
+                                 FRA=Fa&cture];
+                      Visible=FALSE }
+      { 1000000007;2 ;Action    ;
+                      ShortCutKey=Shift+F5;
+                      CaptionML=[ENU=Card;
+                                 FRA=Fiche];
+                      RunObject=Page 27;
+                      RunPageLink=No.=FIELD(Buy-from Vendor No.);
+                      Visible=FALSE;
+                      Image=EditLines }
+      { 1000000008;2 ;Action    ;
+                      CaptionML=[ENU=Co&mments;
+                                 FRA=Co&mmentaires];
+                      RunObject=Page 66;
+                      RunPageLink=Document Type=FIELD(Document Type),
+                                  No.=FIELD(No.),
+                                  Document Line No.=CONST(0);
+                      Visible=FALSE;
+                      Image=ViewComments }
+      { 1000000009;2 ;Action    ;
+                      CaptionML=[ENU=Dimensions;
+                                 FRA=A&xes analytiques];
+                      Visible=FALSE;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 Rec.ShowDocDim;
+                               END;
+                                }
+      { 1000000001;2 ;Action    ;
+                      CaptionML=[ENU=Approvals;
+                                 FRA=Approbations];
+                      Visible=FALSE;
+                      Image=Approvals;
+                      OnAction=VAR
+                                 ApprovalEntries@1000000000 : Page 658;
+                               BEGIN
+                                 ApprovalEntries.Setfilters(DATABASE::"Purchase Header","Document Type","No.");
+                                 ApprovalEntries.RUN;
+                               END;
+                                }
+      { 1000000038;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ContractPayment;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 Lcu_ContractManagement@1000000001 : Codeunit 50005;
+                               BEGIN
+                                 //D‚but Modif JX-XAD du 26/02/2010
+                                 Lcu_ContractManagement.RunContractFormInvoice("No.");
+                                 //Fin Modif JX-XAD du 26/02/2010
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000002;1 ;ActionGroup;
+                      CaptionML=[ENU=F&unctions;
+                                 FRA=Fonction&s];
+                      Visible=FALSE }
+      { 1000000020;2 ;Separator  }
+      { 1000000024;2 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Get St&d. Vend. Purchase Codes;
+                                 FRA=Extraire codes &achat fourn. std];
+                      Visible=FALSE;
+                      OnAction=VAR
+                                 StdVendPurchCode@1000000001 : Record 175;
+                               BEGIN
+                                 StdVendPurchCode.InsertPurchLines(Rec);
+                               END;
+                                }
+      { 1000000026;2 ;Separator  }
+      { 1000000028;2 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Move Negative Lines;
+                                 FRA=D‚placer lignes n‚gatives];
+                      Visible=FALSE;
+                      OnAction=BEGIN
+                                 CLEAR(MoveNegPurchLines);
+                                 MoveNegPurchLines.SetPurchHeader(Rec);
+                                 MoveNegPurchLines.RUNMODAL;
+                                 MoveNegPurchLines.ShowDocument;
+                               END;
+                                }
+      { 1000000032;2 ;Separator  }
+      { 1000000011;2 ;Action    ;
+                      ShortCutKey=F7;
+                      CaptionML=[ENU=Statistics;
+                                 FRA=Statistiques];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=Statistics;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 PurchSetup.GET;
+                                 IF PurchSetup."Calc. Inv. Discount" THEN BEGIN
+                                   CurrPage.PurchLines.PAGE.CalcInvDisc;
+                                   COMMIT;
+                                 END;
+                                 PAGE.RUNMODAL(PAGE::"Purchase Statistics",Rec);
+                               END;
+                                }
+      { 1000000033;2 ;Action    ;
+                      ShortCutKey=Ctrl+F9;
+                      CaptionML=[ENU=Re&lease;
+                                 FRA=Lancer];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=ReleaseDoc;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ReleasePurchDoc@1000000001 : Codeunit 415;
+                               BEGIN
+                                 ReleasePurchDoc.PerformManualRelease(Rec);
+                               END;
+                                }
+      { 1000000034;2 ;Action    ;
+                      CaptionML=[ENU=Re&open;
+                                 FRA=R&ouvrir];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=ReOpen;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ReleasePurchDoc@1000000001 : Codeunit 415;
+                               BEGIN
+                                 ReleasePurchDoc.PerformManualReopen(Rec);
+                               END;
+                                }
+      { 1000000040;2 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Copy Document;
+                                 FRA=&Copier document];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=CopyDocument;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CopyPurchDoc.SetPurchHeader(Rec);
+                                 CopyPurchDoc.RUNMODAL;
+                                 CLEAR(CopyPurchDoc);
+                               END;
+                                }
+      { 1000000041;2 ;Action    ;
+                      CaptionML=[ENU=Send A&pproval Request;
+                                 FRA=Approbation de Facture];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SendApprovalRequest;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalMgt@1000000001 : Codeunit 439;
+                               BEGIN
+                                 IF ApprovalMgt.SendPurchaseApprovalRequest(Rec) THEN;
+                               END;
+                                }
+      { 1000000042;2 ;Action    ;
+                      CaptionML=[ENU=Cancel Approval Re&quest;
+                                 FRA=Annuler l'approbation];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Cancel;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalMgt@1000000001 : Codeunit 439;
+                               BEGIN
+                                 IF ApprovalMgt.CancelPurchaseApprovalRequest(Rec,TRUE,TRUE) THEN;
+                               END;
+                                }
+      { 1000000019;1 ;ActionGroup;
+                      CaptionML=[ENU=P&osting;
+                                 FRA=&Validation];
+                      Image=Post }
+      { 1000000018;2 ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      CaptionML=[ENU=P&ost;
+                                 FRA=&Valider];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=PostOrder;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 SalesHeader@1000000001 : Record 36;
+                                 ApprovalMgt@1000000000 : Codeunit 439;
+                               BEGIN
+                                 //Modif JX-AUD du 08/07/2013
+                                 Grec_MontantFacture := 0;
+                                 //calcul du montant de la facture
+                                 Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.","No.");
+                                 IF Grec_PurchaseLine.FIND('-') THEN
+                                 BEGIN
+                                   //MESSAGE(FORMAT(Grec_PurchaseLine.COUNT));
+                                   REPEAT
+                                     Grec_MontantFacture +=Grec_PurchaseLine."Line Amount";
+                                   UNTIL Grec_PurchaseLine.NEXT =0;
+                                 END;
+
+                                 IF "Register amount" <> Grec_MontantFacture THEN
+                                   ERROR(Text007);
+
+                                 //Fin Modif JX-AUD du 08/07/2013
+
+                                 IF NOT (COMPANYNAME = 'HEXATOURISME') THEN//modif JX-AUD du 24/04/2012
+                                 BEGIN
+                                   IF VerifierLigneRcpt() THEN  //Modif JX-AUD du 25/10/2011
+                                   //IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN //Modif JX-AUD du 25/10/2011
+                                     Post(CODEUNIT::"Purch.-Post (Yes/No)");
+                                 END ELSE //modif JX-AUD du 24/04/2012
+                                   IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN
+                                     Post(CODEUNIT::"Purch.-Post (Yes/No)");
+                               END;
+                                }
+      { 1000000017;2 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Test Report;
+                                 FRA=Impression test];
+                      Visible=FALSE;
+                      Image=TestReport;
+                      OnAction=BEGIN
+                                 ReportPrint.PrintPurchHeader(Rec);
+                               END;
+                                }
+      { 1000000016;2 ;Action    ;
+                      ShortCutKey=Shift+F9;
+                      CaptionML=[ENU=Post and &Print;
+                                 FRA=Valider et i&mprimer];
+                      Promoted=Yes;
+                      Visible=FALSE;
+                      PromotedIsBig=Yes;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 SalesHeader@1000000001 : Record 36;
+                                 ApprovalMgt@1000000000 : Codeunit 439;
+                               BEGIN
+                                 //Modif JX-AUD du 08/07/2013
+                                 Grec_MontantFacture := 0;
+                                 //calcul du montant de la facture
+                                 Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.","No.");
+                                 IF Grec_PurchaseLine.FIND('-') THEN
+                                 BEGIN
+                                   //MESSAGE(FORMAT(Grec_PurchaseLine.COUNT));
+                                   REPEAT
+                                     Grec_MontantFacture +=Grec_PurchaseLine."Line Amount";
+                                   UNTIL Grec_PurchaseLine.NEXT =0;
+                                 END;
+
+                                 IF "Register amount" <> Grec_MontantFacture THEN
+                                   ERROR(Text007);
+                                 //Fin Modif JX-AUD du 08/07/2013
+
+                                 IF NOT (COMPANYNAME = 'HEXATOURISME') THEN //modif JX-AUD du 24/04/2012
+                                 BEGIN
+                                   IF VerifierLigneRcpt() THEN  //Modif JX-AUD du 25/10/2011
+                                   //IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN    //Modif JX-AUD du 25/10/2011
+                                     Post(CODEUNIT::"Purch.-Post + Print");
+                                 END ELSE //modif JX-AUD du 24/04/2012
+                                   IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN
+                                     Post(CODEUNIT::"Purch.-Post + Print");
+                               END;
+                                }
+      { 1000000015;2 ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Post &Batch;
+                                 FRA=Valider par l&ot];
+                      Visible=FALSE;
+                      Image=PostBatch;
+                      OnAction=BEGIN
+                                 REPORT.RUNMODAL(REPORT::"Batch Post Purchase Invoices",TRUE,TRUE,Rec);
+                                 CurrPage.UPDATE(FALSE);
+                               END;
+                                }
+      { 1000000003;2 ;Action    ;
+                      CaptionML=[ENU=Remove From Job Queue;
+                                 FRA=Supprimer de la file d'attente des travaux];
+                      Visible=JobQueueVisible;
+                      Enabled=FALSE;
+                      Image=RemoveLine;
+                      OnAction=BEGIN
+                                 CancelBackgroundPosting;
+                               END;
+                                }
+      { 1000000029;1 ;ActionGroup;
+                      CaptionML=[ENU=Send mail;
+                                 FRA=Comptabilit‚] }
+      { 1000000027;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - Four non cr‚‚;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Fiche Fournisseur … cr‚er + Devis … cr‚er dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'le fournisseur';
+                                 Gtext_Param2 := 'XXXXXXXX';
+                                 Gtext_Param3 := 'n''a pas ‚t‚ cr‚‚.';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,1,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - Fourn non cr‚‚';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000025;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - DA … cr‚er;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Devis … cr‚er dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,2,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - DA … cr‚er';
+                                 //Gform_FAPMail.RUNMODAL;
+                                 Gform_FAPMail.CorpsMail2;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000023;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - DA non envoy‚ en appro.;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Devis … envoyer en approbation dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'le devis';
+                                 Gtext_Param2 := 'DAXXXXX';
+                                 Gtext_Param3 := 'n''a pas ‚t‚ envoy‚ en approbation';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,3,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - DA non envoy‚ en appro.';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000022;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - DA non approuv‚e;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Devis … approuver dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'le devis';
+                                 Gtext_Param2 := 'DAXXXXX';
+                                 Gtext_Param3 := 'n''est pas approuv‚';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,4,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - DA non approuv‚e';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000021;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - DA non tranform.;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Devis … transformer en BC et … r‚ceptionner dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'Le devis';
+                                 Gtext_Param2 := 'DAXXXXX';
+                                 Gtext_Param3 := 'n''a pas ‚t‚ transform‚ en Bon de commande';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,5,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - DA non tranform.';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000014;2 ;Action    ;
+                      CaptionML=[ENU=Send mail invoice;
+                                 FRA=Envoi mail facture - DA cplmt.];
+                      OnAction=VAR
+                                 Lrec_Historic@1000000001 : Record 50004;
+                                 Ltxt_subject@1000000002 : Text[100];
+                                 Ltxt_body@1000000003 : Text[1024];
+                                 Lrec_PurchLines@1000000004 : Record 39;
+                                 Lrec_UserSetup@1000000005 : Record 91;
+                                 Ltxt_Email@1000000006 : Text[50];
+                                 LTxtUser@1000000007 : Text[30];
+                               BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Devis compl‚mentaire … cr‚er dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'BON DE COMMANDE';
+                                 Gtext_Param2 := 'CAXXXXX';
+                                 Gtext_Param3 := '= xxxxx euros pour une FACTURE= xxxxx euros';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,6,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - DA cplmt.';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000013;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - BC … r‚cept.;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'BC … r‚ceptionner dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := 'BON DE COMMANDE';
+                                 Gtext_Param2 := 'CAXXXXX';
+                                 Gtext_Param3 := 'non r‚ceptionn‚';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,7,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - BC … r‚cept.';
+                                 Gform_FAPMail.RUNMODAL;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000006;2 ;Action    ;
+                      CaptionML=FRA=Envoi mail facture - Fact. … approuver;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 23/04/2013
+                                 CLEAR(Gform_FAPMail);
+                                 Gform_FAPMail.SETRECORD(Rec);
+                                 Gtext_ObjetMail := 'Facture … approuver dans NAVISION';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gtext_Param1 := '';
+                                 Gtext_Param2 := '';
+                                 Gtext_Param3 := '';
+                                 Gform_FAPMail.SetParam(Gtext_Param1, Gtext_Param2, Gtext_Param3,8,Gtext_ObjetMail);
+                                 Gform_FAPMail.CAPTION := 'Envoi mail facture - Fact. … approuver';
+                                 //Gform_FAPMail.RUNMODAL;
+                                 Gform_FAPMail.CorpsMail8;
+                                 //Fin Modif JX-AUD du 23/04/2013
+                               END;
+                                }
+      { 1000000012;2 ;Action    ;
+                      CaptionML=[ENU=Historic;
+                                 FRA=Historique];
+                      OnAction=VAR
+                                 LForm_Historic@1000000001 : Page 50014;
+                                 Lrec_Historic@1000000002 : Record 50004;
+                               BEGIN
+                                 //D‚but Ajout JX-XAD 20/11/2009
+                                 Lrec_Historic.SETFILTER(Lrec_Historic.Type,'%1|%2',Lrec_Historic.Type::Invoice,Lrec_Historic.Type::Receipt);
+                                 Lrec_Historic.SETFILTER(Lrec_Historic."No.",'%1',"No.");
+                                 LForm_Historic.SETTABLEVIEW(Lrec_Historic);
+                                 LForm_Historic.RUNMODAL;
+                                 //Fin Ajout JX-XAD 20/11/2009
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[ENU=General;
+                           FRA=G‚n‚ral] }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="No.";
+                Importance=Promoted;
+                OnAssistEdit=BEGIN
+                               IF AssistEdit(xRec) THEN
+                                 CurrPage.UPDATE;
+                             END;
+                              }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="Buy-from Vendor No.";
+                Importance=Promoted;
+                OnValidate=BEGIN
+                             BuyfromVendorNoOnAfterValidate;
+                           END;
+                            }
+
+    { 128 ;2   ;Field     ;
+                SourceExpr="Buy-from Contact No.";
+                Importance=Additional }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Buy-from Vendor Name" }
+
+    { 72  ;2   ;Field     ;
+                SourceExpr="Buy-from Address";
+                Importance=Additional }
+
+    { 74  ;2   ;Field     ;
+                SourceExpr="Buy-from Address 2";
+                Importance=Additional }
+
+    { 77  ;2   ;Field     ;
+                CaptionML=[ENU=Buy-from Post Code/City;
+                           FRA=CP/Ville fournisseur];
+                SourceExpr="Buy-from Post Code";
+                Importance=Additional }
+
+    { 76  ;2   ;Field     ;
+                SourceExpr="Buy-from City";
+                Importance=Additional }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Buy-from Contact";
+                Importance=Additional }
+
+    { 1000000036;2;Field  ;
+                SourceExpr="Your Reference" }
+
+    { 12  ;2   ;Field     ;
+                SourceExpr="Posting Date";
+                Importance=Promoted }
+
+    { 43  ;2   ;Field     ;
+                SourceExpr="Document Date" }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="Vendor Invoice No.";
+                Importance=Promoted }
+
+    { 81  ;2   ;Field     ;
+                SourceExpr="Order Address Code";
+                Importance=Additional }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr="Purchaser Code";
+                Importance=Additional;
+                OnValidate=BEGIN
+                             PurchaserCodeOnAfterValidate;
+                           END;
+                            }
+
+    { 140 ;2   ;Field     ;
+                SourceExpr="Campaign No.";
+                Importance=Additional }
+
+    { 115 ;2   ;Field     ;
+                SourceExpr="Responsibility Center";
+                Importance=Additional }
+
+    { 65  ;2   ;Field     ;
+                SourceExpr="Assigned User ID";
+                Editable=TRUE }
+
+    { 118 ;2   ;Field     ;
+                SourceExpr=Status;
+                Importance=Promoted }
+
+    { 1000000048;2;Field  ;
+                SourceExpr=Litige }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="BC No." }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000004;2;Field  ;
+                ExtendedDatatype=URL;
+                SourceExpr="Yooz Token link" }
+
+    { 54  ;1   ;Part      ;
+                Name=PurchLines;
+                SubPageLink=Document No.=FIELD(No.);
+                PagePartID=Page50004 }
+
+    { 1905885101;1;Group  ;
+                CaptionML=[ENU=Invoicing;
+                           FRA=Facturation] }
+
+    { 16  ;2   ;Field     ;
+                SourceExpr="Pay-to Vendor No.";
+                OnValidate=BEGIN
+                             PaytoVendorNoOnAfterValidate;
+                           END;
+                            }
+
+    { 130 ;2   ;Field     ;
+                SourceExpr="Pay-to Contact No." }
+
+    { 18  ;2   ;Field     ;
+                SourceExpr="Pay-to Name" }
+
+    { 20  ;2   ;Field     ;
+                SourceExpr="Pay-to Address" }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr="Pay-to Address 2" }
+
+    { 82  ;2   ;Field     ;
+                CaptionML=[ENU=Pay-to Post Code/City;
+                           FRA=CP/Ville];
+                SourceExpr="Pay-to Post Code" }
+
+    { 24  ;2   ;Field     ;
+                SourceExpr="Pay-to City" }
+
+    { 26  ;2   ;Field     ;
+                SourceExpr="Pay-to Contact" }
+
+    { 85  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 1 Code";
+                OnValidate=BEGIN
+                             ShortcutDimension1CodeOnAfterV;
+                           END;
+                            }
+
+    { 87  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 2 Code";
+                OnValidate=BEGIN
+                             ShortcutDimension2CodeOnAfterV;
+                           END;
+                            }
+
+    { 28  ;2   ;Field     ;
+                SourceExpr="Payment Terms Code" }
+
+    { 30  ;2   ;Field     ;
+                SourceExpr="Due Date" }
+
+    { 32  ;2   ;Field     ;
+                SourceExpr="Payment Discount %" }
+
+    { 34  ;2   ;Field     ;
+                SourceExpr="Pmt. Discount Date" }
+
+    { 102 ;2   ;Field     ;
+                SourceExpr="Payment Method Code" }
+
+    { 91  ;2   ;Field     ;
+                SourceExpr="On Hold" }
+
+    { 108 ;2   ;Field     ;
+                SourceExpr="Prices Including VAT";
+                OnValidate=BEGIN
+                             PricesIncludingVATOnAfterValid;
+                           END;
+                            }
+
+    { 138 ;2   ;Field     ;
+                SourceExpr="VAT Bus. Posting Group" }
+
+    { 1906801201;1;Group  ;
+                CaptionML=[ENU=Shipping;
+                           FRA=Livraison] }
+
+    { 36  ;2   ;Field     ;
+                SourceExpr="Ship-to Name" }
+
+    { 38  ;2   ;Field     ;
+                SourceExpr="Ship-to Address" }
+
+    { 40  ;2   ;Field     ;
+                SourceExpr="Ship-to Address 2" }
+
+    { 94  ;2   ;Field     ;
+                CaptionML=[ENU=Ship-to Post Code/City;
+                           FRA=CP/Ville destinataire];
+                SourceExpr="Ship-to Post Code" }
+
+    { 42  ;2   ;Field     ;
+                SourceExpr="Ship-to City" }
+
+    { 44  ;2   ;Field     ;
+                SourceExpr="Ship-to Contact" }
+
+    { 89  ;2   ;Field     ;
+                SourceExpr="Location Code" }
+
+    { 46  ;2   ;Field     ;
+                SourceExpr="Shipment Method Code" }
+
+    { 48  ;2   ;Field     ;
+                SourceExpr="Expected Receipt Date" }
+
+    { 1907468901;1;Group  ;
+                CaptionML=[ENU=Foreign Trade;
+                           FRA=International] }
+
+    { 104 ;2   ;Field     ;
+                SourceExpr="Currency Code";
+                OnValidate=BEGIN
+                             CurrencyCodeOnAfterValidate;
+                           END;
+
+                OnAssistEdit=BEGIN
+                               CLEAR(ChangeExchangeRate);
+                               ChangeExchangeRate.SetParameter("Currency Code","Currency Factor","Posting Date");
+                               IF ChangeExchangeRate.RUNMODAL = ACTION::OK THEN BEGIN
+                                 VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
+                                 CurrPage.UPDATE;
+                               END;
+                               CLEAR(ChangeExchangeRate);
+                             END;
+                              }
+
+    { 50  ;2   ;Field     ;
+                SourceExpr="Transaction Type" }
+
+    { 100 ;2   ;Field     ;
+                SourceExpr="Transaction Specification" }
+
+    { 52  ;2   ;Field     ;
+                SourceExpr="Transport Method" }
+
+    { 96  ;2   ;Field     ;
+                SourceExpr="Entry Point" }
+
+    { 98  ;2   ;Field     ;
+                SourceExpr=Area }
+
+    { 1000000046;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1000000047;1;Part   ;
+                CaptionML=FRA=Montants Document;
+                SubPageLink=Document Type=FIELD(Document Type),
+                            No.=FIELD(Document No.);
+                PagePartID=Page50047;
+                ProviderID=54;
+                PartType=Page }
+
+    { 1000000045;1;Part   ;
+                SubPageLink=Table ID=CONST(38),
+                            Document Type=FIELD(Document Type),
+                            Document No.=FIELD(No.);
+                PagePartID=Page9092;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1000000044;1;Part   ;
+                SubPageLink=No.=FIELD(Buy-from Vendor No.);
+                PagePartID=Page9093;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1000000043;1;Part   ;
+                SubPageLink=No.=FIELD(Pay-to Vendor No.);
+                PagePartID=Page9094;
+                Visible=TRUE;
+                PartType=Page }
+
+    { 1000000039;1;Part   ;
+                SubPageLink=No.=FIELD(Buy-from Vendor No.);
+                PagePartID=Page9095;
+                Visible=TRUE;
+                PartType=Page }
+
+    { 1000000037;1;Part   ;
+                SubPageLink=No.=FIELD(Pay-to Vendor No.);
+                PagePartID=Page9096;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1000000035;1;Part   ;
+                SubPageLink=Document Type=FIELD(Document Type),
+                            Document No.=FIELD(Document No.),
+                            Line No.=FIELD(Line No.);
+                PagePartID=Page9100;
+                ProviderID=54;
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1000000031;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1000000030;1;Part   ;
+                Visible=TRUE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      ChangeExchangeRate@1000000001 : Page 511;
+      PurchSetup@1000000000 : Record 312;
+      CopyPurchDoc@1000000002 : Report 492;
+      MoveNegPurchLines@1000000003 : Report 6698;
+      ReportPrint@1000000004 : Codeunit 228;
+      UserMgt@1000000005 : Codeunit 5700;
+      PurchInfoPaneMgmt@1000000006 : Codeunit 7181;
+      UserSetup@1000000007 : Record 91;
+      PurchHistoryBtnVisible@19036652 : Boolean INDATASET;
+      PayToCommentPictVisible@19020250 : Boolean INDATASET;
+      PayToCommentBtnVisible@19034709 : Boolean INDATASET;
+      PurchHistoryBtn1Visible@19028975 : Boolean INDATASET;
+      Text19023272@19013130 : TextConst 'ENU=Buy-from Vendor;FRA=Fournisseur';
+      Text19005663@19013737 : TextConst 'ENU=Pay-to Vendor;FRA=Fournisseur … payer';
+      JobQueueVisible@1000000035 : Boolean INDATASET;
+      DocNoVisible@1000000034 : Boolean;
+      CU_VSC_Mail@1000000026 : Codeunit 50003;
+      CR@1000000025 : Char;
+      LF@1000000024 : Char;
+      CRLF@1000000023 : Text[2];
+      Grec_PurchaseLine@1000000022 : Record 39;
+      Grec_RcptPurchLine@1000000021 : Record 121;
+      Grec_PurchPaySetup@1000000020 : Record 312;
+      Gint_cptLine@1000000019 : Integer;
+      Grec_ApprovalEntry@1000000018 : Record 454;
+      Grec_MontantFacture@1000000017 : Decimal;
+      Grec_MontantApprobation@1000000016 : Decimal;
+      Grec_MontantMax@1000000015 : Decimal;
+      Gdec_OldAmount@1000000014 : Decimal;
+      Grec_UserSetup@1000000013 : Record 91;
+      Gform_FAPMail@1000000012 : Page 50054;
+      Gtext_Param1@1000000011 : Text[1024];
+      Gtext_Param2@1000000010 : Text[1024];
+      Gtext_Param3@1000000009 : Text[1024];
+      Gtext_ObjetMail@1000000008 : Text[1024];
+      Text001@1000000033 : TextConst 'ENU=" [NAV] Invoice No. ";FRA=" [NAV] Facture Nø "';
+      Text002@1000000032 : TextConst 'ENU=" to validate";FRA=" … valider"';
+      Text003@1000000031 : TextConst 'ENU=" [NAV] Problem on invoice No. ";FRA=" [NAV] ProblŠme sur la facture Nø "';
+      Text004@1000000030 : TextConst 'FRA=Cette facture a ‚t‚ enregistr‚e sans rapprochement avec un BC, vous devez la soumettre … validation';
+      Text005@1000000029 : TextConst 'FRA=La validation n''est pas possible sans nouvelle approbation.';
+      Text006@1000000028 : TextConst 'FRA=La validation n''est pas possible car le statut de votre facture est "%1".';
+      Text007@1000000027 : TextConst 'FRA=Le montant total HT de la facture est diff‚rent du montant … enregistrer';
+
+    LOCAL PROCEDURE Post@4(PostingCodeunitID@1000 : Integer);
+    BEGIN
+      SendToPostingOk(PostingCodeunitID);
+      IF "Job Queue Status" = "Job Queue Status"::"Scheduled for Posting" THEN
+        CurrPage.CLOSE;
+      CurrPage.UPDATE(FALSE);
+    END;
+
+    LOCAL PROCEDURE UpdateInfoPanel@2();
+    VAR
+      DifferBuyFromPayTo@1000000000 : Boolean;
+    BEGIN
+      DifferBuyFromPayTo := "Buy-from Vendor No." <> "Pay-to Vendor No.";
+      PurchHistoryBtnVisible := DifferBuyFromPayTo;
+      PayToCommentPictVisible := DifferBuyFromPayTo;
+      PayToCommentBtnVisible := DifferBuyFromPayTo;
+      PurchHistoryBtn1Visible := PurchInfoPaneMgmt.DocExist(Rec,"Buy-from Vendor No.");
+      IF DifferBuyFromPayTo THEN
+        PurchHistoryBtnVisible := PurchInfoPaneMgmt.DocExist(Rec,"Pay-to Vendor No.")
+    END;
+
+    LOCAL PROCEDURE BuyfromVendorNoOnAfterValidate@19032492();
+    BEGIN
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE PurchaserCodeOnAfterValidate@19046120();
+    BEGIN
+      CurrPage.PurchLines.PAGE.UpdateForm(TRUE);
+    END;
+
+    LOCAL PROCEDURE PaytoVendorNoOnAfterValidate@19048314();
+    BEGIN
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE ShortcutDimension1CodeOnAfterV@19029405();
+    BEGIN
+      CurrPage.PurchLines.PAGE.UpdateForm(TRUE);
+    END;
+
+    LOCAL PROCEDURE ShortcutDimension2CodeOnAfterV@19008725();
+    BEGIN
+      CurrPage.PurchLines.PAGE.UpdateForm(TRUE);
+    END;
+
+    LOCAL PROCEDURE PricesIncludingVATOnAfterValid@19009096();
+    BEGIN
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE CurrencyCodeOnAfterValidate@19068298();
+    BEGIN
+      CurrPage.PurchLines.PAGE.UpdateForm(TRUE);
+    END;
+
+    PROCEDURE VerifierLigneRcpt@1000000000() : Boolean;
+    BEGIN
+      //Modif JX-AUD du 25/10/11
+      Gint_cptLine :=0;
+      Grec_MontantFacture :=0;
+      Grec_MontantApprobation :=0;
+      Grec_PurchPaySetup.GET('');
+      Grec_MontantMax := Grec_PurchPaySetup."Max. Amount allowed";
+
+      //V‚rification si la facture est au statut lanc‚ et v‚rification montant approbation ou facture r‚ouverte
+      IF ((Status = Status::Released) OR (Status = Status::Open)) THEN
+      BEGIN
+        //calcul du montant de la facture
+        Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.","No.");
+        IF Grec_PurchaseLine.FIND('-') THEN
+        BEGIN
+          //MESSAGE(FORMAT(Grec_PurchaseLine.COUNT));
+          REPEAT
+            Grec_MontantFacture +=Grec_PurchaseLine."Line Amount";
+          UNTIL Grec_PurchaseLine.NEXT =0;
+        END;
+
+        //MESSAGE(FORMAT(Grec_MontantFacture));
+        //calcul du montant des approbations
+        Grec_ApprovalEntry.SETFILTER(Grec_ApprovalEntry."Table ID",'38');
+        Grec_ApprovalEntry.SETFILTER(Grec_ApprovalEntry."Document No.","No.");
+        Grec_ApprovalEntry.SETFILTER(Grec_ApprovalEntry."Document Type", FORMAT(Grec_ApprovalEntry."Document Type"::Invoice));
+        Grec_ApprovalEntry.SETFILTER(Grec_ApprovalEntry.Status,FORMAT(Grec_ApprovalEntry.Status::Approved));
+
+        IF Grec_ApprovalEntry.FIND('-') THEN   //si statut ouvert et lignes approbation pr‚sentes
+        BEGIN
+            IF Grec_ApprovalEntry.FIND('+') THEN
+            BEGIN
+                //MESSAGE(FORMAT(Grec_ApprovalEntry."Sequence No."));
+                Grec_MontantApprobation +=Grec_ApprovalEntry.Amount;
+            END ELSE
+              BEGIN
+                 MESSAGE(Text005);
+                 EXIT(FALSE);
+              END;
+
+            //MESSAGE(FORMAT(Grec_MontantApprobation));
+            IF NOT (Grec_MontantFacture = Grec_MontantApprobation) THEN
+            BEGIN
+              MESSAGE(Text005);
+              EXIT(FALSE);
+            END ELSE EXIT(TRUE);
+         END;
+      END;
+
+      IF ((Status = Status::"Pending Approval") OR (Status = Status::"Pending Prepayment")) THEN
+      BEGIN
+          MESSAGE(Text006,Status);
+          EXIT(FALSE);
+      END;
+
+      //MESSAGE(FORMAT(Grec_MontantMax));
+      IF Status = Status::Open THEN
+      BEGIN
+        //MESSAGE(FORMAT(Grec_PurchPaySetup."Max. Amount allowed"));
+        Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.","No.");
+        IF Grec_PurchaseLine.FIND('-') THEN
+        BEGIN
+          //MESSAGE(FORMAT(Grec_PurchaseLine.COUNT));
+          REPEAT
+            BEGIN
+            //MESSAGE(FORMAT(Grec_PurchaseLine.Type) + '  ' +Grec_PurchaseLine."No.");
+              IF (((Grec_PurchaseLine.Type = Grec_PurchaseLine.Type::" ") AND (Grec_PurchaseLine."No." = ''))
+              OR ((Grec_PurchaseLine.Type <> Grec_PurchaseLine.Type::" ") AND (Grec_PurchaseLine."No." = '')))  THEN
+              BEGIN
+                //MESSAGE('OK');
+              END ELSE
+                BEGIN
+                  //traiter si le num‚ro de reception est renseign‚ et qu'il existe bien dans les lignes de reception achat
+                  IF NOT Grec_RcptPurchLine.GET(Grec_PurchaseLine."Receipt No.",Grec_PurchaseLine."Receipt Line No.") THEN
+                    //traiter si le montant est inf‚rieur ou ‚gal au montant de param‚trage achat
+                    IF Grec_PurchaseLine."Line Amount" > Grec_MontantMax THEN
+                    BEGIN
+                      //MESSAGE('Montant sup‚rieur ' + FORMAT(Grec_PurchaseLine."Line Amount"));
+                      MESSAGE(Text004);
+                      Gint_cptLine +=1;
+                      EXIT(FALSE);
+                    END ELSE
+                    BEGIN
+                      //MESSAGE('Montant inf‚rieur … 10 ' + FORMAT(Grec_PurchaseLine."Line Amount"));
+                      IF Gint_cptLine >1 THEN
+                      BEGIN
+                        MESSAGE(Text004);
+                        EXIT(FALSE);
+                      END;
+                    END;
+                END
+            END;
+          UNTIL Grec_PurchaseLine.NEXT =0;
+        END;
+      END;
+
+      //Status := Status::Released;
+      //Rec.MODIFY;
+
+      EXIT(TRUE);
+      //Fin modif JX-AUd du 25/10/11
+    END;
+
+    BEGIN
+    {
+      Modif JX-XAD du 11/06/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 26/02/2010
+      Gestion des contrats : ajout du bouton "Contrat"
+
+      //Modif JX-AUD 30/11/2012
+      //Mise en invisibilit‚ des boutons Facture,Ligne, Fonctions,Validation
+      //Ajout des boutons "Approbation de facture" & "Annuler lÉapprobation"
+
+      //JX-AUD du 24/02/2015
+      Ajout des champs NøBC, Nø Yooz, Lien token Yooz en non ‚ditable
+    }
+    END.
+  }
+}
+

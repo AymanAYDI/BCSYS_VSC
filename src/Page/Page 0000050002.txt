@@ -1,0 +1,647 @@
+OBJECT Page 50002 Purchase Order Subform VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.0-LAB,JX-VSC1.1-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Purchase Order Subform;
+               FRA=Sous-form. commande achat];
+    MultipleNewLines=Yes;
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table39;
+    DelayedInsert=Yes;
+    SourceTableView=WHERE(Document Type=FILTER(Order));
+    PageType=ListPart;
+    AutoSplitKey=Yes;
+    OnOpenPage=BEGIN
+                 //DEBUT MODIF JX-XAD 30/04/2009
+                 QuantityEditable := ((COMPANYNAME <> 'VSCT') AND (COMPANYNAME <> 'VSCT Test')) ;
+                 //FIN MODIF JX-XAD 30/04/2009
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       ShowShortcutDimCode(ShortcutDimCode);
+                     END;
+
+    OnNewRecord=BEGIN
+                  Type := xRec.Type;
+                  CLEAR(ShortcutDimCode);
+                END;
+
+    OnModifyRecord=BEGIN
+                     //DEBUT MODIF JX-XAD 30/04/2009
+                     IF Rec.Quantity > xRec.Quantity THEN
+                     BEGIN
+                       ERROR(Text001,Type,"No.","Line No.",xRec.Quantity);
+                     END ELSE IF Rec.Quantity < xRec.Quantity THEN
+                       IF NOT CONFIRM(Text002,FALSE,Type,"No.","Line No.",Rec.Quantity) THEN
+                         ERROR(Text003);
+                     //FIN MODIF JX-XAD 30/04/2009
+                   END;
+
+    OnDeleteRecord=VAR
+                     ReservePurchLine@1000000000 : Codeunit 99000834;
+                   BEGIN
+                     IF (Quantity <> 0) AND ItemExists("No.") THEN BEGIN
+                       COMMIT;
+                       IF NOT ReservePurchLine.DeleteLineConfirm(Rec) THEN
+                         EXIT(FALSE);
+                       ReservePurchLine.DeleteLine(Rec);
+                     END;
+                   END;
+
+    ActionList=ACTIONS
+    {
+      { 1000000023;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1000000022;1 ;ActionGroup;
+                      CaptionML=[ENU=&Line;
+                                 FRA=&Ligne];
+                      Image=Line }
+      { 1000000021;2 ;ActionGroup;
+                      CaptionML=[ENU=Item Availability by;
+                                 FRA=DisponibilitÇ article par];
+                      Image=ItemAvailability }
+      { 1000000020;3 ;Action    ;
+                      CaptionML=[ENU=Event;
+                                 FRA=êvÇnement];
+                      Image=Event;
+                      OnAction=BEGIN
+                                 ItemAvailFormsMgt.ShowItemAvailFromPurchLine(Rec,ItemAvailFormsMgt.ByEvent)
+                               END;
+                                }
+      { 1000000019;3 ;Action    ;
+                      CaptionML=[ENU=Period;
+                                 FRA=PÇriode];
+                      Image=Period;
+                      OnAction=BEGIN
+                                 ItemAvailFormsMgt.ShowItemAvailFromPurchLine(Rec,ItemAvailFormsMgt.ByPeriod)
+                               END;
+                                }
+      { 1000000018;3 ;Action    ;
+                      CaptionML=[ENU=Variant;
+                                 FRA=Variante];
+                      Image=ItemVariant;
+                      OnAction=BEGIN
+                                 ItemAvailFormsMgt.ShowItemAvailFromPurchLine(Rec,ItemAvailFormsMgt.ByVariant)
+                               END;
+                                }
+      { 1000000017;3 ;Action    ;
+                      AccessByPermission=TableData 14=R;
+                      CaptionML=[ENU=Location;
+                                 FRA=Magasin];
+                      Image=Warehouse;
+                      OnAction=BEGIN
+                                 ItemAvailFormsMgt.ShowItemAvailFromPurchLine(Rec,ItemAvailFormsMgt.ByLocation)
+                               END;
+                                }
+      { 1000000016;3 ;Action    ;
+                      CaptionML=[ENU=BOM Level;
+                                 FRA=Niveau nomenclature];
+                      Image=BOMLevel;
+                      OnAction=BEGIN
+                                 ItemAvailFormsMgt.ShowItemAvailFromPurchLine(Rec,ItemAvailFormsMgt.ByBOM)
+                               END;
+                                }
+      { 1000000015;2 ;Action    ;
+                      AccessByPermission=TableData 27=R;
+                      CaptionML=[ENU=Reservation Entries;
+                                 FRA=êcritures rÇservation];
+                      Image=ReservationLedger;
+                      OnAction=BEGIN
+                                 ShowReservationEntries(TRUE);
+                               END;
+                                }
+      { 1000000014;2 ;Action    ;
+                      Name=Item Tracking Lines;
+                      ShortCutKey=Shift+Ctrl+I;
+                      CaptionML=[ENU=Item &Tracking Lines;
+                                 FRA=Lignes &traáabilitÇ];
+                      Image=ItemTrackingLines;
+                      OnAction=BEGIN
+                                 OpenItemTrackingLines;
+                               END;
+                                }
+      { 1000000013;2 ;Action    ;
+                      AccessByPermission=TableData 348=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[ENU=Dimensions;
+                                 FRA=Axes analytiques];
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 1000000012;2 ;Action    ;
+                      CaptionML=[ENU=Co&mments;
+                                 FRA=Co&mmentaires];
+                      Image=ViewComments;
+                      OnAction=BEGIN
+                                 ShowLineComments;
+                               END;
+                                }
+      { 1000000011;2 ;Action    ;
+                      Name=ItemChargeAssignment;
+                      AccessByPermission=TableData 5800=R;
+                      CaptionML=[ENU=Item Charge &Assignment;
+                                 FRA=&Affectation frais annexes];
+                      OnAction=BEGIN
+                                 ShowItemChargeAssgnt;
+                               END;
+                                }
+      { 1000000010;1 ;ActionGroup;
+                      CaptionML=[ENU=F&unctions;
+                                 FRA=Fonction&s];
+                      Image=Action }
+      { 1000000009;2 ;Action    ;
+                      AccessByPermission=TableData 90=R;
+                      CaptionML=[ENU=E&xplode BOM;
+                                 FRA=&Eclater nomenclature];
+                      Image=ExplodeBOM;
+                      OnAction=BEGIN
+                                 ExplodeBOM;
+                               END;
+                                }
+      { 1000000008;2 ;Action    ;
+                      Name=Insert Ext. Texts;
+                      AccessByPermission=TableData 279=R;
+                      CaptionML=[ENU=Insert &Ext. Texts;
+                                 FRA=InsÇrer te&xtes Çtendus];
+                      Image=Text;
+                      OnAction=BEGIN
+                                 InsertExtendedText(TRUE);
+                               END;
+                                }
+      { 1000000007;2 ;Action    ;
+                      Name=Reserve;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=&Reserve;
+                                 FRA=&RÇserver];
+                      Image=Reserve;
+                      OnAction=BEGIN
+                                 FIND;
+                                 ShowReservation;
+                               END;
+                                }
+      { 1000000006;2 ;Action    ;
+                      Name=OrderTracking;
+                      CaptionML=[ENU=Order &Tracking;
+                                 FRA=C&haånage];
+                      Image=OrderTracking;
+                      OnAction=BEGIN
+                                 ShowTracking;
+                               END;
+                                }
+      { 1000000005;1 ;ActionGroup;
+                      CaptionML=[ENU=O&rder;
+                                 FRA=&Commande];
+                      Image=Order }
+      { 1000000004;2 ;ActionGroup;
+                      CaptionML=[ENU=Dr&op Shipment;
+                                 FRA=Livraison &directe];
+                      Image=Delivery }
+      { 1000000003;3 ;Action    ;
+                      AccessByPermission=TableData 110=R;
+                      CaptionML=[ENU=Sales &Order;
+                                 FRA=Commande &vente];
+                      Image=Document;
+                      OnAction=BEGIN
+                                 OpenSalesOrderForm;
+                               END;
+                                }
+      { 1000000002;2 ;ActionGroup;
+                      CaptionML=[ENU=Speci&al Order;
+                                 FRA=C&ommande spÇciale];
+                      Image=SpecialOrder }
+      { 1000000001;3 ;Action    ;
+                      AccessByPermission=TableData 110=R;
+                      CaptionML=[ENU=Sales &Order;
+                                 FRA=Commande &vente];
+                      Image=Document;
+                      OnAction=BEGIN
+                                 OpenSpecOrderSalesOrderForm;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Tableaulignes;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Type;
+                Editable=FALSE }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr="No.";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             ShowShortcutDimCode(ShortcutDimCode);
+                               NoOnAfterValidate;
+                           END;
+                            }
+
+    { 62  ;2   ;Field     ;
+                SourceExpr="Cross-Reference No.";
+                Visible=FALSE;
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             CrossReferenceNoOnAfterValidat;
+                           END;
+
+                OnLookup=BEGIN
+                           CrossReferenceNoLookUp;
+                           InsertExtendedText(FALSE);
+                         END;
+                          }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Description;
+                Editable=FALSE }
+
+    { 74  ;2   ;Field     ;
+                SourceExpr="Location Code";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 8   ;2   ;Field     ;
+                Name=Quantity;
+                BlankZero=Yes;
+                SourceExpr=Quantity;
+                Editable=QuantityEditable }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr="Unit of Measure";
+                Visible=TRUE;
+                Editable=FALSE }
+
+    { 12  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Direct Unit Cost";
+                Editable=FALSE }
+
+    { 30  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Unit Price (LCY)";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 44  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Line Amount";
+                Editable=FALSE }
+
+    { 16  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Line Discount %";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 60  ;2   ;Field     ;
+                SourceExpr="Line Discount Amount";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 108 ;2   ;Field     ;
+                SourceExpr="Prepayment %";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 110 ;2   ;Field     ;
+                SourceExpr="Prepmt. Line Amount";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 112 ;2   ;Field     ;
+                SourceExpr="Prepmt. Amt. Inv.";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 18  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Qty. to Receive" }
+
+    { 20  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Quantity Received" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Qty. to Invoice";
+                Editable=FALSE }
+
+    { 24  ;2   ;Field     ;
+                BlankZero=Yes;
+                SourceExpr="Quantity Invoiced" }
+
+    { 78  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE }
+
+    { 76  ;2   ;Field     ;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE }
+
+    { 300 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[3];
+                CaptionClass='1,2,3';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(3,ShortcutDimCode[3]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(3,ShortcutDimCode[3]);
+                         END;
+                          }
+
+    { 302 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[4];
+                CaptionClass='1,2,4';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(4,ShortcutDimCode[4]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(4,ShortcutDimCode[4]);
+                         END;
+                          }
+
+    { 304 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[5];
+                CaptionClass='1,2,5';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(5,ShortcutDimCode[5]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(5,ShortcutDimCode[5]);
+                         END;
+                          }
+
+    { 306 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[6];
+                CaptionClass='1,2,6';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(6,ShortcutDimCode[6]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(6,ShortcutDimCode[6]);
+                         END;
+                          }
+
+    { 308 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[7];
+                CaptionClass='1,2,7';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(7,ShortcutDimCode[7]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(7,ShortcutDimCode[7]);
+                         END;
+                          }
+
+    { 310 ;2   ;Field     ;
+                SourceExpr=ShortcutDimCode[8];
+                CaptionClass='1,2,8';
+                Visible=TRUE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(8,ShortcutDimCode[8]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(8,ShortcutDimCode[8]);
+                         END;
+                          }
+
+    { 1000000026;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
+
+    { 1000000025;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
+
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
+
+    { 92  ;2   ;Field     ;
+                SourceExpr="Planned Receipt Date";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 14  ;2   ;Field     ;
+                SourceExpr="VAT Prod. Posting Group";
+                Visible=TRUE;
+                Editable=FALSE }
+
+    { 46  ;2   ;Field     ;
+                SourceExpr="Blanket Order No.";
+                Visible=FALSE;
+                Editable=FALSE }
+
+    { 1000000024;2;Field  ;
+                SourceExpr="Dimension Set ID";
+                Visible=FALSE;
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      TransferExtendedText@1000000000 : Codeunit 378;
+      ShortcutDimCode@1000000001 : ARRAY [10] OF Code[20];
+      PurchInfoPaneMgt@1000000002 : Codeunit 7181;
+      PurchHeader@1000000003 : Record 38;
+      PurchPriceCalcMgt@1000000004 : Codeunit 7010;
+      Gbool_test@1000000005 : Boolean;
+      Text001@1000000006 : TextConst 'ENU=Error on %1 %2 line %3 !\\The quantity must be less than or equal to % %4;FRA=Erreur sur %1 %2 ligne %3 !\\La quantitÇ doit àtre infÇrieure ou Çgale Ö %4';
+      Text002@1000000007 : TextConst 'ENU=Warning! The quantity was modified on %1 %2 line %3\\ This operation is irreversible. The quantity can be changed with a value greater than %4.Do you confirm this new quantity ?;FRA=Attention ! La quantitÇ a ÇtÇ modifiÇe sur %1 %2 ligne %3\\Cette opÇration est irrÇversible.\\La quantitÇ ne pourra plus àtre modifiÇe avec une valeur supÇrieure Ö %4.\\Confirmez-vous cette nouvelle quantitÇ ?';
+      Text003@1000000008 : TextConst 'ENU=Change in the quantity canceled!;FRA=Modification de la quantitÇ annulÇe !';
+      QuantityEditable@19013162 : Boolean INDATASET;
+      ItemAvailFormsMgt@1000000009 : Codeunit 353;
+      TotalPurchaseHeader@1000000025 : Record 38;
+      TotalPurchaseLine@1000000024 : Record 39;
+      PurchCalcDiscByType@1000000019 : Codeunit 66;
+      DocumentTotals@1000000018 : Codeunit 57;
+      UpdateAllowedVar@1000000016 : Boolean;
+      VATAmount@1000000015 : Decimal;
+      InvDiscAmountEditable@1000000014 : Boolean;
+      TotalAmountStyle@1000000013 : Text;
+      RefreshMessageEnabled@1000000012 : Boolean;
+      RefreshMessageText@1000000011 : Text;
+      TypeChosen@1000000010 : Boolean;
+
+    PROCEDURE ApproveCalcInvDisc@7();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Purch.-Disc. (Yes/No)",Rec);
+    END;
+
+    PROCEDURE CalcInvDisc@1();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Purch.-Calc.Discount",Rec);
+    END;
+
+    PROCEDURE ExplodeBOM@3();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Purch.-Explode BOM",Rec);
+    END;
+
+    PROCEDURE OpenSalesOrderForm@5();
+    VAR
+      SalesHeader@1000000000 : Record 36;
+      SalesOrder@1000000001 : Page 42;
+    BEGIN
+      TESTFIELD("Sales Order No.");
+      SalesHeader.SETRANGE("No.","Sales Order No.");
+      SalesOrder.SETTABLEVIEW(SalesHeader);
+      SalesOrder.EDITABLE := FALSE;
+      SalesOrder.RUN;
+    END;
+
+    PROCEDURE InsertExtendedText@6(Unconditionally@1000000000 : Boolean);
+    BEGIN
+      IF TransferExtendedText.PurchCheckIfAnyExtText(Rec,Unconditionally) THEN BEGIN
+        CurrPage.SAVERECORD;
+        TransferExtendedText.InsertPurchExtText(Rec);
+      END;
+      IF TransferExtendedText.MakeUpdate THEN
+        UpdateForm(TRUE);
+    END;
+
+    PROCEDURE ShowReservation@2();
+    BEGIN
+      FIND;
+      Rec.ShowReservation;
+    END;
+
+    PROCEDURE ShowReservationEntries@9();
+    BEGIN
+      Rec.ShowReservationEntries(TRUE);
+    END;
+
+    PROCEDURE ShowTracking@10();
+    VAR
+      TrackingForm@1000000000 : Page 99000822;
+    BEGIN
+      TrackingForm.SetPurchLine(Rec);
+      TrackingForm.RUNMODAL;
+    END;
+
+    PROCEDURE ShowDimensions@11();
+    BEGIN
+      Rec.ShowDimensions;
+    END;
+
+    PROCEDURE ItemChargeAssgnt@5800();
+    BEGIN
+      Rec.ShowItemChargeAssgnt;
+    END;
+
+    PROCEDURE OpenItemTrackingLines@6500();
+    BEGIN
+      Rec.OpenItemTrackingLines;
+    END;
+
+    PROCEDURE OpenSpecOrderSalesOrderForm@12();
+    VAR
+      SalesHeader@1000000000 : Record 36;
+      SalesOrder@1000000001 : Page 42;
+    BEGIN
+      TESTFIELD("Special Order Sales No.");
+      SalesHeader.SETRANGE("No.","Special Order Sales No.");
+      SalesOrder.SETTABLEVIEW(SalesHeader);
+      SalesOrder.EDITABLE := FALSE;
+      SalesOrder.RUN;
+    END;
+
+    PROCEDURE UpdateForm@13(SetSaveRecord@1000000000 : Boolean);
+    BEGIN
+      CurrPage.UPDATE(SetSaveRecord);
+    END;
+
+    PROCEDURE ShowPrices@15();
+    BEGIN
+      PurchHeader.GET("Document Type","Document No.");
+      CLEAR(PurchPriceCalcMgt);
+      PurchPriceCalcMgt.GetPurchLinePrice(PurchHeader,Rec);
+    END;
+
+    PROCEDURE ShowLineDisc@16();
+    BEGIN
+      PurchHeader.GET("Document Type","Document No.");
+      CLEAR(PurchPriceCalcMgt);
+      PurchPriceCalcMgt.GetPurchLineLineDisc(PurchHeader,Rec);
+    END;
+
+    PROCEDURE ShowLineComments@4();
+    BEGIN
+      Rec.ShowLineComments;
+    END;
+
+    LOCAL PROCEDURE NoOnAfterValidate@19066594();
+    BEGIN
+      InsertExtendedText(FALSE);
+      IF (Type = Type::"Charge (Item)") AND ("No." <> xRec."No.") AND
+         (xRec."No." <> '')
+      THEN
+        CurrPage.SAVERECORD;
+    END;
+
+    LOCAL PROCEDURE CrossReferenceNoOnAfterValidat@19048248();
+    BEGIN
+      InsertExtendedText(FALSE);
+    END;
+
+    BEGIN
+    {
+      Modif JX-LAB du 18/09/2008
+      Mise en visible des champs analytiques
+
+      Modif JX-LAB du 30/10/2008
+      Personalisation des colonnes visibles (uniquement pour les sociÇtÇs VSC et Agence)
+
+      //MODIF JX-XAD du 07/05/2009
+      //Autorisation de saisie du champ QuantitÇ Ö condition que cette quantitÇ soit infÇrieure Ö la quantitÇ en cours
+
+      //MODIF JX-LAB du 25/08/2011
+      //rajout de la colonne quantitÇ facturÇe
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
+    END.
+  }
+}
+

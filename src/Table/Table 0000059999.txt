@@ -1,0 +1,40 @@
+OBJECT Table 59999 VSCT analytics 2011 changes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=23/02/11;
+    Time=19:11:53;
+    Modified=Yes;
+    Version List=JX-VSC2.0-LAB;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=VSCT analytics 2011 changes;
+               FRA=VSCT changement analytique 2011];
+  }
+  FIELDS
+  {
+    { 50000;  ;axe1                ;Code20        ;CaptionML=FRA=axe1 }
+    { 50001;  ;axe2                ;Code20        ;CaptionML=FRA=axe2 }
+    { 50002;  ;axe3                ;Code20        ;CaptionML=FRA=axe3 }
+    { 50003;  ;axe4                ;Code20        ;CaptionML=FRA=axe4 }
+    { 50004;  ;account             ;Code20        ;CaptionML=FRA=compte }
+    { 50005;  ;new axe1            ;Code20        ;CaptionML=FRA=nouvel axe1 }
+    { 50006;  ;new axe2            ;Code20        ;CaptionML=FRA=nouvel axe2 }
+    { 50007;  ;new axe3            ;Code20        ;CaptionML=FRA=nouvel axe3 }
+  }
+  KEYS
+  {
+    {    ;axe1,axe2,axe3,axe4,account             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

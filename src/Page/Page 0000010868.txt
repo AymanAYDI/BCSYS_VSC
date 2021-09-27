@@ -2,9 +2,10 @@ OBJECT Page 10868 Payment Slip
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVFR8.00;
+    Date=24/08/16;
+    Time=14:30:00;
+    Modified=Yes;
+    Version List=NAVFR6.00,JX-VSC1.0-LAB,JX-YOOZ2,JX-VSC4.2-PBD;
   }
   PROPERTIES
   {
@@ -15,7 +16,12 @@ OBJECT Page 10868 Payment Slip
     RefreshOnActivate=Yes;
     OnAfterGetRecord=BEGIN
                        CurrPage.Lines.PAGE.EDITABLE(TRUE);
+                       FctYoozNo;
                      END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           FctYoozNo;
+                         END;
 
     ActionList=ACTIONS
     {
@@ -40,6 +46,21 @@ OBJECT Page 10868 Payment Slip
                       RunObject=Page 10876;
                       RunPageLink=No.=FIELD(No.);
                       Image=Check }
+      { 1000000001;2 ;Action    ;
+                      Name=Export Nos. Yooz;
+                      CaptionML=FRA=Export Num‚ros Yooz du bordereau;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Export1099;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 lPaymHeader@1000000000 : Record 10865;
+                               BEGIN
+                                 lPaymHeader.RESET;
+                                 lPaymHeader.SETRANGE("No.","No.");
+                                 XMLPORT.RUN(50022,TRUE,FALSE,lPaymHeader);
+                               END;
+                                }
       { 1120040 ;1   ;ActionGroup;
                       CaptionML=[ENU=&Navigate;
                                  FRA=Navi&guer] }
@@ -88,6 +109,10 @@ OBJECT Page 10868 Payment Slip
                                        CLEAR(CreateVendorPmtSuggestion);
                                      END ELSE
                                        MESSAGE(Text001);
+
+                                 // PBE 29/07/16
+                                 FctYooz(TRUE);
+                                 //
                                END;
                                 }
       { 1120037 ;2   ;Action    ;
@@ -128,6 +153,16 @@ OBJECT Page 10868 Payment Slip
                                  IF NOT CONFIRM(Text009) THEN
                                    EXIT;
                                  PaymentMgt.ArchiveDocument(Rec);
+                               END;
+                                }
+      { 1000000002;2 ;Action    ;
+                      CaptionML=FRA=Mettre … jour num‚ros Yooz;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=UpdateXML;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 FctYooz(TRUE);
                                END;
                                 }
       { 1120039 ;1   ;ActionGroup;
@@ -263,6 +298,12 @@ OBJECT Page 10868 Payment Slip
                 SourceExpr="Account No.";
                 Importance=Promoted }
 
+    { 1000000000;2;Field  ;
+                Name=Nø Yooz Bordereau;
+                CaptionML=FRA=Nø Yooz Bordereau;
+                SourceExpr=YoozNo_G;
+                Editable=FALSE }
+
     { 1120006; ;Container ;
                 ContainerType=FactBoxArea }
 
@@ -290,13 +331,31 @@ OBJECT Page 10868 Payment Slip
       Text002@1120005 : TextConst 'ENU=This payment class does not authorize customer suggestions.;FRA=Ce type de rŠglement n''autorise pas les propositions client.';
       Text003@1120006 : TextConst 'ENU=You cannot suggest payments on a posted header.;FRA=Vous n''ˆtes pas autoris‚ … faire des propositions de paiement sur un bordereau valid‚.';
       Text009@1120011 : TextConst 'ENU=Do you want to archive this document?;FRA=Souhaitez-vous archiver ce documentÿ?';
+      YoozNo_G@1000000000 : Text;
 
     LOCAL PROCEDURE DocumentDateOnAfterValidate@19038487();
     BEGIN
       CurrPage.UPDATE;
     END;
 
+    LOCAL PROCEDURE FctYoozNo@1000000000();
+    VAR
+      YoozTable@1000000000 : Record 50018;
     BEGIN
+      YoozNo_G := '';
+      YoozTable.RESET;
+      YoozTable.SETRANGE("No.","No.");
+      IF YoozTable.FINDFIRST THEN
+       REPEAT
+        YoozNo_G := YoozNo_G + YoozTable."Applied Yooz No.";
+       UNTIL YoozTable.NEXT = 0;
+    END;
+
+    BEGIN
+    {
+      //Modif LAB du 18/11/08
+      //desactivation de la fonction modification RIB
+    }
     END.
   }
 }

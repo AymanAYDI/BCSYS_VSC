@@ -2,18 +2,20 @@ OBJECT Page 49 Purchase Quote
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798;
+    Date=01/08/16;
+    Time=17:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,JX-ABE,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
     CaptionML=[ENU=Purchase Quote;
-               FRA=Demande de prix];
+               FRA=Devis];
     SourceTable=Table38;
     SourceTableView=WHERE(Document Type=FILTER(Quote));
     PageType=Document;
     RefreshOnActivate=Yes;
+    PromotedActionCategoriesML=FRA=G‚rer,Processus,Editions,Naviguer;
     OnOpenPage=BEGIN
                  IF UserMgt.GetPurchasesFilter <> '' THEN BEGIN
                    FILTERGROUP(2);
@@ -39,16 +41,15 @@ OBJECT Page 49 Purchase Quote
                       ActionContainerType=RelatedInformation }
       { 59      ;1   ;ActionGroup;
                       CaptionML=[ENU=&Quote;
-                                 FRA=&Dem. prix];
+                                 FRA=&Naviguer];
                       Image=Quote }
       { 61      ;2   ;Action    ;
                       Name=Statistics;
                       ShortCutKey=F7;
                       CaptionML=[ENU=Statistics;
                                  FRA=Statistiques];
-                      Promoted=Yes;
+                      Visible=FALSE;
                       Image=Statistics;
-                      PromotedCategory=Process;
                       OnAction=BEGIN
                                  CalcInvDiscForHeader;
                                  COMMIT;
@@ -62,6 +63,7 @@ OBJECT Page 49 Purchase Quote
                                  FRA=Fournisseur];
                       RunObject=Page 26;
                       RunPageLink=No.=FIELD(Buy-from Vendor No.);
+                      Visible=FALSE;
                       Image=Vendor }
       { 63      ;2   ;Action    ;
                       CaptionML=[ENU=Co&mments;
@@ -70,22 +72,59 @@ OBJECT Page 49 Purchase Quote
                       RunPageLink=Document Type=FIELD(Document Type),
                                   No.=FIELD(No.),
                                   Document Line No.=CONST(0);
+                      Visible=FALSE;
                       Image=ViewComments }
       { 111     ;2   ;Action    ;
                       AccessByPermission=TableData 348=R;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[ENU=Dimensions;
                                  FRA=Axes analytiques];
+                      Visible=FALSE;
                       Image=Dimensions;
                       OnAction=BEGIN
                                  ShowDocDim;
                                  CurrPage.SAVERECORD;
                                END;
                                 }
-      { 152     ;2   ;Action    ;
+      { 1000000000;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ContractPayment;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 //Modif JX-AUD du 20/02/2012
+                                 IF "Matricule No." = '' THEN
+                                   ERROR(Text002);
+
+                                 IF Grec_Matricule.GET("Matricule No.") THEN
+                                 BEGIN
+
+                                   IF NOT Grec_Contract.GET("No.") THEN
+                                   BEGIN
+                                     Grec_Contract.INIT;
+                                     Grec_Contract."Initial quote No" := "No.";
+                                     Grec_Contract.User := USERID;
+                                     Grec_Contract."Nom prestataire" := Grec_Matricule."Provider name";
+                                     Grec_Contract."Pr‚nom prestataire" := Grec_Matricule."Provider first name";
+                                     Grec_Contract.INSERT;
+                                   END;
+
+                                   Grec_Contract.SETFILTER(Grec_Contract."Initial quote No","No.");
+                                   PAGE.RUN(50018,Grec_Contract);
+
+                                 END;
+                                 //Fin modif JX-AUD du 20/02/2012
+                               END;
+                                }
+      { 1000000005;2 ;Action    ;
                       CaptionML=[ENU=Approvals;
                                  FRA=Approbations];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
                       Image=Approvals;
+                      PromotedCategory=Category4;
                       OnAction=VAR
                                  ApprovalEntries@1001 : Page 658;
                                BEGIN
@@ -95,11 +134,123 @@ OBJECT Page 49 Purchase Quote
                                 }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
-      { 70      ;1   ;Action    ;
+      { 1000000004;1 ;Action    ;
+                      CaptionML=[ENU=Send A&pproval Request;
+                                 FRA=Envoyer demande d'approbation];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SendApprovalRequest;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalMgt@1001 : Codeunit 439;
+                               BEGIN
+                                 //D‚but Modif JX-XAD du 24/06/2010
+                                 IF "Creation date" >= 160610D THEN
+                                 BEGIN
+                                   // D‚but Modif JX-XAD du 22/02/2010
+                                   // Test si le devis n‚cessite un contrat et si les champs obligatoires sont remplis
+                                   //IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT - RECETTE') THEN
+                                   //  IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE') THEN
+                                     BEGIN
+                                       IF NOT Gcu_ManageContract.CheckQuoteLines("No.") THEN
+                                         IF NOT Gcu_ManageContract.CheckContractInQuote("No.") THEN
+                                           ERROR(Text001);
+                                     END;
+                                     // Fin Modif JX-XAD du 22/02/2010
+                                   END;
+                                   //Fin Modif JX-XAD du 24/06/2010
+
+                                 //Modif JX-AUD du 29/01/2013
+                                 VerifSaisieAxesAnalytiques;
+                                 //Fin modif JX-AUD du 29/01/2013
+
+                                 IF ApprovalMgt.SendPurchaseApprovalRequest(Rec) THEN;
+                               END;
+                                }
+      { 1000000003;1 ;Action    ;
+                      CaptionML=[ENU=Cancel Approval Re&quest;
+                                 FRA=Annuler l'approbation];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Cancel;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalMgt@1001 : Codeunit 439;
+                               BEGIN
+                                 IF ApprovalMgt.CancelPurchaseApprovalRequest(Rec,TRUE,TRUE) THEN;
+                               END;
+                                }
+      { 1000000008;1 ;Action    ;
+                      CaptionML=[ENU=Re&open;
+                                 FRA=R&ouvrir];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ReOpen;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ReleasePurchDoc@1001 : Codeunit 415;
+                               BEGIN
+                                 ReleasePurchDoc.PerformManualReopen(Rec);
+                               END;
+                                }
+      { 1000000007;1 ;Action    ;
+                      Name=Make Order;
+                      CaptionML=[ENU=Make &Order;
+                                 FRA=&Transformer en commande];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=MakeOrder;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 SalesHeader@1000 : Record 36;
+                                 ApprovalMgt@1001 : Codeunit 439;
+                               BEGIN
+                                 //D‚but Modif JX-XAD du 24/06/2010
+                                 IF "Creation date" >= 160610D THEN
+                                 BEGIN
+                                   // D‚but Modif JX-XAD du 22/02/2010
+                                   // Test si le devis n‚cessite un contrat et si les champs obligatoires sont remplis
+                                   //IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME = 'VSCT - RECETTE') THEN
+                                   //  IF (COMPANYNAME = 'VSC') OR (COMPANYNAME = 'VSC - RECETTE') THEN
+                                     BEGIN
+                                       IF NOT Gcu_ManageContract.CheckQuoteLines("No.") THEN
+                                         IF NOT Gcu_ManageContract.CheckContractInQuote("No.") THEN
+                                           ERROR(Text001);
+                                     END;
+                                     // Fin Modif JX-XAD du 22/02/2010
+                                   END;
+                                   //Fin Modif JX-XAD du 24/06/2010
+
+                                 //Modif JX-AUD du 29/01/2013
+                                 VerifSaisieAxesAnalytiques;
+                                 //Fin modif JX-AUD du 29/01/2013
+
+                                 IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN
+                                   CODEUNIT.RUN(CODEUNIT::"Purch.-Quote to Order (Yes/No)",Rec);
+                               END;
+                                }
+      { 1000000006;1 ;Action    ;
+                      Name=CopyDocument;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Copy Document;
+                                 FRA=Copier document];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyDocument;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CopyPurchDoc.SetPurchHeader(Rec);
+                                 CopyPurchDoc.RUNMODAL;
+                                 CLEAR(CopyPurchDoc);
+                               END;
+                                }
+      { 1000000010;1 ;Action    ;
+                      Name=Print;
                       Ellipsis=Yes;
                       CaptionML=[ENU=&Print;
                                  FRA=&Imprimer];
                       Promoted=Yes;
+                      PromotedIsBig=Yes;
                       Image=Print;
                       PromotedCategory=Process;
                       OnAction=BEGIN
@@ -116,6 +267,7 @@ OBJECT Page 49 Purchase Quote
                       ShortCutKey=Ctrl+F9;
                       CaptionML=[ENU=Re&lease;
                                  FRA=&Lancer];
+                      Visible=FALSE;
                       Image=ReleaseDoc;
                       OnAction=VAR
                                  ReleasePurchDoc@1000 : Codeunit 415;
@@ -123,25 +275,17 @@ OBJECT Page 49 Purchase Quote
                                  ReleasePurchDoc.PerformManualRelease(Rec);
                                END;
                                 }
-      { 119     ;2   ;Action    ;
-                      CaptionML=[ENU=Re&open;
-                                 FRA=R&ouvrir];
-                      Image=ReOpen;
-                      OnAction=VAR
-                                 ReleasePurchDoc@1001 : Codeunit 415;
-                               BEGIN
-                                 ReleasePurchDoc.PerformManualReopen(Rec);
-                               END;
-                                }
       { 64      ;1   ;ActionGroup;
                       CaptionML=[ENU=F&unctions;
                                  FRA=Fonction&s];
+                      Visible=TRUE;
                       Image=Action }
       { 65      ;2   ;Action    ;
                       Name=CalculateInvoiceDiscount;
                       AccessByPermission=TableData 24=R;
                       CaptionML=[ENU=Calculate &Invoice Discount;
                                  FRA=C&alculer remise facture];
+                      Visible=FALSE;
                       Image=CalculateInvoiceDiscount;
                       OnAction=BEGIN
                                  ApproveCalcInvDisc;
@@ -153,6 +297,7 @@ OBJECT Page 49 Purchase Quote
                       Ellipsis=Yes;
                       CaptionML=[ENU=Get St&d. Vend. Purchase Codes;
                                  FRA=Extraire codes &achat fourn. std];
+                      Visible=FALSE;
                       Image=VendorCode;
                       OnAction=VAR
                                  StdVendPurchCode@1000 : Record 175;
@@ -161,20 +306,6 @@ OBJECT Page 49 Purchase Quote
                                END;
                                 }
       { 146     ;2   ;Separator  }
-      { 66      ;2   ;Action    ;
-                      Name=CopyDocument;
-                      Ellipsis=Yes;
-                      CaptionML=[ENU=Copy Document;
-                                 FRA=Copier document];
-                      Promoted=Yes;
-                      Image=CopyDocument;
-                      PromotedCategory=Process;
-                      OnAction=BEGIN
-                                 CopyPurchDoc.SetPurchHeader(Rec);
-                                 CopyPurchDoc.RUNMODAL;
-                                 CLEAR(CopyPurchDoc);
-                               END;
-                                }
       { 138     ;2   ;Action    ;
                       Name=Archive Document;
                       CaptionML=[ENU=Archi&ve Document;
@@ -186,43 +317,16 @@ OBJECT Page 49 Purchase Quote
                                END;
                                 }
       { 147     ;2   ;Separator  }
-      { 153     ;2   ;Action    ;
-                      CaptionML=[ENU=Send A&pproval Request;
-                                 FRA=Envoyer demande d'a&pprobation];
-                      Image=SendApprovalRequest;
-                      OnAction=VAR
-                                 ApprovalMgt@1001 : Codeunit 439;
-                               BEGIN
-                                 IF ApprovalMgt.SendPurchaseApprovalRequest(Rec) THEN;
-                               END;
-                                }
-      { 154     ;2   ;Action    ;
-                      CaptionML=[ENU=Cancel Approval Re&quest;
-                                 FRA=Annuler demande d'appro&bation];
-                      Image=Cancel;
-                      OnAction=VAR
-                                 ApprovalMgt@1001 : Codeunit 439;
-                               BEGIN
-                                 IF ApprovalMgt.CancelPurchaseApprovalRequest(Rec,TRUE,TRUE) THEN;
-                               END;
-                                }
-      { 7       ;1   ;ActionGroup;
-                      CaptionML=[ENU=Make Order;
-                                 FRA=Cr‚er commande];
-                      Image=MakeOrder }
-      { 69      ;2   ;Action    ;
-                      Name=Make Order;
-                      CaptionML=[ENU=Make &Order;
-                                 FRA=&Cr‚er commande];
+      { 1000000009;2 ;Action    ;
+                      CaptionML=FRA=Payer ce document;
                       Promoted=Yes;
-                      Image=MakeOrder;
+                      PromotedIsBig=Yes;
+                      Image=VendorPayment;
                       PromotedCategory=Process;
                       OnAction=VAR
-                                 SalesHeader@1000 : Record 36;
-                                 ApprovalMgt@1001 : Codeunit 439;
+                                 lPaymentMgt@1000000000 : Codeunit 50010;
                                BEGIN
-                                 IF ApprovalMgt.PrePostApprovalCheck(SalesHeader,Rec) THEN
-                                   CODEUNIT.RUN(CODEUNIT::"Purch.-Quote to Order (Yes/No)",Rec);
+                                 lPaymentMgt.CreatePaymentDoc(Rec);
                                END;
                                 }
     }
@@ -255,7 +359,8 @@ OBJECT Page 49 Purchase Quote
                             }
 
     { 139 ;2   ;Field     ;
-                SourceExpr="Buy-from Contact No." }
+                SourceExpr="Buy-from Contact No.";
+                Importance=Additional }
 
     { 6   ;2   ;Field     ;
                 SourceExpr="Buy-from Vendor Name" }
@@ -282,6 +387,12 @@ OBJECT Page 49 Purchase Quote
                 SourceExpr="No. of Archived Versions";
                 Importance=Additional }
 
+    { 1000000001;2;Field  ;
+                SourceExpr="Your Reference" }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="Matricule No." }
+
     { 12  ;2   ;Field     ;
                 SourceExpr="Order Date";
                 Importance=Promoted }
@@ -290,13 +401,16 @@ OBJECT Page 49 Purchase Quote
                 SourceExpr="Document Date" }
 
     { 110 ;2   ;Field     ;
-                SourceExpr="Requested Receipt Date" }
+                SourceExpr="Requested Receipt Date";
+                Importance=Additional }
 
     { 14  ;2   ;Field     ;
-                SourceExpr="Vendor Order No." }
+                SourceExpr="Vendor Order No.";
+                Importance=Additional }
 
     { 16  ;2   ;Field     ;
-                SourceExpr="Vendor Shipment No." }
+                SourceExpr="Vendor Shipment No.";
+                Importance=Additional }
 
     { 81  ;2   ;Field     ;
                 SourceExpr="Order Address Code";
@@ -304,6 +418,7 @@ OBJECT Page 49 Purchase Quote
 
     { 10  ;2   ;Field     ;
                 SourceExpr="Purchaser Code";
+                Importance=Additional;
                 OnValidate=BEGIN
                              PurchaserCodeOnAfterValidate;
                            END;
@@ -317,13 +432,29 @@ OBJECT Page 49 Purchase Quote
                 SourceExpr="Responsibility Center";
                 Importance=Additional }
 
+    { 1000000014;2;Field  ;
+                SourceExpr="Document Prepaid";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1000000012;2;Field  ;
+                SourceExpr="Amount Prepaid";
+                Importance=Additional;
+                Editable=FALSE }
+
     { 68  ;2   ;Field     ;
-                SourceExpr="Assigned User ID";
-                Importance=Additional }
+                SourceExpr="Assigned User ID" }
 
     { 107 ;2   ;Field     ;
                 SourceExpr=Status;
                 Importance=Promoted }
+
+    { 1000000015;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000013;2;Field  ;
+                ExtendedDatatype=URL;
+                SourceExpr="Yooz Token link" }
 
     { 58  ;1   ;Part      ;
                 Name=PurchLines;
@@ -492,6 +623,14 @@ OBJECT Page 49 Purchase Quote
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
 
+    { 1000000011;1;Part   ;
+                CaptionML=FRA=Montants Document;
+                SubPageLink=Document Type=FIELD(Document Type),
+                            No.=FIELD(Document No.);
+                PagePartID=Page50047;
+                ProviderID=58;
+                PartType=Page }
+
     { 1901138007;1;Part   ;
                 SubPageLink=No.=FIELD(Buy-from Vendor No.);
                 PagePartID=Page9093;
@@ -553,6 +692,26 @@ OBJECT Page 49 Purchase Quote
       ArchiveManagement@1005 : Codeunit 5063;
       PurchCalcDiscByType@1006 : Codeunit 66;
       DocNoVisible@1000 : Boolean;
+      Gcu_ContractManagement@1000000000 : Codeunit 50005;
+      Text001@1000000011 : TextConst 'ENU=Please complete all mandatory fields of contract;FRA=Veuillez renseigner les champs obligatoires du contrat';
+      Text002@1000000001 : TextConst 'ENU=Please enter a matricule no.;FRA=Veuillez saisir un code matricule';
+      Gcu_ManageContract@1000000004 : Codeunit 50005;
+      Grec_Contract@1000000003 : Record 50008;
+      Grec_Matricule@1000000002 : Record 50010;
+      Grec_PurchReceiptLine@1000000024 : Record 121;
+      Grec_PurchReceiptHeader@1000000023 : Record 120;
+      Gcode_Axe1@1000000021 : Code[20];
+      Gcode_Axe2@1000000020 : Code[20];
+      Gcode_Axe3@1000000019 : Code[20];
+      Gcode_Axe4@1000000018 : Code[20];
+      Gtext_Axe1@1000000009 : Text[50];
+      Gtext_Axe2@1000000008 : Text[50];
+      Gtext_Axe3@1000000007 : Text[50];
+      Gtext_Axe4@1000000006 : Text[50];
+      Grecord_GeneralLedgerSetup@1000000017 : Record 98;
+      Grec_PurchaseLine@1000000016 : Record 39;
+      Grec_Dimension@1000000015 : Record 348;
+      Grec_DimSetEntry@1000000005 : Record 480;
 
     LOCAL PROCEDURE ApproveCalcInvDisc@1();
     BEGIN
@@ -600,7 +759,71 @@ OBJECT Page 49 Purchase Quote
       DocNoVisible := DocumentNoVisibility.PurchaseDocumentNoIsVisible(DocType::Quote,"No.");
     END;
 
+    PROCEDURE VerifSaisieAxesAnalytiques@1000000000();
     BEGIN
+      IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+        Gcode_Axe1 := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";//Axe 0
+        IF Grec_Dimension.GET(Gcode_Axe1) THEN Gtext_Axe1 := Grec_Dimension.Name;
+        Gcode_Axe2 := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";// Axe 1
+        IF Grec_Dimension.GET(Gcode_Axe2) THEN Gtext_Axe2 := Grec_Dimension.Name;
+        Gcode_Axe3 := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";// Axe 2
+        IF Grec_Dimension.GET(Gcode_Axe3) THEN Gtext_Axe3 := Grec_Dimension.Name;
+        Gcode_Axe4 := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";// Axe 3
+        IF Grec_Dimension.GET(Gcode_Axe4) THEN Gtext_Axe4 := Grec_Dimension.Name;
+      END;
+
+      IF "Document Type" = "Document Type"::Quote THEN//DA
+      BEGIN
+        Grec_PurchaseLine.SETFILTER("Document No.", "No.");
+        IF Grec_PurchaseLine.FIND('-') THEN
+        REPEAT
+        IF  Grec_PurchaseLine.Type <> Grec_PurchaseLine.Type::" " THEN
+        BEGIN
+          IF Gcode_Axe1 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe1) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe1) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe2 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe2) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe2) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe3 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe3) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe3) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe4 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe4) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe4) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+        END;
+        UNTIL Grec_PurchaseLine.NEXT = 0;
+      END;
+
+      IF "Document Type" = "Document Type"::Order THEN//Commande
+      BEGIN
+        Grec_PurchaseLine.SETFILTER("Document No.", "No.");
+        IF Grec_PurchaseLine.FIND('-') THEN
+        REPEAT
+        IF  Grec_PurchaseLine.Type <> Grec_PurchaseLine.Type::" " THEN
+        BEGIN
+          IF Gcode_Axe1 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe1) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe1) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe2 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe2) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe2) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe3 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe3) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe3) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+          IF Gcode_Axe4 <> '' THEN
+           IF NOT Grec_DimSetEntry.GET(Grec_PurchaseLine."Dimension Set ID",Gcode_Axe4) THEN
+            ERROR('Vous devez saisir l''axe analytique ' + FORMAT(Gtext_Axe4) + ' sur la ligne ' + FORMAT(Grec_PurchaseLine."Line No."));
+        END;
+        UNTIL Grec_PurchaseLine.NEXT = 0;
+      END;
+    END;
+
+    BEGIN
+    {
+      // //MODIF JX-ABE du 05/10/2015
+      // Rendre le Bouton "Archive Document" visible
+    }
     END.
   }
 }

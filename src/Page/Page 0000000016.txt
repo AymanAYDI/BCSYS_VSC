@@ -2,9 +2,10 @@ OBJECT Page 16 Chart of Accounts
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW14.00.03,NAVFR6.00,JX-VSC1.0-XAD,VSC1.1-LAB,JX-VSC2.0-AUD,JX-VSC3.0-PBD;
   }
   PROPERTIES
   {
@@ -36,6 +37,18 @@ OBJECT Page 16 Chart of Accounts
                       CaptionML=[ENU=A&ccount;
                                  FRA=&Compte];
                       Image=ChartOfAccounts }
+      { 24      ;2   ;Action    ;
+                      ShortCutKey=Shift+F5;
+                      CaptionML=[ENU=Card;
+                                 FRA=Fiche];
+                      RunObject=Page 16;
+                      RunPageLink=No.=FIELD(No.),
+                                  Date Filter=FIELD(Date Filter),
+                                  Global Dimension 1 Filter=FIELD(Global Dimension 1 Filter),
+                                  Global Dimension 2 Filter=FIELD(Global Dimension 2 Filter),
+                                  Budget Filter=FIELD(Budget Filter),
+                                  Business Unit Filter=FIELD(Business Unit Filter);
+                      Image=EditLines }
       { 28      ;2   ;Action    ;
                       ShortCutKey=Ctrl+F7;
                       CaptionML=[ENU=Ledger E&ntries;
@@ -295,6 +308,10 @@ OBJECT Page 16 Chart of Accounts
                 SourceExpr="VAT Bus. Posting Group";
                 Visible=FALSE }
 
+    { 1000000012;2;Field  ;
+                SourceExpr=Blocked;
+                Visible=FALSE }
+
     { 44  ;2   ;Field     ;
                 SourceExpr="VAT Prod. Posting Group";
                 Visible=FALSE }
@@ -346,6 +363,11 @@ OBJECT Page 16 Chart of Accounts
                 SourceExpr="Default IC Partner G/L Acc. No";
                 Visible=FALSE }
 
+    { 1000000010;2;Field  ;
+                SourceExpr=Rubrique;
+                Visible=FALSE;
+                LookupPageID=Page50000 }
+
     { 1900000007;0;Container;
                 ContainerType=FactBoxArea }
 
@@ -375,6 +397,16 @@ OBJECT Page 16 Chart of Accounts
       NameIndent@1002 : Integer INDATASET;
 
     BEGIN
+    {
+      MODIF JX-XAD du 26/08/2008
+      Ajout de 5 champs li‚s … IRIS Finance. Ces champs sont utilis‚s dans le dataport de g‚n‚ration des ‚critures compta pour IRIS ainsi
+      que dans le report de synthŠse de TVA fournisseurs.
+
+      //Modif LAB du 01/07/09
+      //Ajout du champ "bloqu‚"
+
+      MODIF JX-PBD du 04/03/15 Migration 2015 => Suppression des champs 50000 … 50004
+    }
     END.
   }
 }

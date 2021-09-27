@@ -2,9 +2,10 @@ OBJECT Page 98 Purch. Cr. Memo Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.1-XAD,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -232,6 +233,10 @@ OBJECT Page 98 Purch. Cr. Memo Subform
 
     { 74  ;2   ;Field     ;
                 SourceExpr=Nonstock;
+                Visible=FALSE }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Gen. Prod. Posting Group";
                 Visible=FALSE }
 
     { 14  ;2   ;Field     ;
@@ -547,89 +552,40 @@ OBJECT Page 98 Purch. Cr. Memo Subform
                          END;
                           }
 
-    { 47  ;1   ;Group     ;
-                GroupType=Group }
-
-    { 41  ;2   ;Group     ;
-                GroupType=Group }
-
-    { 39  ;3   ;Field     ;
-                Name=Invoice Discount Amount;
-                CaptionML=[ENU=Invoice Discount Amount;
-                           FRA=Montant remise facture];
-                SourceExpr=TotalPurchaseLine."Inv. Discount Amount";
-                AutoFormatType=1;
-                Editable=InvDiscAmountEditable;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled;
-                OnValidate=VAR
-                             PurchaseHeader@1000 : Record 38;
-                           BEGIN
-                             PurchaseHeader.GET("Document Type","Document No.");
-                             PurchCalcDiscByType.ApplyInvDiscBasedOnAmt(TotalPurchaseLine."Inv. Discount Amount",PurchaseHeader);
-                             CurrPage.UPDATE(FALSE);
+    { 1000000001;2;Field  ;
+                SourceExpr=ShortcutDimCode[9];
+                CaptionClass='1,2,9';
+                Visible=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(9,ShortcutDimCode[9]);
                            END;
-                            }
 
-    { 37  ;3   ;Field     ;
-                Name=Invoice Disc. Pct.;
-                CaptionML=[ENU=Invoice Discount %;
-                           FRA=% remise facture];
-                DecimalPlaces=0:2;
-                SourceExpr=PurchCalcDiscByType.GetVendInvoiceDiscountPct(Rec);
-                Visible=TRUE;
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(9,ShortcutDimCode[9]);
+                         END;
+                          }
 
-    { 23  ;2   ;Group     ;
-                GroupType=Group }
+    { 1000000003;2;Field  ;
+                SourceExpr=ShortcutDimCode[10];
+                CaptionClass='1,2,10';
+                Visible=FALSE;
+                Enabled=FALSE;
+                OnValidate=BEGIN
+                             ValidateShortcutDimCode(10,ShortcutDimCode[10]);
+                           END;
 
-    { 21  ;3   ;Field     ;
-                Name=Total Amount Excl. VAT;
-                DrillDown=No;
-                CaptionML=[ENU=Total Amount Excl. VAT;
-                           FRA=Montant total HT];
-                SourceExpr=TotalPurchaseLine.Amount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalExclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+                OnLookup=BEGIN
+                           LookupShortcutDimCode(10,ShortcutDimCode[10]);
+                         END;
+                          }
 
-    { 19  ;3   ;Field     ;
-                Name=Total VAT Amount;
-                CaptionML=[ENU=Total VAT;
-                           FRA=Total TVA];
-                SourceExpr=VATAmount;
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                Style=Subordinate;
-                StyleExpr=RefreshMessageEnabled }
+    { 1000000000;2;Field  ;
+                SourceExpr="Gen. Bus. Posting Group";
+                Visible=FALSE }
 
-    { 17  ;3   ;Field     ;
-                Name=Total Amount Incl. VAT;
-                CaptionML=[ENU=Total Amount Incl. VAT;
-                           FRA=Montant total TTC];
-                SourceExpr=TotalPurchaseLine."Amount Including VAT";
-                AutoFormatType=1;
-                CaptionClass=DocumentTotals.GetTotalInclVATCaption(PurchHeader."Currency Code");
-                Editable=FALSE;
-                StyleExpr=TotalAmountStyle }
-
-    { 15  ;3   ;Field     ;
-                Name=RefreshTotals;
-                DrillDown=Yes;
-                SourceExpr=RefreshMessageText;
-                Enabled=RefreshMessageEnabled;
-                Editable=FALSE;
-                OnDrillDown=BEGIN
-                              DocumentTotals.PurchaseRedistributeInvoiceDiscountAmounts(Rec,VATAmount,TotalPurchaseLine);
-                              CurrPage.UPDATE(FALSE);
-                            END;
-
-                ShowCaption=No }
+    { 1000000002;2;Field  ;
+                SourceExpr="VAT Bus. Posting Group";
+                Visible=FALSE }
 
   }
   CODE
@@ -642,7 +598,7 @@ OBJECT Page 98 Purch. Cr. Memo Subform
       ItemAvailFormsMgt@1004 : Codeunit 353;
       PurchCalcDiscByType@1016 : Codeunit 66;
       DocumentTotals@1015 : Codeunit 57;
-      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      ShortcutDimCode@1003 : ARRAY [10] OF Code[20];
       UpdateAllowedVar@1000 : Boolean;
       Text000@1001 : TextConst 'ENU=Unable to run this function while in View mode.;FRA=Impossible d''ex‚cuter cette fonction en mode Afficher.';
       VATAmount@1011 : Decimal;
@@ -711,9 +667,28 @@ OBJECT Page 98 Purch. Cr. Memo Subform
       EXIT(TRUE);
     END;
 
+    PROCEDURE JX_InsertDescriptInHisto@1000000000() Rtxt_Description : Text[50];
+    VAR
+      Lrec_PurchLines@1000000000 : Record 39;
+    BEGIN
+      //D‚but Ajout JX-XAD le 15/01/2010
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document Type",'%1',"Document Type");
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document No.",'%1',"Document No.");
+
+      IF Lrec_PurchLines.FIND('-') THEN
+        Rtxt_Description := Lrec_PurchLines.Description;
+      //Fin Ajout JX-XAD le 15/01/2010
+    END;
+
     PROCEDURE ShowLineComments@10();
     BEGIN
       ShowLineComments;
+    END;
+
+    PROCEDURE JX_GetPurchLines@1000000001(VAR Prec_PurchLines@1000000000 : Record 39);
+    BEGIN
+      Prec_PurchLines.SETFILTER(Prec_PurchLines."Document Type",'%1',"Document Type");
+      Prec_PurchLines.SETFILTER(Prec_PurchLines."Document No.",'%1',"Document No.");
     END;
 
     LOCAL PROCEDURE NoOnAfterValidate@19066594();
@@ -741,6 +716,19 @@ OBJECT Page 98 Purch. Cr. Memo Subform
     END;
 
     BEGIN
+    {
+      ---------------------------------- V1.1 ---------------------------------
+
+      Modif JX-XAD du 04/08/2009
+      Ajout des colonnes "Groupe compta march‚ " et "Groupe compta march‚ TVA"
+
+      ----------------------------------- V1.2 ----------------------------------
+      Modif JX-XAD du 15/01/2010
+      Ajout d'une fonction JX_InsertDescripionInHisto() renvoyant la premiŠre ligne de description destin‚e … l'historique
+      Ajout d'une fonction JX_GetPurchLines() pour renvoyer le contenu de l'avoir
+
+      //Modif JX-VSC4.0-PBD du 26/01/15
+    }
     END.
   }
 }

@@ -1,0 +1,283 @@
+OBJECT XMLport 50034 Sales_Invoice_Export
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15/05/20;
+    Time=11:31:26;
+    Modified=Yes;
+    Version List=JX-LAB-EDI-CEGEDIM;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Sales_Invoice_Export;
+               FRA=Export_factures_ventes];
+    Direction=Export;
+    Encoding=UTF-8;
+    OnInitXMLport=BEGIN
+
+                    Grec_CompanyInfo.GET;
+                  END;
+
+  }
+  ELEMENTS
+  {
+    { [{027E078F-C21F-41AC-A009-E7C471753234}];  ;Root                ;Element ;Text     }
+
+    { [{5263A4DB-8179-44B2-9EB4-B8C3F7E492C9}];1 ;SalesInvoiceHeader  ;Element ;Table   ;
+                                                  ReqFilterFields=Field3,Field20;
+                                                  SourceTable=Table112;
+                                                  SourceTableView=SORTING(Field3)
+                                                                  ORDER(Ascending);
+                                                  Export::OnAfterGetRecord=BEGIN
+
+                                                                               GLEntry_G.RESET;
+                                                                               GLEntry_G.SETRANGE(GLEntry_G."Document No.","Sales Invoice Header"."No.");
+                                                                               IF GLEntry_G.FINDSET THEN
+                                                                               TypeDoc := FORMAT(GLEntry_G."Document Type");
+                                                                           END;
+                                                                            }
+
+    { [{3D59F703-AFB9-473A-8872-7997507970D2}];2 ;DocumentNo.         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::No. }
+
+    { [{9E47075F-7B19-481C-9011-D8E0D70989BF}];2 ;TypeDoc             ;Element ;Text    ;
+                                                  VariableName=TypeDoc }
+
+    { [{D65BEDD7-5DAA-4895-B2DA-D85B2C52BAF0}];2 ;CustNo              ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::Bill-to Customer No. }
+
+    { [{BEB85174-A394-4B38-ADD1-CA6BDD8A1CF3}];2 ;CustName            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Bill-to Name }
+
+    { [{E426745B-8841-43FE-919C-6C2941F14BF2}];2 ;CustAddress1        ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Bill-to Address }
+
+    { [{781C8B18-0288-4438-8079-7B675829D2BC}];2 ;CustAddress2        ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Bill-to Address 2 }
+
+    { [{35F9F694-FAA5-4A62-AFB6-CE85A299A200}];2 ;CustCity            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Bill-to City }
+
+    { [{6C7765E4-5A40-4B51-A6E5-9C983A66CE69}];2 ;CustPostCode        ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::Bill-to Post Code }
+
+    { [{13A0DD69-62A6-4C4F-9E40-D679DA17922F}];2 ;CustCountry         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::Bill-to Country/Region Code }
+
+    { [{0ADC69D6-29BF-42A3-9AE7-B2D127E4FB58}];2 ;YourRef             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Your Reference }
+
+    { [{2D076957-6A30-4883-B3DA-067C4277C7C0}];2 ;UserMail            ;Element ;Text    ;
+                                                  VariableName=UserMail;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+                                                                                 IF UserSetup.GET("Sales Invoice Header"."User ID") THEN
+
+                                                                                 UserMail := UserSetup."E-Mail";
+
+                                                                                 {
+                                                                                 IF UserSetup.GET("Sales Invoice Header"."User ID") THEN BEGIN
+                                                                                 UserMail := UserSetup."E-Mail";
+                                                                                 // Gtext_UserName := UserSetup."User ID";
+                                                                                 END ELSE BEGIN
+                                                                                 // Gtext_UserName := '';
+                                                                                 UserMail := '';
+                                                                                 END;
+                                                                                  }
+                                                                               END;
+                                                                                }
+
+    { [{E18CCCF7-46DF-476D-905A-7362C78F741B}];2 ;Date                ;Element ;Field   ;
+                                                  DataType=Date;
+                                                  SourceField=Sales Invoice Header::Document Date }
+
+    { [{09258930-4F3F-4A82-9075-4437B165E34C}];2 ;PostingDescription  ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::Posting Description }
+
+    { [{6D607EB9-634D-4390-8AEA-E8A2F2AECEE8}];2 ;Currency            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::Currency Code }
+
+    { [{EDA34AEE-E1A8-4DDC-8CD4-E0E69E18038A}];2 ;OrderNo.            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::Order No. }
+
+    { [{1B69DBFD-E4A1-4136-8CB4-E9E3BE916C3D}];2 ;HeaderAmount        ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Header::Amount }
+
+    { [{DB4983C7-B9B0-40BE-814E-0507F1913F30}];2 ;HeaderAmountWithVAT ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Header::Amount Including VAT }
+
+    { [{F23606CD-83AD-43F0-809F-BDDA839B594F}];2 ;VATAMOUNTheader     ;Element ;Text    ;
+                                                  VariableName=VATAMOUNTheader;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+                                                                                 VATAMOUNTheader:= FORMAT("Sales Invoice Header"."Amount Including VAT"-"Sales Invoice Header".Amount);
+                                                                               END;
+                                                                                }
+
+    { [{C91091E7-532D-47CB-8966-F1381EE0E903}];2 ;CustVATRegistration ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Header::VAT Registration No. }
+
+    { [{16D0A897-38B1-4FCE-953F-2E2C5AF5C6E5}];2 ;ExternalNo.         ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Header::External Document No. }
+
+    { [{725E5944-8768-4371-A1D7-32A0D33A439F}];2 ;SalesInvoiceLines   ;Element ;Table   ;
+                                                  SourceTable=Table113;
+                                                  SourceTableView=SORTING(Field3,Field4)
+                                                                  ORDER(Ascending)
+                                                                  WHERE(Field5=FILTER(<>0),
+                                                                        Field15=FILTER(<>0));
+                                                  LinkFields=Field3=FIELD(Field3);
+                                                  LinkTable=Sales Invoice Header }
+
+    { [{300931D3-3114-4C41-93AB-51836165E51C}];3 ;LineDocumentNo.     ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Line::Document No. }
+
+    { [{71076DD5-7509-4CF4-BCFF-01545ED8C734}];3 ;LineLineNo.         ;Element ;Field   ;
+                                                  DataType=Integer;
+                                                  SourceField=Sales Invoice Line::Line No. }
+
+    { [{17F768AD-BCEB-4C98-8D95-B6AEB93FD3F7}];3 ;LineType            ;Element ;Field   ;
+                                                  DataType=Option;
+                                                  SourceField=Sales Invoice Line::Type }
+
+    { [{389F5E53-42C4-4E2B-B8C6-EA3AF74BA698}];3 ;LineNo.             ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Line::No. }
+
+    { [{771A9A91-FE81-4B41-89AE-4CF91E768271}];3 ;LineDescription     ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Line::Description }
+
+    { [{87C85C9D-A71F-4463-B4C0-92D70E9876D6}];3 ;LineQuantity        ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Quantity }
+
+    { [{71ED4755-9DBA-4788-AA05-4FBB39B42592}];3 ;LineUnit            ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Sales Invoice Line::Unit of Measure }
+
+    { [{A8EB9E80-BA20-4AF4-A699-21742397AF11}];3 ;LineUnitPrice       ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Unit Price }
+
+    { [{1D6FF54E-4AB6-4FA7-9CED-D37EE3897A46}];3 ;LineVAT             ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::VAT % }
+
+    { [{AC80851E-50FB-4988-AE8D-00CF5388668E}];3 ;LineDiscountPercent ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Line Discount % }
+
+    { [{C6FCEC6F-EC54-44CB-8047-8D57283D629B}];3 ;LineDicountAmount   ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Line Discount Amount }
+
+    { [{3327FEB9-3570-4F7B-B254-6724D2A413B1}];3 ;LineAmount          ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Amount }
+
+    { [{B940D4E4-4AE3-45D4-B65F-3805517E9421}];3 ;LineAmountWithVAT   ;Element ;Field   ;
+                                                  DataType=Decimal;
+                                                  SourceField=Sales Invoice Line::Amount Including VAT }
+
+    { [{D66EC92C-F3DD-45A7-9968-C995ACA694EA}];3 ;VATAMOUNTline       ;Element ;Text    ;
+                                                  VariableName=VATAMOUNTline;
+                                                  Export::OnBeforePassVariable=BEGIN
+
+                                                                                 VATAMOUNTline := FORMAT("Sales Invoice Line"."Amount Including VAT"-"Sales Invoice Line".Amount);
+                                                                               END;
+                                                                                }
+
+    { [{FA379C2C-0658-4DB5-ACB0-A2D0C485C32C}];3 ;LineCustomerVAT     ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Line::VAT Bus. Posting Group }
+
+    { [{F7E5D313-806F-4314-B669-0A1361DC249B}];3 ;LineProductVAT      ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Sales Invoice Line::VAT Prod. Posting Group }
+
+    { [{FCCEC8E4-0690-40FD-A0D6-1C81E9CCF880}];2 ;CompanyInformation  ;Element ;Table   ;
+                                                  SourceTable=Table79 }
+
+    { [{3DFAB82B-45F1-457C-A452-08DE6FA40CD3}];3 ;Name                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Name }
+
+    { [{0664C624-14E4-4D6F-A601-E81A68EFBBB0}];3 ;Adress              ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Address }
+
+    { [{D0F4F2D3-8CE9-4E42-A5C6-D9CE3190D951}];3 ;Adress2             ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Address 2 }
+
+    { [{C47E1791-7C7A-4560-A595-0976D3844039}];3 ;PostCode            ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::Post Code }
+
+    { [{63269A90-DC45-457D-A172-45B48C2F1B3F}];3 ;City                ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::City }
+
+    { [{94050F7F-1DE7-4068-B739-75DEDEF937D1}];3 ;CountryPays_Region  ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::Country/Region Code }
+
+    { [{928B5600-A06A-4FAF-935F-AD213528E076}];3 ;VATRegistaration    ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::VAT Registration No. }
+
+    { [{17958590-7C5F-43B0-B752-475F8DCC2C1C}];3 ;IBAN                ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Company Information::IBAN }
+
+    { [{AEB6CD48-EFEB-4B36-970C-8200D5E70ED6}];3 ;RegistrationNo.     ;Element ;Field   ;
+                                                  DataType=Text;
+                                                  SourceField=Company Information::Registration No. }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      GLEntry_G@1000000002 : Record 17;
+      CompagnyAdress_G@1000000001 : Record 79;
+      CompagnyAdress2_G@1000000003 : Record 79;
+      CompagnyCity_G@1000000004 : Record 79;
+      CompagnyName_G@1000000000 : Record 79;
+      Grec_CompanyInfo@1000000005 : Record 79;
+      UserSetup@1000000006 : Record 91;
+
+    BEGIN
+    END.
+  }
+}
+

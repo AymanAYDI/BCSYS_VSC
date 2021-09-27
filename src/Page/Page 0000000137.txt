@@ -2,12 +2,14 @@ OBJECT Page 137 Posted Purchase Rcpt. Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=31/07/15;
+    Time=16:30:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
+    Permissions=TableData 17=rm;
     Editable=No;
     CaptionML=[ENU=Lines;
                FRA=Lignes];
@@ -44,7 +46,7 @@ OBJECT Page 137 Posted Purchase Rcpt. Subform
                                  FRA=&Ligne];
                       Image=Line }
       { 1901741704;2 ;Action    ;
-                      AccessByPermission=TableData 348=R;
+                      AccessByPermission=TableData 348=RM;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[ENU=Dimensions;
                                  FRA=Axes analytiques];
@@ -220,7 +222,16 @@ OBJECT Page 137 Posted Purchase Rcpt. Subform
       ShowItemPurchInvLines;
     END;
 
+    PROCEDURE ReturnRecord@1000000000(VAR Prec_PurchRcptLine@1000000000 : Record 121);
     BEGIN
+      Prec_PurchRcptLine := Rec;
+    END;
+
+    BEGIN
+    {
+      MODIF JX-XAD 04/05/2010
+      Ajout d'une fonction dans le cadre de la modification analytique
+    }
     END.
   }
 }

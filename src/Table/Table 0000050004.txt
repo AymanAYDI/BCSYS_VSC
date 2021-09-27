@@ -1,0 +1,76 @@
+OBJECT Table 50004 VSC historic
+{
+  OBJECT-PROPERTIES
+  {
+    Date=12/06/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-LAB;
+  }
+  PROPERTIES
+  {
+    CaptionML=FRA=Historique VSC;
+    LookupPageID=Page50004;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Type                ;Option        ;CaptionML=[ENU=Type;
+                                                              FRA=Type];
+                                                   OptionCaptionML=[ENU=Invoice,Receipt,Credit Memo;
+                                                                    FRA=Facture,Reception,Avoir];
+                                                   OptionString=Invoice,Receipt,Credit Memo;
+                                                   Description=Type de document }
+    { 2   ;   ;No.                 ;Code20        ;CaptionML=[ENU=No.;
+                                                              FRA=Nø];
+                                                   Description=Nø de document }
+    { 3   ;   ;Date time           ;DateTime      ;CaptionML=[ENU=Date time;
+                                                              FRA=Date heure] }
+    { 4   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
+                                                              FRA=Description] }
+    { 5   ;   ;User ID             ;Code50        ;CaptionML=[ENU=User ID;
+                                                              FRA=Code utilisateur] }
+    { 6   ;   ;Comments            ;Text100       ;CaptionML=[ENU=Comments;
+                                                              FRA=Commentaires];
+                                                   Description=Commentaires ‚ditables par la compta }
+    { 7   ;   ;Assigned User ID    ;Code50        ;CaptionML=[ENU=Assigned User ID;
+                                                              FRA=Code utilisateur affect‚] }
+  }
+  KEYS
+  {
+    {    ;Type,No.,Date time                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE ShowHistoric@1000000000();
+    BEGIN
+      //TESTFIELD("Document No.");
+      //TESTFIELD("Line No.");
+      //DocDim.SETRANGE("Table ID",DATABASE::"Purchase Line");
+      //DocDim.SETRANGE("Document Type","Document Type");
+      //DocDim.SETRANGE("Document No.","Document No.");
+      //DocDim.SETRANGE("Line No.","Line No.");
+      //DocDimensions.SETTABLEVIEW(DocDim);
+      //DocDimensions.RUNMODAL;
+    END;
+
+    BEGIN
+    {
+      ---------------------------------- V1.2 ----------------------------------
+      CREATION JX-XAD 19/11/2009
+      Historique des factures et r‚ceptions envoy‚es par mail :
+      cet historique est renseign‚ via le bouton d'envoi de mails sur les factures
+
+      // modif LAB du 16/12/2009
+      // Ajout des champs comments et Assigned User ID
+
+      // Modif JX-XAD 15/01/2010
+      // Ajout du type de document Avoir
+    }
+    END.
+  }
+}
+

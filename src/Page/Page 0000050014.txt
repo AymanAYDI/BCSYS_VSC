@@ -1,0 +1,83 @@
+OBJECT Page 50014 VSC historic
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD-LAB;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=VSC historic;
+               FRA=Historique VSC];
+    InsertAllowed=No;
+    SourceTable=Table50004;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1000000001;2;Field  ;
+                OptionCaptionML=[ENU=Invoice,Receipt,Credit Memo;
+                                 FRA=Facture,Reception,Avoir];
+                SourceExpr=Type;
+                Editable=FALSE }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="No.";
+                Editable=FALSE }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Date time";
+                Editable=FALSE }
+
+    { 1000000007;2;Field  ;
+                SourceExpr=Description;
+                Editable=FALSE }
+
+    { 1000000009;2;Field  ;
+                SourceExpr="User ID";
+                Editable=FALSE }
+
+    { 1000000016;2;Field  ;
+                SourceExpr="Assigned User ID";
+                Editable=FALSE }
+
+    { 1000000014;2;Field  ;
+                SourceExpr=Comments;
+                Editable=TRUE }
+
+  }
+  CODE
+  {
+
+    PROCEDURE InitForm@1000000000(PRec_Historic@1000000000 : Record 50004);
+    BEGIN
+      Rec := PRec_Historic;
+    END;
+
+    BEGIN
+    {
+      ---------------------------------- V1.2 ----------------------------------
+      CREATION JX-XAD 20/11/2009
+      Historique des factures et r‚ceptions envoy‚es par mail (table 50004) :
+      cet historique est renseign‚ via le bouton d'envoi de mails sur les factures
+
+      // modif LAB du 16/12/2009
+      // ajout du champ commentaires en ‚ditable
+
+      MODIF JX-XAD 15/01/2010
+      Ajout de l'option "Avoir" pour le champ Type
+      MODIF JX-XAD 10/02/2010
+      Rendre le champ type non ‚ditable
+    }
+    END.
+  }
+}
+

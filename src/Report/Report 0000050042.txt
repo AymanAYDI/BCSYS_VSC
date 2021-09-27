@@ -1,0 +1,107 @@
+OBJECT Report 50042 Copy Contract
+{
+  OBJECT-PROPERTIES
+  {
+    Date=10/06/15;
+    Time=19:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Copy Contract;
+               FRA=Copier contrat];
+    ProcessingOnly=Yes;
+  }
+  DATASET
+  {
+    { 1461;    ;DataItem;                    ;
+               DataItemTable=Table50008;
+               DataItemTableView=SORTING(Initial quote No);
+               OnPreDataItem=BEGIN
+                               Contract.SETFILTER(Contract."Initial quote No",'%1',Contract."Initial quote No");
+                             END;
+
+               OnAfterGetRecord=VAR
+                                  Lrec_Contract@1000000000 : Record 50008;
+                                BEGIN
+                                  IF Grec_ContractSource.GET(Gcode_Contract) THEN
+                                  BEGIN
+                                    Contract."Date of entry" := Grec_ContractSource."Date of entry";
+                                    Contract."End date" := Grec_ContractSource."End date";
+                                    Contract."Speaking supplier" := Grec_ContractSource."Speaking supplier";
+                                    Contract."Speaking VSCT" := Grec_ContractSource."Speaking VSCT";
+                                    Contract.Description1 := Grec_ContractSource.Description1;
+                                    Contract.Description2 := Grec_ContractSource.Description2;
+                                    Contract.Description3 := Grec_ContractSource.Description3;
+                                    Contract.Description4 := Grec_ContractSource.Description4;
+                                    Contract.Description5 := Grec_ContractSource.Description5;
+                                    Contract.Description6 := Grec_ContractSource.Description6;
+                                    Contract.Description7 := Grec_ContractSource.Description7;
+                                    Contract.Description8 := Grec_ContractSource.Description8;
+                                    Contract."Nom prestataire" := Grec_ContractSource."Nom prestataire";
+                                    Contract."Pr‚nom prestataire" := Grec_ContractSource."Pr‚nom prestataire";
+                                    Contract.MODIFY;
+                                  END;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Options;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  Name=Contrat … copier (nø devis ori.);
+                  SourceExpr=Gcode_Contract;
+                  OnLookup=BEGIN
+                             Grec_Contract.RESET;
+                             Grec_Contract.FILTERGROUP(2);
+                             Grec_Contract.SETFILTER(Grec_Contract.User,UserMgt.jx_GetPurchasesFilter);
+                             Grec_Contract.FILTERGROUP(0);
+                             Grec_Contract."Initial quote No" := Text;
+                             IF PAGE.RUNMODAL(PAGE::"Contract list",Grec_Contract) = ACTION::LookupOK THEN BEGIN
+                               Text := Grec_Contract."Initial quote No";
+                               EXIT(TRUE);
+                             END ELSE
+                               EXIT(FALSE);
+                           END;
+                            }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Gcode_Contract@1000000000 : Code[20];
+      Grec_Contract@1000000001 : Record 50008;
+      Grec_ContractSource@1000000002 : Record 50008;
+      UserMgt@1000000003 : Codeunit 5700;
+
+    PROCEDURE SetContract@1000000000(Prec_Contract@1000000000 : Record 50008);
+    BEGIN
+      Contract := Prec_Contract;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD 12/04/2010
+      Copier un contrat dans un autre
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

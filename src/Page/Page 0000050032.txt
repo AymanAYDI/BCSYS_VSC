@@ -1,0 +1,119 @@
+OBJECT Page 50032 Vendor Bank Account subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/08/15;
+    Time=09:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-LAB-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Vendor Bank Account Subform;
+               FRA=Sous-fomulaire compte bancaire fourn.];
+    SourceTable=Table288;
+    PageType=ListPart;
+    OnOpenPage=BEGIN
+                   OnActivateForm;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Code }
+
+    { 1000000003;2;Field  ;
+                SourceExpr="SWIFT Code" }
+
+    { 30  ;2   ;Field     ;
+                SourceExpr=IBAN }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Country/Region Code" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Change RIB/IBAN" }
+
+    { 36  ;2   ;Field     ;
+                SourceExpr="Bank Account No." }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Name;
+                Visible=FALSE }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr=Address;
+                Visible=FALSE }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Address 2";
+                Visible=FALSE }
+
+    { 11  ;2   ;Field     ;
+                CaptionML=[ENU=Post Code/City;
+                           FRA=CP/Ville];
+                SourceExpr="Post Code";
+                Visible=FALSE }
+
+    { 10  ;2   ;Field     ;
+                SourceExpr=City;
+                Visible=FALSE }
+
+    { 64  ;2   ;Field     ;
+                SourceExpr="Bank Branch No.";
+                Visible=FALSE }
+
+    { 1120000;2;Field     ;
+                SourceExpr="Agency Code";
+                Visible=FALSE }
+
+    { 1120002;2;Field     ;
+                SourceExpr="RIB Key";
+                Visible=FALSE }
+
+    { 1120004;2;Field     ;
+                SourceExpr="RIB Checked";
+                Visible=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      Mail@1000 : Codeunit 397;
+      Text001@1000000000 : TextConst 'ENU=Code must be filled.\\Please enter a value.;FRA=Code doit ˆtre renseign‚.\\Veuillez entrer une valeur.';
+
+    PROCEDURE ReturnRecord@1000000000(VAR Prec_VendorBankAccount@1000000000 : Record 288);
+    BEGIN
+      Prec_VendorBankAccount := Rec;
+    END;
+
+    LOCAL PROCEDURE OnActivateForm@19002417();
+    BEGIN
+      //DEBUT MODIF JX-XAD 07/06/2011
+      IF Code = '' THEN;
+      //FIN MODIF JX-XAD 07/06/2011
+    END;
+
+    BEGIN
+    {
+      // Cr‚ation LAB du 15/07/2010
+      // sous-formulaire pour formulaire r‚capitulatif des fournisseurs
+
+      // MODIF JX-XAD du 10/04/2011
+      // Ajout de la fonnction ReturnRecord (utilis‚ par le r‚capitulatif fournisseur)
+
+      MODIF JX-XAD 07/06/2011
+      Un bug Nav permet parfois de renseigner certains champs avant d'avoir renseign‚ le Code.
+      Le code doit absolument ˆtre renseign‚ avant toute chose. Un message apparaŒt donc et le curseur se positionne sur ce champ.
+    }
+    END.
+  }
+}
+

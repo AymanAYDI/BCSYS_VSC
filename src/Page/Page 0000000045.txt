@@ -2,9 +2,10 @@ OBJECT Page 45 Sales List
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00;
   }
   PROPERTIES
   {
@@ -104,6 +105,11 @@ OBJECT Page 45 Sales List
                 SourceExpr="Bill-to Name";
                 Visible=FALSE }
 
+    { 1000000000;2;Field  ;
+                CaptionML=[ENU=Our Reference;
+                           FRA=Notre r‚f‚rence];
+                SourceExpr="Your Reference" }
+
     { 39  ;2   ;Field     ;
                 SourceExpr="Bill-to Post Code";
                 Visible=FALSE }
@@ -198,6 +204,10 @@ OBJECT Page 45 Sales List
     END;
 
     BEGIN
+    {
+      //MODIF JX-AUD du 15/03/2013
+      //Ajout du champ "Notre r‚f‚rence"
+    }
     END.
   }
 }

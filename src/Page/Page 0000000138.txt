@@ -2,12 +2,14 @@ OBJECT Page 138 Posted Purchase Invoice
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=29/07/16;
+    Time=14:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-XAD,JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
+    Permissions=TableData 122=rm;
     CaptionML=[ENU=Posted Purchase Invoice;
                FRA=Facture achat enregistr‚e];
     InsertAllowed=No;
@@ -15,6 +17,13 @@ OBJECT Page 138 Posted Purchase Invoice
     PageType=Document;
     RefreshOnActivate=Yes;
     OnOpenPage=BEGIN
+                 //D‚but Modif JX-XAD du 05/08/2008
+                 //Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+                 FILTERGROUP(2);
+                 SETFILTER("User ID",UserMgt.jx_GetPurchasesFilter);
+                 FILTERGROUP(0);
+                 //Fin Modif JX-XAD du 05/08/2008
+
                  SetSecurityFilterOnRespCenter;
                END;
 
@@ -65,6 +74,49 @@ OBJECT Page 138 Posted Purchase Invoice
                                  PostedApprovalEntries.RUN;
                                END;
                                 }
+      { 1000000000;2 ;ActionGroup;
+                      CaptionML=[ENU=Modify dimension;
+                                 FRA=Modifier axe] }
+      { 1000000001;3 ;Action    ;
+                      CaptionML=[ENU=Period;
+                                 FRA=P‚riode];
+                      OnAction=BEGIN
+                                 ModifierAxe.SetPostedInvoice(Rec);
+                                 ModifierAxe.RUNMODAL;
+                                 CLEAR(ModifierAxe);
+                               END;
+                                }
+      { 1000000016;2 ;Action    ;
+                      CaptionML=[ENU=Historic;
+                                 FRA=Historique];
+                      OnAction=VAR
+                                 Lrec_Historic@1000000001 : Record 50004;
+                                 Lform_Historic@1000000002 : Page 50014;
+                               BEGIN
+                                 //D‚but Ajout JX-XAD 20/11/2009
+                                 //Lrec_Historic.SETFILTER(Lrec_Historic.Type,'%1',Lrec_Historic.Type::Invoice);//Modif JX-AUD 10/10/2011
+                                 Lrec_Historic.SETFILTER(Lrec_Historic.Type,'%1|%2',Lrec_Historic.Type::Invoice,Lrec_Historic.Type::Receipt);
+                                 Lrec_Historic.SETFILTER(Lrec_Historic."No.",'%1',"Pre-Assigned No.");
+                                 Lform_Historic.SETTABLEVIEW(Lrec_Historic);
+                                 Lform_Historic.RUNMODAL;
+                                 //Fin Ajout JX-XAD 20/11/2009
+                               END;
+                                }
+      { 1000000017;2 ;Action    ;
+                      CaptionML=[ENU=Contract;
+                                 FRA=Contrat];
+                      OnAction=VAR
+                                 Lcu_ContractManagement@1000000001 : Codeunit 50005;
+                               BEGIN
+                                 //D‚but Modif JX-XAD du 26/02/2010
+                                 Lcu_ContractManagement.RunContractFormPostedInvoice("No.");
+                                 //Fin Modif JX-XAD du 26/02/2010
+                               END;
+                                }
+      { 90      ;1   ;ActionGroup;
+                      CaptionML=[ENU=&Line;
+                                 FRA=&Ligne] }
+      { 108     ;2   ;Separator  }
       { 1900000004;0 ;ActionContainer;
                       ActionContainerType=ActionItems }
       { 56      ;1   ;Action    ;
@@ -87,6 +139,18 @@ OBJECT Page 138 Posted Purchase Invoice
                       PromotedCategory=Process;
                       OnAction=BEGIN
                                  Navigate;
+                               END;
+                                }
+      { 1000000009;1 ;Action    ;
+                      CaptionML=FRA=Payer ce document;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=VendorPayment;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 lPaymentMgt@1000000000 : Codeunit 50010;
+                               BEGIN
+                                 lPaymentMgt.CreatePaymentInv(Rec);
                                END;
                                 }
     }
@@ -142,6 +206,21 @@ OBJECT Page 138 Posted Purchase Invoice
                 SourceExpr="No. Printed";
                 Editable=FALSE }
 
+    { 1000000015;2;Field  ;
+                SourceExpr="Original user";
+                Editable=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="User ID";
+                Editable=FALSE }
+
+    { 1000000020;2;Field  ;
+                SourceExpr="Matricule No.";
+                Editable=FALSE }
+
+    { 1000000024;2;Field  ;
+                SourceExpr=Litige }
+
     { 12  ;2   ;Field     ;
                 SourceExpr="Posting Date";
                 Importance=Promoted;
@@ -149,6 +228,14 @@ OBJECT Page 138 Posted Purchase Invoice
 
     { 71  ;2   ;Field     ;
                 SourceExpr="Document Date";
+                Editable=FALSE }
+
+    { 1000000010;2;Field  ;
+                SourceExpr="Creation date";
+                Editable=FALSE }
+
+    { 1000000011;2;Field  ;
+                SourceExpr="Invoice receipt date";
                 Editable=FALSE }
 
     { 110 ;2   ;Field     ;
@@ -182,6 +269,16 @@ OBJECT Page 138 Posted Purchase Invoice
     { 92  ;2   ;Field     ;
                 SourceExpr="Responsibility Center";
                 Editable=FALSE }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="BC No." }
+
+    { 1000000005;2;Field  ;
+                SourceExpr="Yooz No." }
+
+    { 1000000003;2;Field  ;
+                ExtendedDatatype=URL;
+                SourceExpr="Yooz Token link" }
 
     { 52  ;1   ;Part      ;
                 Name=PurchInvLines;
@@ -223,6 +320,18 @@ OBJECT Page 138 Posted Purchase Invoice
 
     { 28  ;2   ;Field     ;
                 SourceExpr="Pay-to Contact";
+                Editable=FALSE }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="Vendor Posting Group";
+                Editable=FALSE }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Gen. Bus. Posting Group";
+                Editable=FALSE }
+
+    { 1000000008;2;Field  ;
+                SourceExpr="VAT Bus. Posting Group";
                 Editable=FALSE }
 
     { 72  ;2   ;Field     ;
@@ -340,8 +449,46 @@ OBJECT Page 138 Posted Purchase Invoice
     VAR
       PurchInvHeader@1000 : Record 122;
       ChangeExchangeRate@1001 : Page 511;
+      UserMgt@1000000000 : Codeunit 5700;
+      ModifierAxe@1000000001 : Report 50023;
+      Grec_PurchInvLine@1000000003 : Record 123;
+      ModifierAxesFacture@1000000002 : Report 50037;
 
     BEGIN
+    {
+      D‚but Modif JX-XAD du 05/08/2008
+      Filtrer sur le (ou les) utilisateur(s) li‚s au droit de l'utilisateur courant (voir table des paramŠtres utilisateur)
+
+      JX-XAD 05/06/2009
+      Traduction en Anglais
+
+      ------------------------------------ V1.2 ------------------------------------
+
+      Modif JX-XAD du 19/11/2009
+      Ajout des champs :
+      - Utilisateur initial
+      - Date de cr‚ation
+      - Date de r‚ception facture
+
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 26/02/2010
+      Gestion des contrats : ajout du bouton "Contrat"
+
+      MODIF JX-XAD 23/03/2010
+      Mise … jour des axes analytiques dans les documents enregistr‚s
+
+      Modif JX-AUD 10/10/2011
+      Remise en place du filtre sur Receipt pour avoir l'historique des mails
+
+      //Modif JX-AUD du 17/02/2012
+      //Ajout du Champs "Matricule" et traitement de celui-ci
+
+      //JX-AUD du 01/07/2013
+      //Ajout du champ Litige
+
+      //JX-AUD du 24/02/2015
+      Ajout des champs NøBC, Nø Yooz, Lien token Yooz en non ‚ditable
+    }
     END.
   }
 }

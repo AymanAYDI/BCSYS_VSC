@@ -2,8 +2,9 @@ OBJECT Page 9310 Blanket Purchase Orders
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
+    Date=04/06/15;
+    Time=09:00:00;
+    Modified=Yes;
     Version List=NAVW18.00;
   }
   PROPERTIES
@@ -169,6 +170,9 @@ OBJECT Page 9310 Blanket Purchase Orders
 
     { 15  ;2   ;Field     ;
                 SourceExpr="Vendor Authorization No." }
+
+    { 1000000001;2;Field  ;
+                SourceExpr="Lines Amount" }
 
     { 27  ;2   ;Field     ;
                 SourceExpr="Buy-from Post Code";

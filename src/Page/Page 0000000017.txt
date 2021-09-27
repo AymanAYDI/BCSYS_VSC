@@ -2,9 +2,10 @@ OBJECT Page 17 G/L Account Card
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
+    Date=22/05/15;
     Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Modified=Yes;
+    Version List=NAVW15.00,NAVFR6.00,JX-VSC1.0-XAD,JX-VSC1.1-XAD,JX-VSC2.0-AUD,JX-VSC3.0-PBD;
   }
   PROPERTIES
   {
@@ -80,6 +81,28 @@ OBJECT Page 17 G/L Account Card
                       RunObject=Page 10842;
                       RunPageLink=G/L Account No.=FIELD(No.);
                       Image=ApplyEntries }
+      { 1000000012;2 ;Separator  }
+      { 1000000013;2 ;Action    ;
+                      CaptionML=[ENU=Duplicate to another company;
+                                 FRA=Dupliquer vers une autre soci‚t‚];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyFromChartOfAccounts;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 03/04/2009
+
+                                 //DEBUT MODIF JX-XAD le 15/06/2010
+                                 //GForm_Dupliquer.initialiser(Gopt_TypeFiche::"G/L Account","No.");
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::"G/L Account","No.",'');
+
+                                 //FIN MODIF JX-XAD le 15/06/2010
+
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 03/04/2009
+                               END;
+                                }
       { 136     ;1   ;ActionGroup;
                       CaptionML=[ENU=&Balance;
                                  FRA=Sol&de];
@@ -332,8 +355,29 @@ OBJECT Page 17 G/L Account Card
   }
   CODE
   {
+    VAR
+      GForm_Dupliquer@1000000000 : Page 50013;
+      Gopt_TypeFiche@1000000001 : ',Vendor,G/L Account,Item,VendorBankAccount';
 
     BEGIN
+    {
+      MODIF JX-XAD du 25/08/2008
+      Ajout de 5 champs li‚s … IRIS Finance. Ces champs sont utilis‚s dans le dataport de g‚n‚ration des ‚critures compta pour IRIS ainsi
+      que dans le report de synthŠse de TVA fournisseurs.
+
+      //Ajout JX-XAD le 03/04/2009
+      //Ajout de la fonction "Dupliquer" dans le menu Compte
+
+      ---------------------------- V1.2 ----------------------------
+
+      //MODIF JX-XAD 15/06/2010 (fait le 15/10/2010 dans Nav 2009)
+      //Modification suite … l'ajout de la duplication de la fiche bancaire
+
+      //MODIF JX-AUD 08/04/2011
+      //Limitation du champ No. dur formulaire … 8 caractŠres
+
+      MODIF JX-PBD du 04/03/15 Migration 2015 => Suppression des champs iris et rubrique
+    }
     END.
   }
 }

@@ -1,0 +1,293 @@
+OBJECT Query 50001 SIL
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+  }
+  ELEMENTS
+  {
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table113 }
+
+    { 1000000001;1;Column;                   ;
+               DataSource=Sell-to Customer No. }
+
+    { 1000000002;1;Column;                   ;
+               DataSource=Document No. }
+
+    { 1000000003;1;Column;                   ;
+               DataSource=Line No. }
+
+    { 1000000004;1;Column;                   ;
+               DataSource=Type }
+
+    { 1000000005;1;Column;                   ;
+               DataSource=No. }
+
+    { 1000000006;1;Column;                   ;
+               DataSource=Location Code }
+
+    { 1000000007;1;Column;                   ;
+               DataSource=Posting Group }
+
+    { 1000000008;1;Column;                   ;
+               DataSource=Shipment Date }
+
+    { 1000000009;1;Column;                   ;
+               DataSource=Description }
+
+    { 1000000010;1;Column;                   ;
+               DataSource=Description 2 }
+
+    { 1000000011;1;Column;                   ;
+               DataSource=Unit of Measure }
+
+    { 1000000012;1;Column;                   ;
+               DataSource=Quantity }
+
+    { 1000000013;1;Column;                   ;
+               DataSource=Unit Price }
+
+    { 1000000014;1;Column;                   ;
+               DataSource=Unit Cost (LCY) }
+
+    { 1000000015;1;Column;                   ;
+               DataSource=VAT % }
+
+    { 1000000016;1;Column;                   ;
+               DataSource=Line Discount % }
+
+    { 1000000017;1;Column;                   ;
+               DataSource=Line Discount Amount }
+
+    { 1000000018;1;Column;                   ;
+               DataSource=Amount }
+
+    { 1000000019;1;Column;                   ;
+               DataSource=Amount Including VAT }
+
+    { 1000000020;1;Column;                   ;
+               DataSource=Allow Invoice Disc. }
+
+    { 1000000021;1;Column;                   ;
+               DataSource=Gross Weight }
+
+    { 1000000022;1;Column;                   ;
+               DataSource=Net Weight }
+
+    { 1000000023;1;Column;                   ;
+               DataSource=Units per Parcel }
+
+    { 1000000024;1;Column;                   ;
+               DataSource=Unit Volume }
+
+    { 1000000025;1;Column;                   ;
+               DataSource=Appl.-to Item Entry }
+
+    { 1000000026;1;Column;                   ;
+               DataSource=Shortcut Dimension 1 Code }
+
+    { 1000000027;1;Column;                   ;
+               DataSource=Shortcut Dimension 2 Code }
+
+    { 1000000028;1;Column;                   ;
+               DataSource=Customer Price Group }
+
+    { 1000000029;1;Column;                   ;
+               DataSource=Job No. }
+
+    { 1000000030;1;Column;                   ;
+               DataSource=Work Type Code }
+
+    { 1000000031;1;Column;                   ;
+               DataSource=Shipment No. }
+
+    { 1000000032;1;Column;                   ;
+               DataSource=Shipment Line No. }
+
+    { 1000000033;1;Column;                   ;
+               DataSource=Bill-to Customer No. }
+
+    { 1000000034;1;Column;                   ;
+               DataSource=Inv. Discount Amount }
+
+    { 1000000035;1;Column;                   ;
+               DataSource=Drop Shipment }
+
+    { 1000000036;1;Column;                   ;
+               DataSource=Gen. Bus. Posting Group }
+
+    { 1000000037;1;Column;                   ;
+               DataSource=Gen. Prod. Posting Group }
+
+    { 1000000038;1;Column;                   ;
+               DataSource=VAT Calculation Type }
+
+    { 1000000039;1;Column;                   ;
+               DataSource=Transaction Type }
+
+    { 1000000040;1;Column;                   ;
+               DataSource=Transport Method }
+
+    { 1000000041;1;Column;                   ;
+               DataSource=Attached to Line No. }
+
+    { 1000000042;1;Column;                   ;
+               DataSource=Exit Point }
+
+    { 1000000043;1;Column;                   ;
+               DataSource=Area }
+
+    { 1000000044;1;Column;                   ;
+               DataSource=Transaction Specification }
+
+    { 1000000045;1;Column;                   ;
+               DataSource=Tax Area Code }
+
+    { 1000000046;1;Column;                   ;
+               DataSource=Tax Liable }
+
+    { 1000000047;1;Column;                   ;
+               DataSource=Tax Group Code }
+
+    { 1000000048;1;Column;                   ;
+               DataSource=VAT Clause Code }
+
+    { 1000000049;1;Column;                   ;
+               DataSource=VAT Bus. Posting Group }
+
+    { 1000000050;1;Column;                   ;
+               DataSource=VAT Prod. Posting Group }
+
+    { 1000000051;1;Column;                   ;
+               DataSource=Blanket Order No. }
+
+    { 1000000052;1;Column;                   ;
+               DataSource=Blanket Order Line No. }
+
+    { 1000000053;1;Column;                   ;
+               DataSource=VAT Base Amount }
+
+    { 1000000054;1;Column;                   ;
+               DataSource=Unit Cost }
+
+    { 1000000055;1;Column;                   ;
+               DataSource=System-Created Entry }
+
+    { 1000000056;1;Column;                   ;
+               DataSource=Line Amount }
+
+    { 1000000057;1;Column;                   ;
+               DataSource=VAT Difference }
+
+    { 1000000058;1;Column;                   ;
+               DataSource=VAT Identifier }
+
+    { 1000000059;1;Column;                   ;
+               DataSource=IC Partner Ref. Type }
+
+    { 1000000060;1;Column;                   ;
+               DataSource=IC Partner Reference }
+
+    { 1000000061;1;Column;                   ;
+               DataSource=Prepayment Line }
+
+    { 1000000062;1;Column;                   ;
+               DataSource=IC Partner Code }
+
+    { 1000000063;1;Column;                   ;
+               DataSource=Posting Date }
+
+    { 1000000064;1;Column;                   ;
+               DataSource=Dimension Set ID }
+
+    { 1000000065;1;Column;                   ;
+               DataSource=Job Task No. }
+
+    { 1000000066;1;Column;                   ;
+               DataSource=Job Contract Entry No. }
+
+    { 1000000067;1;Column;                   ;
+               DataSource=Variant Code }
+
+    { 1000000068;1;Column;                   ;
+               DataSource=Bin Code }
+
+    { 1000000069;1;Column;                   ;
+               DataSource=Qty. per Unit of Measure }
+
+    { 1000000070;1;Column;                   ;
+               DataSource=Unit of Measure Code }
+
+    { 1000000071;1;Column;                   ;
+               DataSource=Quantity (Base) }
+
+    { 1000000072;1;Column;                   ;
+               DataSource=FA Posting Date }
+
+    { 1000000073;1;Column;                   ;
+               DataSource=Depreciation Book Code }
+
+    { 1000000074;1;Column;                   ;
+               DataSource=Depr. until FA Posting Date }
+
+    { 1000000075;1;Column;                   ;
+               DataSource=Duplicate in Depreciation Book }
+
+    { 1000000076;1;Column;                   ;
+               DataSource=Use Duplication List }
+
+    { 1000000077;1;Column;                   ;
+               DataSource=Responsibility Center }
+
+    { 1000000078;1;Column;                   ;
+               DataSource=Cross-Reference No. }
+
+    { 1000000079;1;Column;                   ;
+               DataSource=Unit of Measure (Cross Ref.) }
+
+    { 1000000080;1;Column;                   ;
+               DataSource=Cross-Reference Type }
+
+    { 1000000081;1;Column;                   ;
+               DataSource=Cross-Reference Type No. }
+
+    { 1000000082;1;Column;                   ;
+               DataSource=Item Category Code }
+
+    { 1000000083;1;Column;                   ;
+               DataSource=Nonstock }
+
+    { 1000000084;1;Column;                   ;
+               DataSource=Purchasing Code }
+
+    { 1000000085;1;Column;                   ;
+               DataSource=Product Group Code }
+
+    { 1000000086;1;Column;                   ;
+               DataSource=Appl.-from Item Entry }
+
+    { 1000000087;1;Column;                   ;
+               DataSource=Return Reason Code }
+
+    { 1000000088;1;Column;                   ;
+               DataSource=Allow Line Disc. }
+
+    { 1000000089;1;Column;                   ;
+               DataSource=Customer Disc. Group }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

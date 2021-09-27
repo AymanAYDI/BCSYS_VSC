@@ -2,9 +2,10 @@ OBJECT Table 5600 Fixed Asset
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00,NAVFR8.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00,NAVFR8.00,JX-VSC1.0-LAB;
   }
   PROPERTIES
   {
@@ -76,7 +77,7 @@ OBJECT Table 5600 Fixed Asset
 
     CaptionML=[ENU=Fixed Asset;
                FRA=Immobilisation];
-    LookupPageID=Page5601;
+    LookupPageID=Page50007;
     DrillDownPageID=Page5601;
   }
   FIELDS
@@ -263,6 +264,11 @@ OBJECT Table 5600 Fixed Asset
     END;
 
     BEGIN
+    {
+
+      //Modif LAB du 07/11/08
+      //Nouveau formulaire liste sur lookup
+    }
     END.
   }
 }

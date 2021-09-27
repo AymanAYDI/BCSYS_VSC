@@ -2,8 +2,9 @@ OBJECT Codeunit 42 CaptionManagement
 {
   OBJECT-PROPERTIES
   {
-    Date=29/01/15;
-    Time=12:00:00;
+    Date=26/01/16;
+    Time=11:00:00;
+    Modified=Yes;
     Version List=NAVW18.00.00.39663;
   }
   PROPERTIES
@@ -195,6 +196,20 @@ OBJECT Codeunit 42 CaptionManagement
                     Language,DimOptionalParam1,DimOptionalParam2,
                     GLSetup."Shortcut Dimension 8 Code",
                     GLSetup.FIELDCAPTION("Shortcut Dimension 8 Code")));
+      //Modif JX-VSC4.0-PBD du 26/01/15
+              '9':
+                EXIT(
+                  DimCodeCaption(
+                    Language,DimOptionalParam1,DimOptionalParam2,
+                    GLSetup."Shortcut Dimension 9 Code",
+                    GLSetup.FIELDCAPTION("Shortcut Dimension 9 Code")));
+              '10':
+                EXIT(
+                  DimCodeCaption(
+                    Language,DimOptionalParam1,DimOptionalParam2,
+                    GLSetup."Shortcut Dimension 10 Code",
+                    GLSetup.FIELDCAPTION("Shortcut Dimension 10 Code")));
+      //
             END;
           '3':  // Filter Caption - Global Dimension using No. as Reference
             CASE DimCaptionRef OF
@@ -261,6 +276,20 @@ OBJECT Codeunit 42 CaptionManagement
                     Language,DimOptionalParam1,DimOptionalParam2,
                     GLSetup."Shortcut Dimension 8 Code",
                     GLSetup.FIELDCAPTION("Shortcut Dimension 8 Code")));
+      //Modif JX-VSC4.0-PBD du 26/01/15
+              '9':
+                EXIT(
+                  DimFilterCaption(
+                    Language,DimOptionalParam1,DimOptionalParam2,
+                    GLSetup."Shortcut Dimension 9 Code",
+                    GLSetup.FIELDCAPTION("Shortcut Dimension 9 Code")));
+              '10':
+                EXIT(
+                  DimFilterCaption(
+                    Language,DimOptionalParam1,DimOptionalParam2,
+                    GLSetup."Shortcut Dimension 10 Code",
+                    GLSetup.FIELDCAPTION("Shortcut Dimension 10 Code")));
+      //
             END;
           '5':  // Code Caption - using Dimension Code as Reference
             BEGIN
@@ -338,6 +367,10 @@ OBJECT Codeunit 42 CaptionManagement
     END;
 
     BEGIN
+    {
+      //Modif JX-VSC4.0-PBD du 26/01/15
+      Ajout Axes analytique (Shortcut 9 et 10)
+    }
     END.
   }
 }

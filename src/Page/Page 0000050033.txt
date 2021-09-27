@@ -1,0 +1,100 @@
+OBJECT Page 50033 Consultation General Accounts
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/07/15;
+    Time=15:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Consultation General Accounts;
+               FRA=Consultation des comptes g‚n‚raux];
+    SourceTable=Table15;
+    PageType=NavigatePage;
+    OnOpenPage=BEGIN
+                 Choice := 'Choisissez les comptes … imprimer';
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1000000001;  ;ActionContainer;
+                      ActionContainerType=Reports }
+      { 1000000002;1 ;Action    ;
+                      Name=Comptes 401*;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 Grec_GLEntry.RESET;
+                                 Grec_GLEntry.SETFILTER("G/L Account No.",'%1','401*');
+                                 REPORT.RUNMODAL(REPORT::"Consult general accounts",TRUE,FALSE,Grec_GLEntry);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+      { 1000000003;1 ;Action    ;
+                      Name=Comptes 411*;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=NewChartOfAccounts;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 Grec_GLEntry.RESET;
+                                 Grec_GLEntry.SETFILTER("G/L Account No.",'%1','411*');
+                                 REPORT.RUNMODAL(REPORT::"Consult general accounts",TRUE,FALSE,Grec_GLEntry);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+      { 1000000005;1 ;Action    ;
+                      Name=Comptes 408*;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Account;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 Grec_GLEntry.RESET;
+                                 Grec_GLEntry.SETFILTER("G/L Account No.",'%1','408*');
+                                 REPORT.RUNMODAL(REPORT::"Consult general accounts (FNP)",TRUE,FALSE,Grec_GLEntry);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+      { 1000000006;1 ;Action    ;
+                      Name=Comptes 418*;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=BankAccount;
+                      PromotedCategory=Report;
+                      OnAction=BEGIN
+                                 Grec_GLEntry.RESET;
+                                 Grec_GLEntry.SETFILTER("G/L Account No.",'%1','418*');
+                                 REPORT.RUNMODAL(REPORT::"Consult general accounts (FAE)",TRUE,FALSE,Grec_GLEntry);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1000000000;;Container;
+                Name=Edition;
+                ContainerType=ContentArea }
+
+    { 1000000004;1;Field  ;
+                Name=Choisissez les comptes … imprimer;
+                SourceExpr=Choice;
+                Editable=FALSE;
+                ShowCaption=No }
+
+  }
+  CODE
+  {
+    VAR
+      Grec_GLEntry@1000000000 : Record 17;
+      Choice@1000000001 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,265 @@
+OBJECT Codeunit 50005 Contract management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/03/16;
+    Time=16:03:47;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    PROCEDURE CheckQuoteLines@1000000000(Pcode_Quote@1000000000 : Code[20]) Rbool_OK : Boolean;
+    VAR
+      Grec_PurchaseLine@1000000001 : Record 39;
+    BEGIN
+      // Cette fonction v‚rifie si des lignes du devis comportent des unit‚s jours-homme, elle renvoie FAUX si c'est le cas
+      Rbool_OK := TRUE;
+      Grec_PurchaseLine.RESET;
+      Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document Type",'%1',Grec_PurchaseLine."Document Type"::Quote);
+      Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.",'%1',Pcode_Quote);
+      IF Grec_PurchaseLine.COUNT > 0 THEN
+      BEGIN
+        IF Grec_PurchaseLine.FIND('-') THEN
+        REPEAT
+          IF Grec_PurchaseLine."Unit of Measure Code" = 'JOURS' THEN
+            Rbool_OK := FALSE;
+        UNTIL Grec_PurchaseLine.NEXT = 0;
+      END ELSE
+        Rbool_OK := FALSE;
+    END;
+
+    PROCEDURE CheckOrderLines@1000000008(Pcode_Order@1000000000 : Code[20]) Rbool_OK : Boolean;
+    VAR
+      Grec_PurchaseLine@1000000001 : Record 39;
+    BEGIN
+      // Cette fonction v‚rifie si des lignes de la commande comportent des unit‚s jours-homme, elle renvoie FAUX si c'est le cas
+      Rbool_OK := TRUE;
+      Grec_PurchaseLine.RESET;
+      Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document Type",'%1',Grec_PurchaseLine."Document Type"::Order);
+      Grec_PurchaseLine.SETFILTER(Grec_PurchaseLine."Document No.",'%1',Pcode_Order);
+      IF Grec_PurchaseLine.COUNT > 0 THEN
+      BEGIN
+        IF Grec_PurchaseLine.FIND('-') THEN
+        REPEAT
+          IF Grec_PurchaseLine."Unit of Measure Code" = 'JOURS' THEN
+            Rbool_OK := FALSE;
+        UNTIL Grec_PurchaseLine.NEXT = 0;
+      END ELSE
+        Rbool_OK := FALSE;
+    END;
+
+    PROCEDURE CheckContractInQuote@1000000001(Pcode_Quote@1000000000 : Code[20]) Rbool_OK : Boolean;
+    VAR
+      Grec_Contract@1000000001 : Record 50008;
+    BEGIN
+      // Cette fonction VRAI si tous les champs obligatoires ont ‚t‚ saisis
+      Rbool_OK := TRUE;
+      IF Grec_Contract.GET(Pcode_Quote) THEN
+      BEGIN
+        IF (Grec_Contract."Date of entry" = 0D) OR
+           (Grec_Contract."End date" = 0D) OR
+      //     (Grec_Contract."Term of service" = 0) OR
+           (Grec_Contract."Speaking supplier" = '') OR
+           (Grec_Contract."Speaking VSCT" = '') OR
+      //     (Grec_Contract.TJM = 0) OR
+           (Grec_Contract.Description1 = '') OR
+           (Grec_Contract."Nom prestataire" = '') OR
+           (Grec_Contract."Pr‚nom prestataire" = '') THEN
+             Rbool_OK := FALSE;
+      END ELSE
+        Rbool_OK := FALSE;
+    END;
+
+    PROCEDURE RunContractFormInvoice@1000000002(Pcode_Invoice@1000000000 : Code[20]);
+    VAR
+      Lint_NbOrders@1000000001 : Integer;
+      Lcu_LinksBetweenDocuments@1000000002 : Codeunit 50004;
+      Lcode_OrderFilter@1000000003 : Text[1024];
+      Lcode_Order@1000000004 : ARRAY [100] OF Code[20];
+      Lrec_Contract@1000000005 : Record 50008;
+      i@1000000006 : Integer;
+    BEGIN
+      Lint_NbOrders := Lcu_LinksBetweenDocuments.SearchOrdersFAP(Pcode_Invoice,Lcode_Order);
+      Lcode_OrderFilter := '';
+      FOR i := 1 TO Lint_NbOrders DO
+      BEGIN
+        Lcode_OrderFilter += Lcode_Order[i];
+        IF i <> Lint_NbOrders THEN
+          Lcode_OrderFilter += '|';
+      END;
+      IF Lint_NbOrders > 0 THEN
+      BEGIN
+        Lrec_Contract.RESET;
+        Lrec_Contract.SETFILTER(Lrec_Contract."Order No.",Lcode_OrderFilter);
+        IF Lrec_Contract.COUNT > 0 THEN
+          PAGE.RUNMODAL(50019,Lrec_Contract);
+      END;
+    END;
+
+    PROCEDURE RunContractFormPostedInvoice@1000000003(Pcode_Invoice@1000000000 : Code[20]);
+    VAR
+      Lint_NbOrders@1000000001 : Integer;
+      Lcu_LinksBetweenDocuments@1000000002 : Codeunit 50004;
+      Lcode_OrderFilter@1000000003 : Text[1024];
+      Lcode_Order@1000000004 : ARRAY [100] OF Code[20];
+      Lrec_Contract@1000000005 : Record 50008;
+      i@1000000006 : Integer;
+    BEGIN
+      Lint_NbOrders := Lcu_LinksBetweenDocuments.SearchOrdersFA(Pcode_Invoice,Lcode_Order);
+      Lcode_OrderFilter := '';
+      FOR i := 1 TO Lint_NbOrders DO
+      BEGIN
+        Lcode_OrderFilter += Lcode_Order[i];
+        IF i <> Lint_NbOrders THEN
+          Lcode_OrderFilter += '|';
+      END;
+      IF Lint_NbOrders > 0 THEN
+      BEGIN
+        Lrec_Contract.RESET;
+        Lrec_Contract.SETFILTER(Lrec_Contract."Order No.",Lcode_OrderFilter);
+        IF Lrec_Contract.COUNT > 0 THEN
+          PAGE.RUNMODAL(50019,Lrec_Contract);
+      END;
+    END;
+
+    PROCEDURE RunContractFormOrder@1000000005(Pcode_Order@1000000000 : Code[20]);
+    VAR
+      Lrec_Contract@1000000001 : Record 50008;
+      Lrec_PurchLine@1000000002 : Record 39;
+      Lrec_PurchHeader@1000000003 : Record 38;
+    BEGIN
+      IF Lrec_PurchHeader.GET(Lrec_PurchHeader."Document Type"::Order,Pcode_Order) THEN
+        IF Lrec_Contract.GET(Lrec_PurchHeader."Quote No.") THEN
+        BEGIN
+          Lrec_Contract."Date de commande" := Lrec_PurchHeader."Order Date";
+          //IF Lrec_Contract.WRITEPERMISSION THEN  // AJOUT JX-XAD 25/06/2010
+            Lrec_Contract.MODIFY;
+        END;
+      COMMIT;
+
+      Lrec_PurchLine.RESET;
+      Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Document Type",'%1',Lrec_PurchLine."Document Type"::Order);
+      Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Document No.",'%1',Pcode_Order);
+      Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Unit of Measure",'%1','Jours-homm');
+      Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Quantity Invoiced",'>%1',0);
+      IF Lrec_PurchLine.COUNT = 0 THEN
+      BEGIN
+        Lrec_Contract.RESET;
+        Lrec_Contract.SETFILTER(Lrec_Contract."Order No.",Pcode_Order);
+        IF Lrec_Contract.COUNT > 0 THEN
+          PAGE.RUNMODAL(50018,Lrec_Contract);
+      END ELSE BEGIN
+        Lrec_Contract.RESET;
+        Lrec_Contract.SETFILTER(Lrec_Contract."Order No.",Pcode_Order);
+        IF Lrec_Contract.COUNT > 0 THEN
+          PAGE.RUNMODAL(50019,Lrec_Contract);
+      END;
+    END;
+
+    PROCEDURE OpenWord@1000000004(Pcode_Quote@1000000000 : Code[20]);
+    VAR
+      Lrec_Contract@1000000001 : Record 50008;
+      wdApp@1000000002 : Automation "{00020905-0000-0000-C000-000000000046} 8.4:{000209FF-0000-0000-C000-000000000046}:Unknown Automation Server.Unknown Class";
+      wdDoc@1000000003 : Automation "{00020905-0000-0000-C000-000000000046} 8.4:{00020906-0000-0000-C000-000000000046}:Unknown Automation Server.Unknown Class";
+      wdRange@1000000004 : Automation "{00020905-0000-0000-C000-000000000046} 8.4:{0002095E-0000-0000-C000-000000000046}:Unknown Automation Server.Unknown Class";
+      TemplateName@1000000005 : Text[250];
+    BEGIN
+      IF Lrec_Contract.GET(Pcode_Quote) THEN
+      BEGIN
+        CREATE(wdApp,TRUE,TRUE);
+
+        TemplateName := APPLICATIONPATH+'contrat_regie.dot';
+
+        wdDoc := wdApp.Documents.Add(TemplateName);
+        wdApp.ActiveDocument.Fields.Update;
+
+        //ParamŠtres … int‚grer dans le fichier word
+        {
+        wdRange := wdApp.ActiveDocument.Fields.Item(1).Result;
+        wdRange.Text := Lrec_Contract."Order No.";
+        wdRange.Bold := 1;
+        }
+
+        {
+        wdRange := wdApp.ActiveDocument.Fields.Item(2).Result;
+        wdRange.Text := 'Exemple champ 2';
+        wdRange.Bold := 1;
+
+        wdRange := wdApp.ActiveDocument.Fields.Item(3).Result;
+        wdRange.Text := 'Exemple champ 3';
+        wdRange.Bold := 1;
+        }
+
+        wdApp.Visible := TRUE;
+        wdApp.ActiveDocument.Fields.Unlink;
+      END;
+    END;
+
+    PROCEDURE CopyContract@1000000006();
+    BEGIN
+    END;
+
+    PROCEDURE AutoInit@1000000007(Pcode_DocNo@1000000000 : Code[20]);
+    VAR
+      Lrec_Contract@1000000001 : Record 50008;
+      Ldec_TermOfService@1000000002 : Decimal;
+      Lrec_PurchLine@1000000003 : Record 39;
+      Lcode_DocNo@1000000004 : Code[20];
+    BEGIN
+      //Cr‚ation du contrat et mise … jour automatique des champs
+      {IF NOT Lrec_Contract.GET(Pcode_DocNo) THEN    //Modif JX-AUD du 20/02/12 //mise en commentaire
+      BEGIN
+        Lrec_Contract.INIT;
+        Lrec_Contract."Initial quote No" := Pcode_DocNo;
+        Lrec_Contract.User := USERID;
+        Lrec_Contract.INSERT;
+      END;}
+
+      IF Lrec_Contract.GET(Pcode_DocNo) THEN
+      BEGIN
+        Ldec_TermOfService := 0;
+        IF Lrec_Contract."Order No." <> '' THEN
+          Lcode_DocNo := Lrec_Contract."Order No."
+        ELSE
+          Lcode_DocNo := Lrec_Contract."Initial quote No";
+
+        Lrec_PurchLine.RESET;
+        Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Document No.",'%1',Lcode_DocNo);
+        Lrec_PurchLine.SETFILTER(Lrec_PurchLine."Unit of Measure",'%1','Jours-homm');
+        IF Lrec_PurchLine.FIND('-') THEN
+        BEGIN
+          Lrec_Contract.TJM := Lrec_PurchLine."Direct Unit Cost";
+          REPEAT
+            Ldec_TermOfService += Lrec_PurchLine.Quantity;
+          UNTIL Lrec_PurchLine.NEXT = 0;
+          Lrec_Contract."Term of service" := Ldec_TermOfService;
+        END;
+      //IF Lrec_Contract.WRITEPERMISSION THEN    // AJOUT JX-XAD 25/06/2010
+        Lrec_Contract.MODIFY;
+      END;
+    END;
+
+    BEGIN
+    {
+      ------------------------------ V1.2 ---------------------------
+      CREATION JX-XAD 22/02/2010
+      Gestion des contrats
+
+      AJOUT JX-XAD 25/06/2010
+      Permettre la lecture seule pour certains utilisateurs
+
+      //Modif JX-AUD du 20/02/2012
+      //Mise en commentaire d'une partie de la fonction AutoInit()
+    }
+    END.
+  }
+}
+

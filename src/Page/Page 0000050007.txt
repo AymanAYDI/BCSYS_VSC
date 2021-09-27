@@ -1,0 +1,68 @@
+OBJECT Page 50007 Fixed Asset List VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW14.00.03,JX-VSC1.0-LAB,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Editable=Yes;
+    CaptionML=[ENU=Fixed Asset List;
+               FRA=Liste des immobilisations];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table5600;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr="No.";
+                Editable=FALSE }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Description;
+                Editable=FALSE }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Serial No." }
+
+    { 1000000004;2;Field  ;
+                SourceExpr="FA Subclass Code" }
+
+    { 23  ;2   ;Field     ;
+                SourceExpr="Vendor No.";
+                Editable=FALSE }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Search Description";
+                Editable=FALSE }
+
+    { 1000000002;2;Field  ;
+                SourceExpr="FA Location Code" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      //CREATION LAB du 07/11/08
+      //Nouveau formulaire pour ligne achat
+
+      //JX-AUD du 30/05/2013
+      //Ajour du code Sous-classe Immo
+    }
+    END.
+  }
+}
+

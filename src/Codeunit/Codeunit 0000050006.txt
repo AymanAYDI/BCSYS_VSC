@@ -1,0 +1,126 @@
+OBJECT Codeunit 50006 CheckJnlLine
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-VSC1.2-XAD,JX-VSC2.0-XAD;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text001@1000000000 : TextConst 'ENU=Error on line %1 document %2 !\\Vendor No. is required for account No. 409;FRA=Erreur Ligne %1 document %2 !\\Le nø Fournisseur est obligatoire pour les comptes 409, 408';
+      Text002@1000000001 : TextConst 'ENU=Error on line %1 document %2 !\\Customer No. is required for accounts 416, 418, 419;FRA=Erreur Ligne %1 document %2 !\\Le nø Client est obligatoire pour les comptes 416, 418 et 419';
+
+    PROCEDURE ValidateLines@1000000000(Pcode_JnlTemplateName@1000000000 : Code[20];Pcode_JnlBatchName@1000000001 : Code[20]);
+    VAR
+      Lrec_GenJnlLine@1000000003 : Record 81;
+      Ldate_PostingDate@1000000002 : Date;
+      Lopt_AccountType@1000000004 : 'G/L Account,Customer,Vendor,Bank Account,Fixed Asset,IC Partner';
+      Lcode_AccountNo@1000000007 : Code[20];
+      Ldec_CreditAmount@1000000005 : Decimal;
+      Ldec_DebitAmount@1000000006 : Decimal;
+      Lcode_Code@1000000009 : ARRAY [10] OF Code[20];
+      Lcode_ValueCode@1000000010 : ARRAY [10] OF Code[20];
+      i@1000000011 : Integer;
+      Lint_Counter@1000000012 : Integer;
+      Lrec_DimSetEntry@1000000016 : Record 480;
+    BEGIN
+      //Validation des lignes de la feuille compta concernant le cash pooling
+      Lrec_GenJnlLine.RESET;
+      Lrec_GenJnlLine.SETFILTER(Lrec_GenJnlLine."Journal Template Name",'%1',Pcode_JnlTemplateName);
+      Lrec_GenJnlLine.SETFILTER(Lrec_GenJnlLine."Journal Batch Name",'%1',Pcode_JnlBatchName);
+
+      IF Lrec_GenJnlLine.FIND('-') THEN
+      REPEAT
+
+        //DEBUT MODIF JX-XAD 02/03/2011
+        Lrec_DimSetEntry.RESET;
+        Lrec_DimSetEntry.SETRANGE("Dimension Set ID",Lrec_GenJnlLine."Dimension Set ID");
+        Lint_Counter := 0;
+        IF Lrec_DimSetEntry.FINDFIRST THEN
+        REPEAT
+          Lint_Counter += 1;
+          Lcode_Code[Lint_Counter] := Lrec_DimSetEntry."Dimension Code";
+          Lcode_ValueCode[Lint_Counter] := Lrec_DimSetEntry."Dimension Value Code";
+        UNTIL Lrec_DimSetEntry.NEXT = 0;
+        //FIN MODIF JX-XAD 02/03/2011
+
+        Ldate_PostingDate := Lrec_GenJnlLine."Posting Date";
+        Lopt_AccountType := Lrec_GenJnlLine."Account Type";
+        Lcode_AccountNo := Lrec_GenJnlLine."Account No.";
+        Ldec_DebitAmount := Lrec_GenJnlLine."Debit Amount";
+        Ldec_CreditAmount := Lrec_GenJnlLine."Credit Amount";
+        Lrec_GenJnlLine.VALIDATE(Lrec_GenJnlLine."Posting Date",Ldate_PostingDate);
+        Lrec_GenJnlLine.VALIDATE(Lrec_GenJnlLine."Account Type",Lopt_AccountType);
+        Lrec_GenJnlLine.VALIDATE(Lrec_GenJnlLine."Account No.",Lcode_AccountNo);
+        IF Ldec_DebitAmount <> 0 THEN
+          Lrec_GenJnlLine.VALIDATE(Lrec_GenJnlLine."Debit Amount",Ldec_DebitAmount);
+        IF Ldec_CreditAmount <> 0 THEN
+          Lrec_GenJnlLine.VALIDATE(Lrec_GenJnlLine."Credit Amount",Ldec_CreditAmount);
+
+        Lrec_GenJnlLine.MODIFY;
+
+      UNTIL Lrec_GenJnlLine.NEXT = 0;
+
+      COMMIT;
+    END;
+
+    PROCEDURE CheckGenJnlLines@1000000002(Pcode_JnlTemplateName@1000000000 : Code[20];Pcode_JnlBatchName@1000000001 : Code[20]);
+    VAR
+      Lrec_GenJnlLine@1000000003 : Record 81;
+      Ldate_PostingDate@1000000002 : Date;
+      Lopt_AccountType@1000000004 : 'G/L Account,Customer,Vendor,Bank Account,Fixed Asset,IC Partner';
+      Lcode_AccountNo@1000000007 : Code[20];
+      Ldec_CreditAmount@1000000005 : Decimal;
+      Ldec_DebitAmount@1000000006 : Decimal;
+    BEGIN
+
+      //V‚rification de la feuille de compta : les nø fourn doivent ˆtre renseign‚s pour les comptes 409, 408 et
+      //les nø clien aussi pour les comptes 406, 418 et 419
+      Lrec_GenJnlLine.RESET;
+      Lrec_GenJnlLine.SETFILTER(Lrec_GenJnlLine."Journal Template Name",'%1',Pcode_JnlTemplateName);
+      Lrec_GenJnlLine.SETFILTER(Lrec_GenJnlLine."Journal Batch Name",'%1',Pcode_JnlBatchName);
+
+      IF Lrec_GenJnlLine.FIND('-') THEN
+      REPEAT
+
+        IF Lrec_GenJnlLine."Account Type" = Lrec_GenJnlLine."Account Type"::"G/L Account" THEN
+        BEGIN
+          IF (COPYSTR(Lrec_GenJnlLine."Account No.",1,3) = '409') OR
+             (COPYSTR(Lrec_GenJnlLine."Account No.",1,3) = '408') THEN//MODIF JX-AUD 07/09/2012
+            IF Lrec_GenJnlLine."Vendor No." = '' THEN
+              ERROR(Text001,Lrec_GenJnlLine."Line No.",Lrec_GenJnlLine."Document No.");
+          IF (COPYSTR(Lrec_GenJnlLine."Account No.",1,3) = '416') OR
+             (COPYSTR(Lrec_GenJnlLine."Account No.",1,3) = '418') OR
+             (COPYSTR(Lrec_GenJnlLine."Account No.",1,3) = '419') THEN
+            IF Lrec_GenJnlLine."Customer No." = '' THEN
+              ERROR(Text002,Lrec_GenJnlLine."Line No.",Lrec_GenJnlLine."Document No.");
+        END;
+
+      UNTIL Lrec_GenJnlLine.NEXT = 0;
+    END;
+
+    BEGIN
+    {
+      CREATION JX-XAD 07/10/2010
+      Codeunit contenant des fonctions de test et de validation de feuille de saisie (ex : Cash Pooling)
+
+      MODIF JX-XAD 02/03/2011
+      Coorection concernant le traitement des axes analytiques afin que les valeurs des axes dans la fuille de compta
+      ne soient pas supprim‚es lors des instructions VALIDATE.
+
+      MODIF JX-AUD 07/09/2012
+      Ajour de la v‚rification des compte 408*
+    }
+    END.
+  }
+}
+

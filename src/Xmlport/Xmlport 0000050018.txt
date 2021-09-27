@@ -1,0 +1,495 @@
+OBJECT XMLport 50018 Import OD Paye
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/12/16;
+    Time=14:37:54;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    OnInitXMLport=BEGIN
+                    Gint_Compteur := 0;
+                    Gint_LineNo :=0;
+                    Grec_CompanyInfo.GET;
+                  END;
+
+    OnPreXMLport=BEGIN
+                   Grec_Company.RESET;
+                   Grec_FeuilleODPaie.SETRANGE("Journal Template Name",Grec_FeuilleODPaie."Journal Template Name");
+                   Grec_FeuilleODPaie.SETRANGE("Journal Batch Name",Grec_FeuilleODPaie."Journal Batch Name");
+                   Gcode_ODPaie := Grec_FeuilleODPaie."Document No.";
+                   //Gcode_JournalTemplateName := 'GêNêRAL';
+                   //Gcode_JournalBatchName := 'ODPAIE';
+                   Gcode_JournalTemplateName := Grec_FeuilleODPaie."Journal Template Name";
+                   Gcode_JournalBatchName := Grec_FeuilleODPaie."Journal Batch Name";
+
+                   //rÇcupÇration des codes axe analytique
+                   IF Grecord_GeneralLedgerSetup.FIND('-') THEN BEGIN
+                       Gcode_Axe[1] := Grecord_GeneralLedgerSetup."Shortcut Dimension 3 Code";
+                       Gcode_Axe[2] := Grecord_GeneralLedgerSetup."Shortcut Dimension 4 Code";
+                       Gcode_Axe[3] := Grecord_GeneralLedgerSetup."Shortcut Dimension 5 Code";
+                       Gcode_Axe[4] := Grecord_GeneralLedgerSetup."Shortcut Dimension 6 Code";
+                       Gcode_Axe[5] := Grecord_GeneralLedgerSetup."Shortcut Dimension 7 Code";
+                       Gcode_Axe[6] := Grecord_GeneralLedgerSetup."Shortcut Dimension 8 Code";
+                       Gcode_Axe[7] := Grecord_GeneralLedgerSetup."Shortcut Dimension 9 Code";
+                       Gcode_Axe[8] := Grecord_GeneralLedgerSetup."Shortcut Dimension 10 Code";
+                   END;
+
+                   {IF Grec_GenJnlBatch.GET(Grec_FeuilleODPaie."Journal Template Name",Grec_FeuilleODPaie."Journal Batch Name") THEN
+                     IF Grec_GenJnlBatch."No. Series" <> 'ODPAIE' THEN
+                       ERROR(Text001);}
+
+                   IF (Grec_FeuilleODPaie.COUNT > 0) THEN
+                       ERROR(Text002);
+                 END;
+
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    UseRequestPage=No;
+    FileName=*.csv;
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;ODPaye              ;Element ;Table   ;
+                                                  SourceTable=Table2000000026;
+                                                  AutoSave=No;
+                                                  AutoUpdate=No;
+                                                  AutoReplace=No;
+                                                  Import::OnBeforeInsertRecord=BEGIN
+                                                                                 Gint_Compteur += 1;//pour passer l'en tàte du fichier
+                                                                                 IF Gint_Compteur > 1 THEN BEGIN
+
+                                                                                  //incrÇmentation du numÇro de ligne
+                                                                                  Gint_LineNo := Gint_LineNo + 10000;
+
+                                                                                  //initialisation de la ligne
+                                                                                  Grec_FeuilleODPaie.INIT;
+                                                                                  Grec_FeuilleODPaie."Journal Template Name" := Gcode_JournalTemplateName;
+                                                                                  Grec_FeuilleODPaie."Journal Batch Name" := Gcode_JournalBatchName;
+                                                                                  Grec_FeuilleODPaie."Source Code" := 'COMPTA';
+                                                                                  Grec_FeuilleODPaie."Line No." := Gint_LineNo;
+                                                                                  Grec_FeuilleODPaie."Document No." :=Gcode_ODPaie;
+                                                                                  Grec_FeuilleODPaie.VALIDATE("Document No.",Gcode_ODPaie);
+
+                                                                                 //champ 1: date
+                                                                                  IF EVALUATE(Gdate_PostingDate,Gtext_Champ1)THEN
+                                                                                   Grec_FeuilleODPaie.VALIDATE("Posting Date",Gdate_PostingDate);
+
+                                                                                 //champ 5: type document
+                                                                                     //*******Grec_FeuilleODPaie."Document Type" := Grec_FeuilleODPaie."Document Type"::Gtext_Champ5;*****//
+                                                                                  IF (Gtext_Champ5 <> '') AND (Gtext_Champ5 <> ' ') THEN
+                                                                                   CASE LOWERCASE(Gcu_Converter.Ansi2Ascii(Gtext_Champ5)) OF
+                                                                                    'paiement':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::Payment);
+                                                                                       END;
+                                                                                    'facture':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::Invoice);
+                                                                                       END;
+                                                                                    'avoir':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::"Credit Memo");
+                                                                                       END;
+                                                                                    'intÇràts':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::"Finance Charge Memo");
+                                                                                       END;
+                                                                                    'relance':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::Reminder);
+                                                                                       END;
+                                                                                    'remboursement':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Document Type",Grec_FeuilleODPaie."Document Type"::Refund);
+                                                                                       END;
+                                                                                     ELSE
+                                                                                          ERROR('Le Type Document %1 n''existe pas, erreur sur la ligne %2 ',Gcu_Converter.Ansi2Ascii(Gtext_Champ5),Gint_Compteur);
+                                                                                   END;
+
+
+                                                                                 //champ 10: n¯compte
+                                                                                  IF EVALUATE(Gcode_AccountNo,Gtext_Champ10) THEN
+
+                                                                                   //champ 6: type compte et champ 10: n¯compte
+                                                                                   CASE LOWERCASE(Gcu_Converter.Ansi2Ascii(Gtext_Champ6)) OF
+                                                                                     'gÇnÇral':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::"G/L Account";
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::"G/L Account");
+                                                                                           IF Grec_Account.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' GÇnÇral ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                     'client':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::Customer;
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::Customer);
+                                                                                           IF Grec_Customer.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' Client ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                     'fournisseur':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::Vendor;
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::Vendor);
+                                                                                           IF Grec_Fournisseur.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' Fournisseur ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                     'banque':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::"Bank Account";
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::"Bank Account");
+                                                                                           IF Grec_Banque.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' Banque ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                     'immobilisation':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::"Fixed Asset";
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::"Fixed Asset");
+                                                                                           IF Grec_Immo.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' Immobilisation ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                     'partenaire ic':
+                                                                                         BEGIN
+                                                                                         //Grec_FeuilleODPaie."Account Type" := Grec_FeuilleODPaie."Account Type"::"IC Partner";
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Account Type",Grec_FeuilleODPaie."Account Type"::"IC Partner");
+                                                                                           IF Grec_PartenaireIC.GET(Gcode_AccountNo) THEN BEGIN
+                                                                                             Grec_FeuilleODPaie.VALIDATE("Account No.",Gcode_AccountNo);
+                                                                                           END ELSE BEGIN
+                                                                                             ERROR(Text003 + ' Partenaire IC ' + Text004,Gcode_AccountNo,Gint_Compteur);
+                                                                                           END;
+                                                                                         END;
+                                                                                      ELSE
+                                                                                         BEGIN
+                                                                                             ERROR(Text005 ,Gcu_Converter.Ansi2Ascii(Gtext_Champ6),Gint_Compteur);
+                                                                                         END;
+                                                                                   END;
+
+
+                                                                                 //champ 7: n¯client
+                                                                                  IF Gtext_Champ7 <> '' THEN
+                                                                                   IF Grec_Customer.GET(Gtext_Champ7)   THEN BEGIN
+                                                                                    Grec_FeuilleODPaie.VALIDATE("Customer No.",Gtext_Champ7);
+                                                                                   END ELSE BEGIN
+                                                                                    ERROR('Le compte client n¯ %1 n''existe pas, erreur ligne n¯ %2 du fichier',Gtext_Champ7,Gint_Compteur);
+                                                                                   END;
+
+                                                                                 //champ 8: n¯fournisseur
+                                                                                  IF Gtext_Champ8 <> '' THEN
+                                                                                   IF Grec_Fournisseur.GET(Gtext_Champ8) THEN BEGIN
+                                                                                    Grec_FeuilleODPaie.VALIDATE("Vendor No.",Gtext_Champ8);
+                                                                                   END ELSE BEGIN
+                                                                                    ERROR('Le compte fournisseur n¯ %1 n''existe pas, erreur ligne n¯ %2 du fichier',Gtext_Champ8,Gint_Compteur);
+                                                                                   END;
+
+                                                                                 //champ 9: journal
+
+                                                                                 //champ 17: libÇllÇ
+                                                                                  Grec_FeuilleODPaie.VALIDATE(Description,Gcu_Converter.Ansi2Ascii(Gtext_Champ17));
+
+                                                                                 //MODIF JX-AUD 06/04/2011
+
+                                                                                 //champ 18: sens et champ 19: montant
+                                                                                  // IF EVALUATE(varDecimal, Gtext_Champ19) AND (Gtext_Champ18 = 'C')THEN BEGIN
+                                                                                    //  Gdec_CreditAmount := varDecimal;
+                                                                                   //   Grec_FeuilleODPaie.VALIDATE("Credit Amount",Gdec_CreditAmount);
+                                                                                  // END;
+
+                                                                                  // IF EVALUATE(varDecimal, Gtext_Champ19) AND (Gtext_Champ18 = 'D')THEN BEGIN
+                                                                                  //    Gdec_DebitAmount := varDecimal;
+                                                                                  //    Grec_FeuilleODPaie.VALIDATE("Debit Amount",Gdec_DebitAmount);
+                                                                                  // END;
+
+                                                                                 // JX-ABE-13/12/2016-Ajout : External Document No
+                                                                                 //champ 22: External Document No
+                                                                                 IF EVALUATE(Gcode_ExternalDocumentNo,Gtext_Champ22) THEN
+                                                                                 Grec_FeuilleODPaie.VALIDATE("External Document No.",Gcode_ExternalDocumentNo);
+                                                                                 // JX-ABE-13/12/2016-Fin Ajout
+
+                                                                                 //champ 19: Credit
+                                                                                  IF Gtext_Champ19<>'' THEN BEGIN
+                                                                                   IF EVALUATE(varDecimal, Gtext_Champ19) THEN BEGIN
+                                                                                      Gdec_CreditAmount := varDecimal;
+                                                                                      Grec_FeuilleODPaie.VALIDATE(Grec_FeuilleODPaie."Credit Amount",Gdec_CreditAmount);
+                                                                                   END;
+                                                                                  END;
+
+                                                                                 // champ 18: Debit
+                                                                                  IF Gtext_Champ18<>'' THEN BEGIN
+                                                                                   IF EVALUATE(varDecimal1, Gtext_Champ18)THEN BEGIN
+                                                                                      Gdec_DebitAmount := varDecimal1;
+                                                                                      Grec_FeuilleODPaie.VALIDATE(Grec_FeuilleODPaie."Debit Amount",Gdec_DebitAmount);
+                                                                                   END;
+                                                                                  END;
+                                                                                 //FINMODIF JX-AUD 06/04/2011
+
+                                                                                 //champ 2: type compta.TVA
+                                                                                   //*******Grec_FeuilleODPaie."Gen. Posting Type" := Grec_FeuilleODPaie."Gen. Posting Type"::Gtext_Champ2;****//
+                                                                                  IF Gtext_Champ2 <> '' THEN
+                                                                                   CASE LOWERCASE(Gcu_Converter.Ansi2Ascii(Gtext_Champ2)) OF
+                                                                                    'achat':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Gen. Posting Type",Grec_FeuilleODPaie."Gen. Posting Type"::Purchase);
+                                                                                       END;
+                                                                                    'vente':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Gen. Posting Type",Grec_FeuilleODPaie."Gen. Posting Type"::Sale);
+                                                                                       END;
+                                                                                    'räglement':
+                                                                                       BEGIN
+                                                                                         Grec_FeuilleODPaie.VALIDATE("Gen. Posting Type",Grec_FeuilleODPaie."Gen. Posting Type"::Settlement);
+                                                                                       END;
+                                                                                     ELSE
+                                                                                         ERROR('Le Type Document %1 n''existe pas, erreur sur la ligne %2 ',Gcu_Converter.Ansi2Ascii(Gtext_Champ5),Gint_Compteur);
+                                                                                   END;
+
+
+                                                                                 //champ 3: groupe compta. marchÇ
+                                                                                   //**********Grec_FeuilleODPaie.VALIDATE("Gen. Bus. Posting Group",Gcu_Converter.Ansi2Ascii(Gtext_Champ3));******//
+                                                                                  Gtext_ComptaM := Gcu_Converter.Ansi2Ascii(Gtext_Champ3);
+                                                                                  IF Gtext_ComptaM <> '' THEN
+                                                                                   IF Grec_GComptaMarche.GET(Gtext_ComptaM) THEN BEGIN
+                                                                                     Grec_FeuilleODPaie.VALIDATE("Gen. Bus. Posting Group",Gtext_ComptaM);
+                                                                                   END ELSE BEGIN
+                                                                                     ERROR('Le Groupe compta. marchÇ n¯ %1 n''existe pas, erreur ligne n¯ %2 du fichier',Gtext_ComptaM,Gint_Compteur);
+                                                                                   END;
+
+
+                                                                                 //champ 4: groupe compta. produit
+                                                                                   //***********Grec_FeuilleODPaie.VALIDATE("Gen. Prod. Posting Group",Gcu_Converter.Ansi2Ascii(Gtext_Champ4));*****//
+                                                                                  Gtext_ComptaP := Gcu_Converter.Ansi2Ascii(Gtext_Champ4);
+                                                                                  IF Gtext_ComptaP <> '' THEN
+                                                                                   IF Grec_GComptaProduit.GET(Gtext_ComptaP) THEN BEGIN
+                                                                                     Grec_FeuilleODPaie.VALIDATE("Gen. Prod. Posting Group",Gtext_ComptaP);
+                                                                                   END ELSE BEGIN
+                                                                                     ERROR('Le Groupe compta. produit n¯ %1 n''existe pas, erreur ligne n¯ %2 du fichier',Gtext_ComptaP,Gint_Compteur);
+                                                                                   END;
+
+                                                                                 //insertion ligne
+                                                                                  Grec_FeuilleODPaie.INSERT;
+
+                                                                                 //appel fonction insÇrÇr analytique
+                                                                                  InsÇrerAnalytique();
+
+                                                                                 END;
+
+                                                                                 currXMLport.SKIP;
+                                                                               END;
+                                                                                }
+
+    { [{18A2A756-F084-4EBF-8689-60C1DC266417}];2 ;Gtext_Champ1        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ1 }
+
+    { [{8A165EA3-3DB4-4384-80C2-4455C4A92525}];2 ;Gtext_Champ2        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ2 }
+
+    { [{32051069-43DB-4B34-B734-A678408CD4C3}];2 ;Gtext_Champ3        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ3 }
+
+    { [{F93B0593-EC87-4B15-A86C-D69D61186955}];2 ;Gtext_Champ4        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ4 }
+
+    { [{51924B73-51B2-4917-B44E-FF680DE0393B}];2 ;Gtext_Champ5        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ5 }
+
+    { [{3BBB4ABD-3D5F-4094-A18A-6291E6F698A1}];2 ;Gtext_Champ6        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ6 }
+
+    { [{58D7B173-036C-4B0E-8D4C-D28472B1B349}];2 ;Gtext_Champ7        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ7 }
+
+    { [{1B1EFEFA-CD0C-4803-8C7E-ECB022243A2E}];2 ;Gtext_Champ8        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ8 }
+
+    { [{E7F11536-25A9-4369-90FA-FE33E50491C2}];2 ;Gtext_Champ9        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ9 }
+
+    { [{C387EFAA-E991-4730-BD05-6C463FE23B18}];2 ;Gtext_Champ10       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ10 }
+
+    { [{264FD376-92A9-4FD2-A9BD-0CE1C040B136}];2 ;Gtext_Champ11       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ11 }
+
+    { [{73AA8F70-9393-486A-B585-22772414AE09}];2 ;Gtext_Champ12       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ12 }
+
+    { [{577AC519-1532-4128-BBE6-7F4BB465A3D5}];2 ;Gtext_Champ13       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ13 }
+
+    { [{AC6AECEA-4B9C-42F1-9411-9A76F694A98E}];2 ;Gtext_Champ14       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ14 }
+
+    { [{4E91D87C-9340-4813-A1E4-28D35DBBD7D0}];2 ;Gtext_Champ15       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ15 }
+
+    { [{C2542A8B-DE50-4B80-8CA8-C772405B461F}];2 ;Gtext_Champ16       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ16 }
+
+    { [{8BA896AC-0764-4DB2-88F8-535AE95663C5}];2 ;Gtext_Champ17       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ17 }
+
+    { [{60ECBAE3-D946-472A-990A-DD9C568E68AA}];2 ;Gtext_Champ18       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ18 }
+
+    { [{39DC5AE7-CDFB-428B-9C49-A8935EAB7857}];2 ;Gtext_Champ19       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ19 }
+
+    { [{DD7B7FA3-FD88-44F6-AB1A-55EC4EFB1C5C}];2 ;Gtext_Champ20       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ20 }
+
+    { [{C7A40CD3-B207-458F-94A8-F90F14906527}];2 ;Gtext_Champ21       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ21 }
+
+    { [{E439741A-2C88-43A2-9E30-CB14D16F439C}];2 ;Gtext_Champ22       ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ22 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      i@1000000037 : Integer;
+      Grec_FeuilleODPaie@1000000036 : Record 81;
+      Gint_Compteur@1000000035 : Integer;
+      Gint_Year@1000000034 : Integer;
+      Gint_Month@1000000033 : Integer;
+      Gint_Day@1000000032 : Integer;
+      varInteger@1000000031 : Integer;
+      varDecimal1@1000000030 : Decimal;
+      varDecimal@1000000029 : Decimal;
+      Gdate_PostingDate@1000000028 : Date;
+      Gdec_DebitAmount@1000000027 : Decimal;
+      Gdec_CreditAmount@1000000026 : Decimal;
+      Gcode_AccountNo@1000000025 : Code[20];
+      Gcode_CashPooling@1000000024 : Code[10];
+      Gcode_CodeJournal@1000000023 : Code[10];
+      Gcode_ExternalDocumentNo@1000000045 : Code[35];
+      Grec_GenJnlBatch@1000000022 : Record 232;
+      Grec_CompanyInfo@1000000021 : Record 79;
+      Grec_Company@1000000020 : Record 2000000006;
+      Gcode_JournalBatchName@1000000019 : Code[20];
+      Gcode_JournalTemplateName@1000000018 : Code[20];
+      Gcode_ODPaie@1000000017 : Code[14];
+      Grec_Dimension@1000000015 : Record 348;
+      Grec_DimValue@1000000038 : Record 349;
+      Gint_LineNo@1000000014 : Integer;
+      Gcode_Axe@1000000013 : ARRAY [8] OF Code[20];
+      Grecord_GeneralLedgerSetup@1000000012 : Record 98;
+      Grec_Account@1000000011 : Record 15;
+      Gcu_Converter@1000000010 : Codeunit 50002;
+      Gtext_TypeCompte@1000000009 : Text[20];
+      Grec_Customer@1000000008 : Record 18;
+      Grec_Fournisseur@1000000007 : Record 23;
+      Grec_Banque@1000000006 : Record 270;
+      Grec_Immo@1000000005 : Record 5600;
+      Grec_PartenaireIC@1000000004 : Record 413;
+      Grec_GComptaMarche@1000000003 : Record 250;
+      Grec_GComptaProduit@1000000002 : Record 251;
+      Gtext_ComptaM@1000000001 : Text[30];
+      Gtext_ComptaP@1000000000 : Text[30];
+      Text002@1000000044 : TextConst 'ENU=This sheet is not empty. Please open a new sheet;FRA=Cette feuille n''est pas vide. Veuillez ouvrir une nouvelle feuille';
+      Text001@1000000043 : TextConst 'ENU=This fonction is not destinated for the current sheet;FRA=Cette fonction n''est pas destinÇe pour la feuille en cours';
+      Text003@1000000042 : TextConst 'FRA="Le compte N¯ %1 n'' existe pas pour le Type Compte : "';
+      Text004@1000000041 : TextConst 'FRA=Ö la ligne  n¯ %2 du fichier';
+      Text005@1000000040 : TextConst 'FRA=Le Type Compte %1 n'' existe pas, erreur sur la ligne n¯ %2';
+      Text006@1000000039 : TextConst 'FRA=Attention ! une autre valeur existe dÇjÖ pour code axe %1 ligne %2';
+      Grec_DimSetEntry@1000000016 : Record 480;
+
+    PROCEDURE SetODPaieJnlLine@1000000000(FeuilleODPaie@1000000000 : Record 81);
+    BEGIN
+      Grec_FeuilleODPaie := FeuilleODPaie;
+    END;
+
+    PROCEDURE "InsÇrerAnalytique"@1000000001();
+    VAR
+      ValeurChamps@1000000000 : Text;
+      Lcu_Dimension@1000000003 : Codeunit 408;
+      LCode_DimCode@1000000002 : ARRAY [50] OF Code[20];
+      LCode_DimValueCode@1000000001 : ARRAY [50] OF Code[20];
+      j@1000000004 : Integer;
+    BEGIN
+      CLEAR(LCode_DimCode);
+      CLEAR(LCode_DimValueCode);
+      j := 0;
+
+      FOR i:= 1 TO 8 DO BEGIN
+        CASE i OF
+         1: ValeurChamps := Gtext_Champ11;
+         2: ValeurChamps := Gtext_Champ12;
+         3: ValeurChamps := Gtext_Champ13;
+         4: ValeurChamps := Gtext_Champ14;
+         5: ValeurChamps := Gtext_Champ15;
+         6: ValeurChamps := Gtext_Champ16;
+         7: ValeurChamps := Gtext_Champ20;
+         8: ValeurChamps := Gtext_Champ21;
+        END;
+        IF (Grec_Dimension.GET(Gcode_Axe[i])) AND (ValeurChamps <> '') THEN BEGIN
+          IF Grec_Dimension.Code = 'PERIODE' THEN
+            IF STRLEN(ValeurChamps) = 3 THEN
+              ValeurChamps := '0' + ValeurChamps
+            ELSE IF STRLEN(ValeurChamps) = 2 THEN
+              ValeurChamps := '00' + ValeurChamps
+            ELSE IF STRLEN(ValeurChamps) = 1 THEN
+              ValeurChamps := '000' + ValeurChamps;
+           IF NOT Grec_DimValue.GET(Grec_Dimension.Code,ValeurChamps) THEN
+            ERROR('Section analytique %1 inconnue pour l''axe %2',ValeurChamps,Grec_Dimension.Code);
+           j += 1;
+           LCode_DimCode[j] := Grec_Dimension.Code;
+           LCode_DimValueCode[j] := ValeurChamps;
+           Grec_FeuilleODPaie."Dimension Set ID" := Lcu_Dimension.SetNewDimIDSpec(Grec_FeuilleODPaie."Dimension Set ID",Grec_FeuilleODPaie."Shortcut Dimension 1 Code",
+                                    Grec_FeuilleODPaie."Shortcut Dimension 2 Code",LCode_DimCode,LCode_DimValueCode);
+           Grec_FeuilleODPaie.MODIFY;
+
+        END;
+      END;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD 18/10/2010
+      //Import OD Paie
+
+      MODIF JX-XAD 04/04/2011
+      Les codes axes analytiques dÇfinis dans le fichier csv sont prioritaires et les axes prÇdÇfinis dans
+      les comptes fournisseurs (ou autres) sont ÇcrasÇs dans la feuille de compta.
+
+      MODIF JX-AUD 06/04/2011
+      Modification du code pour les colonnes Debit et crÇdit on ne prend plus en compte le sens
+
+      // JX-ABE-13/12/2016-Ajout : External Document No
+    }
+    END.
+  }
+}
+

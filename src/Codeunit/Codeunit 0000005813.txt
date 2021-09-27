@@ -2,8 +2,9 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
 {
   OBJECT-PROPERTIES
   {
-    Date=31/10/14;
-    Time=12:00:00;
+    Date=17/11/15;
+    Time=09:00:00;
+    Modified=Yes;
     Version List=NAVW18.00.00.38457;
   }
   PROPERTIES
@@ -14,7 +15,10 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
                 TableData 359=imd,
                 TableData 6507=ri,
                 TableData 6509=rimd;
-    OnRun=BEGIN
+    OnRun=VAR
+            PurchOrder@1000000000 : Record 38;
+            PurchRelease@1000000001 : Codeunit 415;
+          BEGIN
             SETRANGE(Type,Type::Item);
             IF NOT FIND('-') THEN
               ERROR(Text005);
@@ -26,6 +30,14 @@ OBJECT Codeunit 5813 Undo Purchase Receipt Line
             PurchRcptLine.COPY(Rec);
             Code;
             Rec := PurchRcptLine;
+
+            // Migration Nav 2015 - Gestion du statut r‚ception
+            IF PurchRcptLine."Order No." <> '' THEN
+             IF PurchOrder.GET(PurchOrder."Document Type"::Order,PurchRcptLine."Order No.") THEN BEGIN
+              PurchRelease.Reopen(PurchOrder);
+              PurchRelease.RUN(PurchOrder);
+             END;
+            //
           END;
 
   }

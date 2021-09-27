@@ -1,0 +1,954 @@
+OBJECT Page 50054 New Mail FAP
+{
+  OBJECT-PROPERTIES
+  {
+    Date=22/11/16;
+    Time=16:30:37;
+    Modified=Yes;
+    Version List=JX-VSC4.0-PBD;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table38;
+    PageType=NavigatePage;
+    OnOpenPage=BEGIN
+                 VSCSettings.GET;
+                 PurchSetup.GET;
+                 CASE Gint_Param4 OF
+                  1: CorpsMail1;
+                  2: BEGIN
+                      CorpsMail2;
+                      SendMail;
+                      CurrPage.CLOSE;
+                     END;
+                  3: CorpsMail3;
+                  4: CorpsMail4;
+                  5: CorpsMail5;
+                  6: CorpsMail6;
+                  7: CorpsMail7;
+                  8: BEGIN
+                      CorpsMail8;
+                      SendMail;
+                      CurrPage.CLOSE;
+                     END;
+                  9: CorpsMail9;
+                 END;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1000000005;  ;ActionContainer;
+                      ActionContainerType=NewDocumentItems }
+      { 1000000006;1 ;ActionGroup;
+                      Name=Mail }
+      { 1000000007;2 ;Action    ;
+                      Name=Pr‚visualisation et Envoi Mail;
+                      CaptionML=FRA=Mail;
+                      Promoted=Yes;
+                      InFooterBar=Yes;
+                      PromotedIsBig=Yes;
+                      Image=SendApprovalRequest;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SendMail;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1000000000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Group  ;
+                Name=Information … saisir;
+                GroupType=Group }
+
+    { 1000000002;2;Field  ;
+                Name=ParamŠtre 1;
+                SourceExpr=Gtext_Param1 }
+
+    { 1000000004;2;Field  ;
+                Name=ParamŠtre 2;
+                SourceExpr=Gtext_Param2 }
+
+    { 1000000003;2;Field  ;
+                Name=ParamŠtre 3;
+                SourceExpr=Gtext_Param3 }
+
+    { 1000000008;2;Field  ;
+                Name=Montant 1;
+                SourceExpr=Amount1;
+                Visible=bvisible;
+                OnValidate=BEGIN
+                             CalcAmount;
+                           END;
+                            }
+
+    { 1000000009;2;Field  ;
+                Name=Montant 2;
+                SourceExpr=Amount2;
+                Visible=bvisible;
+                OnValidate=BEGIN
+                             CalcAmount;
+                           END;
+                            }
+
+    { 1000000010;2;Field  ;
+                Name=Diff‚rence;
+                SourceExpr=Amount3;
+                Visible=bvisible;
+                Editable=FALSE }
+
+    { 1000000011;2;Field  ;
+                Name=Nombre1;
+                SourceExpr=Nombre1;
+                Visible=bvisibleint;
+                OnValidate=BEGIN
+                             CalcAmount;
+                           END;
+                            }
+
+    { 1000000012;2;Field  ;
+                Name=Nombre2;
+                SourceExpr=Nombre2;
+                Visible=bvisibleint;
+                OnValidate=BEGIN
+                             CalcAmount;
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      SMAIL@1000000019 : Codeunit 400;
+      Gtext_Corps@1000000018 : Text;
+      Gtext_Corps1@1000000017 : Text;
+      Gtext_Mail@1000000016 : Text[50];
+      Grec_UserSetup@1000000015 : Record 91;
+      Gtext_MailUser@1000000014 : Text[50];
+      Gtext_ObjetMail@1000000013 : Text;
+      Gtext_Param1@1000000012 : Text;
+      Gtext_Param2@1000000011 : Text;
+      Gtext_Param3@1000000010 : Text;
+      Gint_Param4@1000000009 : Integer;
+      Gbool_envoi@1000000008 : Boolean;
+      Grec_PurchaseHeader@1000000007 : Record 38;
+      Gtext_view@1000000006 : Text[250];
+      Gtext_target@1000000005 : Text[250];
+      Gtext_Position@1000000004 : Text[250];
+      Gtext_alias@1000000003 : Text[30];
+      Grec_Vendor@1000000002 : Record 23;
+      Gtext_VendorName@1000000001 : Text[50];
+      Text001@1000000044 : TextConst 'FRA=Le num‚ro du document est incorrect, veuillez le modifier';
+      Text002@1000000043 : TextConst 'FRA=Le mail a bien ‚t‚ envoy‚';
+      VariableDebutMail1@1000000042 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:';
+      VariableMilieuMail@1000000041 : TextConst 'FRA=\%1 %2 %3\';
+      VariableMilieuMailbis@1000000040 : TextConst 'FRA=\Informations sur la facture pour laquelle vous devez cr‚er le fournisseur:\\Fournisseur : %1 \Date de facture : %2\Nø facture : %3\Montant : %4\';
+      VariableFinMail1@1000000039 : TextConst 'FRA=\Les actions que vous devez effectuer sont les suivantes:\\1. Vous devez envoyer la fiche de r‚f‚rencement ci-jointe au fournisseur puis la retourner une fois compl‚t‚e … l''alias "support ERP" 
+    \2. Une fois le Fournisseur r‚f‚renc‚ dans nos bases, vous pourrez cr‚er le Devis dans NAVISION
+    \Merci de faire le n‚cessaire le plus rapidement possible. 
+    
+    Ces op‚rations sont … effectuer si et seulement si vous ˆtes d''accord avec la prestation factur‚e,  dans le cas contraire nous vous remercions de  nous en informer par mail.';
+      VariableSignature@1000000038 : TextConst 'FRA=\\Merci de votre coop‚ration,\\Le Service comptabilit‚.';
+      VariableDebutMail3@1000000037 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:';
+      VariableFinMail3@1000000036 : TextConst 'FRA=\Merci de faire le n‚cessaire le plus rapidement possible. 
+    
+    Ces op‚rations sont … effectuer si et seulement si vous ˆtes d''accord avec la prestation factur‚e,  dans le cas contraire nous vous remercions de  nous en informer par mail.\\Pour acc‚der … la  DA, cliquez sur ce lien :  lien + cliquer sur "demande d''approb."';
+      VariableDebutMail4@1000000035 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:';
+      VariableFinMail4@1000000034 : TextConst 'FRA=\Merci de faire le n‚cessaire le plus rapidement possible. 
+    
+    Ces op‚rations sont … effectuer si et seulement si vous ˆtes d''accord avec la prestation factur‚e,  dans le cas contraire nous vous remercions de  nous en informer par mail.\\Pour acc‚der … la  DA, cliquez sur ce lien :  lien + cliquer sur "demande d''approb."';
+      VariableDebutMail5@1000000033 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:\';
+      VariableFinMail5@1000000032 : TextConst 'FRA=\- Une fois le devis transform‚ en BC, celui-ci est … r‚ceptionner SVP
+    Sans ces actions la facture ne pourra ˆtre pay‚e.
+    
+    Ces op‚rations sont … effectuer si et seulement SI LA PRESTATION EST CONFORME A LA COMMANDE,  dans le cas contraire nous vous remercions de  nous en informer par mail.\\Pour acc‚der … la  DA, cliquez sur ce lien :  lien + cliquer sur "Transformer en BC"';
+      VariableDebutMail6@1000000031 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1 car son montant est sup‚rieur … celui de votre bon de commande:\';
+      VariableMilieuMail6@1000000030 : TextConst 'FRA=\Informations sur la facture en attente de comptabilisation :\\Fournisseur : %1 \Date de facture : %2\Nø facture : %3\Montant : %4\';
+      VariableFinMail6@1000000029 : TextConst 'FRA=\Merci de nous dire si vous ˆtes dÉaccord avec le montant factur‚.\\Si oui --> Veuillez  svp cr‚er un devis compl‚mentaire cf. proc‚dure Devis … cr‚er\\Si non --> Veuillez  svp formaliser votre refus par mail au fournisseur sans oublier de nous mettre en copie.\\Pour cr‚er une  DA, suivre le lien suivant:  lien + appuyer sur F3';
+      VariableDebutMail7@1000000028 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:\';
+      VariableFinMail7@1000000027 : TextConst 'FRA=\La r‚ception est … effectuer si et seulement SI LA PRESTATION EST CONFORME A LA COMMANDE,  dans le cas contraire nous vous remercions de  nous en informer par mail.\\Pour acc‚der au BC … r‚ceptionner, suivre le lien suivant: lien  + bouton "R‚ceptionner"';
+      VariableDebutMail8@1000000026 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous avons re‡u une facture %1.';
+      VariableFinMail8@1000000025 : TextConst 'FRA=\\Nous avons besoin de votre contr“le et de votre validation pour la payer.\\Pour acc‚der … la facture suivre le lien suivant: lien +  cliquez sur  "Approbation de facture"\\Cette op‚ration est … effectuer si et seulement SI LA PRESTATION EST CONFORME,  dans le cas contraire nous vous remercions de  nous en informer par mail.';
+      VariableDebutMail2@1000000024 : TextConst 'FRA=Validez-vous le message suivant ?:\\Bonjour,\\Nous ne pouvons pas saisir la facture %1, pour la raison suivante:\\Le devis correspondant nÉa pas ‚t‚ cr‚‚.\';
+      VariableFinMail2@1000000023 : TextConst 'FRA=\Merci de faire le n‚cessaire le plus rapidement possible. 
+    
+    Ces op‚rations sont … effectuer si et seulement si vous ˆtes d''accord avec la prestation factur‚e,  dans le cas contraire nous vous remercions de  nous en informer par mail.\\Pour cr‚er une DA, suivre le lien suivant: lien
+     + appuyer sur F3';
+      VariableMilieuMail2@1000000022 : TextConst 'FRA=\Informations sur la facture pour laquelle vous devez cr‚er un devis :\\Fournisseur : %1 \Date de facture : %2\Nø facture : %3\Montant : %4\';
+      GtextMail1@1000000021 : TextConst 'FRA=Ces op‚rations sont … effectuer si et seulement si vous ˆtes d''accord avec la prestation factur‚e, dans le cas contraire nous vous remercions de nous en informer par mail.';
+      Gtext_MailCC@1000000000 : TextConst 'FRA=VSCComptaFour@voyages-sncf.com';
+      VSCSettings@1000000020 : Record 50014;
+      MailSetup@1000000045 : Record 50016;
+      MailText@1000000046 : Record 50017;
+      PurchSetup@1000000048 : Record 312;
+      AddAtt@1000000047 : ARRAY [10] OF Text;
+      NbAtt@1000000049 : Integer;
+      Aff_Corps@1000000050 : Text;
+      URLNavDA@1000000051 : Text;
+      URLNavBC@1000000052 : Text;
+      URLNavFAC@1000000053 : Text;
+      bVisible@1000000054 : Boolean INDATASET;
+      bVisibleInt@1000000060 : Boolean INDATASET;
+      Amount1@1000000055 : Decimal;
+      Amount2@1000000056 : Decimal;
+      Amount3@1000000057 : Decimal;
+      Nombre1@1000000058 : Integer;
+      Nombre2@1000000059 : Integer;
+
+    LOCAL PROCEDURE CalcAmount@1000000011();
+    VAR
+      x@1000000000 : Integer;
+    BEGIN
+      Amount3 := Amount2 - Amount1;
+      CASE Gint_Param4 OF
+       1: Gtext_Param3 := '= <MONTANT1> euros pour une FACTURE= <MONTANT2> euros d''o— un ‚cart de <MONTANT3> euros';
+       9: Gtext_Param3 := '<NOMBRE1> jours pour une facture = <NOMBRE2> jours';
+      END;
+      x := STRPOS(UPPERCASE(Gtext_Param3),'<MONTANT1>');
+      IF (x <> 0) AND (Amount1 <> 0) THEN
+       Gtext_Param3 := COPYSTR(Gtext_Param3,1,x - 1) + FORMAT(Amount1) + COPYSTR(Gtext_Param3,x + 10);
+
+      x := STRPOS(UPPERCASE(Gtext_Param3),'<MONTANT2>');
+      IF (x <> 0) AND (Amount2 <> 0) THEN
+       Gtext_Param3 := COPYSTR(Gtext_Param3,1,x - 1) + FORMAT(Amount2) + COPYSTR(Gtext_Param3,x + 10);
+
+      x := STRPOS(UPPERCASE(Gtext_Param3),'<MONTANT3>');
+      IF (x <> 0) AND (Amount1 <> 0) AND (Amount2 <> 0) THEN
+       Gtext_Param3 := COPYSTR(Gtext_Param3,1,x - 1) + FORMAT(Amount3) + COPYSTR(Gtext_Param3,x + 10);
+
+      x := STRPOS(UPPERCASE(Gtext_Param3),'<NOMBRE1>');
+      IF (x <> 0) AND (Nombre1 <> 0) THEN
+       Gtext_Param3 := COPYSTR(Gtext_Param3,1,x - 1) + FORMAT(Nombre1) + COPYSTR(Gtext_Param3,x + 9);
+
+      x := STRPOS(UPPERCASE(Gtext_Param3),'<NOMBRE2>');
+      IF (x <> 0) AND (Nombre2 <> 0) THEN
+       Gtext_Param3 := COPYSTR(Gtext_Param3,1,x - 1) + FORMAT(Nombre2) + COPYSTR(Gtext_Param3,x + 9);
+    END;
+
+    PROCEDURE SetParam@1000000000(Param1@1000000000 : Text;Param2@1000000001 : Text;Param3@1000000002 : Text;Param4@1000000003 : Integer;Param5@1000000004 : Text);
+    BEGIN
+      Gtext_Param1 := Param1;
+      Gtext_Param2 := Param2;
+      Gtext_Param3 := Param3;
+      Gint_Param4 := Param4;
+      Gtext_ObjetMail := Param5;
+      bVisible := FALSE;
+      bVisibleInt := FALSE;
+      IF Gint_Param4 = 6 THEN
+       bVisible := TRUE;
+      IF Gint_Param4 = 9 THEN
+       bVisibleInt := TRUE;
+    END;
+
+    PROCEDURE SetPurchaseHeader@1000000002(p_PurchaseHeader@1000000000 : Record 38);
+    BEGIN
+      Grec_PurchaseHeader := p_PurchaseHeader;
+    END;
+
+    LOCAL PROCEDURE ReplaceText@1000000010(pText@1000000000 : Text) : Text;
+    VAR
+      x@1000000001 : Integer;
+      y@1000000002 : Integer;
+    BEGIN
+      CLEAR(AddAtt);
+      NbAtt := 0;
+      x := STRPOS(pText,'<NOFOUR>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + "Buy-from Vendor No." + COPYSTR(pText,x + 8);
+      x := STRPOS(pText,'<NOMFOUR>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + "Buy-from Vendor Name" + COPYSTR(pText,x + 9);
+      x := STRPOS(pText,'<DATEDOC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + FORMAT("Document Date") + COPYSTR(pText,x + 9);
+      x := STRPOS(pText,'<NOFAC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + "No." + COPYSTR(pText,x + 7);
+      x := STRPOS(pText,'<MTFAC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + FORMAT("Register amount") + COPYSTR(pText,x + 7);
+      x := STRPOS(UPPERCASE(pText),'<B>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '<b>' + COPYSTR(pText,x + 3);
+      x := STRPOS(UPPERCASE(pText),'</B>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '</b>' + COPYSTR(pText,x + 4);
+
+      x := STRPOS(UPPERCASE(pText),'<COUL:');
+      IF x <> 0 THEN BEGIN
+       y := STRPOS(UPPERCASE(COPYSTR(pText,x + 6,6)),'ROUGE>');
+       IF y <> 0 THEN
+        pText := COPYSTR(pText,1,x - 1) + '<font color="red">' + COPYSTR(pText,x + 12)
+       ELSE BEGIN
+        y := STRPOS(UPPERCASE(COPYSTR(pText,x + 6,5)),'VERT>');
+        IF y <> 0 THEN
+         pText := COPYSTR(pText,1,x - 1) + '<font color="green">' + COPYSTR(pText,x + 11)
+        ELSE BEGIN
+         y := STRPOS(UPPERCASE(COPYSTR(pText,x + 6,5)),'BLEU>');
+         IF y <> 0 THEN
+          pText := COPYSTR(pText,1,x - 1) + '<font color="blue">' + COPYSTR(pText,x + 11)
+         ELSE BEGIN
+          y := STRPOS(UPPERCASE(COPYSTR(pText,x + 6,1)),'>');
+          pText := COPYSTR(pText,1,x - 1) + COPYSTR(pText,x + 7);
+         END;
+        END;
+       END;
+      END;
+
+      x := STRPOS(UPPERCASE(pText),'</COUL>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '</font>' + COPYSTR(pText,x + 7);
+
+      x := STRPOS(UPPERCASE(pText),'<FJ:FOUR>');
+      IF x <> 0 THEN BEGIN
+       IF EXISTS(PurchSetup."Excel File Vendor Not Created") THEN BEGIN
+        NbAtt += 1;
+        AddAtt[NbAtt] := PurchSetup."Excel File Vendor Not Created";
+       END;
+       pText := '';
+      END;
+
+      x := STRPOS(UPPERCASE(pText),'<FJ:FAC>');
+      IF x <> 0 THEN BEGIN
+       IF EXISTS(PurchSetup."Mail Invoice Path" + "No." + '.pdf') THEN BEGIN
+        NbAtt += 1;
+        AddAtt[NbAtt] := PurchSetup."Mail Invoice Path" + "No." + '.pdf';
+       END;
+       pText := '';
+      END;
+
+      x := STRPOS(UPPERCASE(pText),'<LIENDOCDA>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + URLNavDA + '">' + COPYSTR(pText,x + 11);
+
+      x := STRPOS(UPPERCASE(pText),'</LIENDOCDA>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '</a>' + COPYSTR(pText,x + 12);
+
+      x := STRPOS(UPPERCASE(pText),'<LIENDOCBC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + URLNavBC + '">' + COPYSTR(pText,x + 11);
+
+      x := STRPOS(UPPERCASE(pText),'</LIENDOCBC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '</a>' + COPYSTR(pText,x + 12);
+
+      x := STRPOS(UPPERCASE(pText),'<LIENDOCFAC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + URLNavFAC + '">' + COPYSTR(pText,x + 12);
+
+      x := STRPOS(UPPERCASE(pText),'</LIENDOCFAC>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '</a>' + COPYSTR(pText,x + 13);
+
+      x := STRPOS(UPPERCASE(pText),'<LIENYOOZ>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + '<a href="' + "Yooz Token link" + '">Lien Yooz</a>' + COPYSTR(pText,x + 10);
+
+      x := STRPOS(UPPERCASE(pText),'<PARAM1>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + Gtext_Param1 + COPYSTR(pText,x + 8);
+
+      x := STRPOS(UPPERCASE(pText),'<PARAM2>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + Gtext_Param2 + COPYSTR(pText,x + 8);
+
+      x := STRPOS(UPPERCASE(pText),'<PARAM3>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + Gtext_Param3 + COPYSTR(pText,x + 8);
+
+      x := STRPOS(UPPERCASE(pText),'<MONTANT1>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + FORMAT(Amount1) + COPYSTR(pText,x + 10);
+
+      x := STRPOS(UPPERCASE(pText),'<MONTANT2>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + FORMAT(Amount2) + COPYSTR(pText,x + 10);
+
+      x := STRPOS(UPPERCASE(pText),'<MONTANT3>');
+      IF x <> 0 THEN
+       pText := COPYSTR(pText,1,x - 1) + FORMAT(Amount3) + COPYSTR(pText,x + 10);
+
+      EXIT(pText);
+    END;
+
+    PROCEDURE CorpsMail1@1000000001() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail1
+      URLNavBC := '';
+      URLNavDA := '';
+      IF lPurchHeader.GET(lPurchHeader."Document Type",Gtext_Param2) THEN
+       URLNavDA :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, lPurchHeader)
+      ELSE
+       URLNavDA +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"Fourn. non cr‚‚");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"Fourn. non cr‚‚");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+
+      pCorps := Gtext_Corps;
+    END;
+
+    PROCEDURE CorpsMail2@1000000066() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail2
+      URLNavBC := '';
+      URLNavDA := '';
+      URLNavDA +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"DA … cr‚er");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"DA … cr‚er");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+
+      pCorps := Gtext_Corps;
+    END;
+
+    PROCEDURE CorpsMail3@1000000005() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail3
+      URLNavBC := '';
+      URLNavDA := '';
+      IF lPurchHeader.GET(lPurchHeader."Document Type",Gtext_Param2) THEN
+       URLNavDA :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, lPurchHeader)
+      ELSE
+       URLNavDA +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"DA non envoy‚ en appro.");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"DA non envoy‚ en appro.");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail4@1000000007() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail4
+      URLNavDA := '';
+      IF lPurchHeader.GET(lPurchHeader."Document Type",Gtext_Param2) THEN
+       URLNavDA :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, lPurchHeader)
+      ELSE
+       URLNavDA +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"DA non approuv‚e");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"DA non approuv‚e");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail5@1000000016() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail5
+      URLNavBC := '';
+      URLNavDA := '';
+      IF lPurchHeader.GET(lPurchHeader."Document Type",Gtext_Param2) THEN
+       URLNavDA :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49, lPurchHeader)
+      ELSE
+       URLNavDA +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"DA non transorm‚e");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"DA non transorm‚e");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail6@1000000006() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail6
+      URLNavDA := '';
+      URLNavDA := '<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 49);
+      URLNavBC := '';
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"DA Cplmt");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"DA Cplmt");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail7@1000000008() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail7
+      URLNavDA := '';
+      URLNavBC := '';
+      IF lPurchHeader.GET("Document Type"::Order,Gtext_Param2) THEN
+       URLNavBC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50, lPurchHeader)
+      ELSE
+       URLNavBC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"BC … r‚ceptionner");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"BC … r‚ceptionner");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail8@1000000012() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      URLNavDA := '';
+      URLNavBC := '';
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50003, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50003);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"Fact. … approuver");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"Fact. … approuver");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE CorpsMail9@1000000013() pCorps : Text;
+    VAR
+      lPurchHeader@1000000000 : Record 38;
+    BEGIN
+      //corps du mail7
+      URLNavDA := '';
+      URLNavBC := '';
+      IF lPurchHeader.GET("Document Type"::Order,Gtext_Param2) THEN
+       URLNavBC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50, lPurchHeader)
+      ELSE
+       URLNavBC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 50);
+      URLNavFAC := '';
+      IF lPurchHeader.GET("Document Type","No.") THEN
+       URLNavFAC :='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51, lPurchHeader)
+      ELSE
+       URLNavFAC +='<a href="' + GETURL(CLIENTTYPE::Current, COMPANYNAME, OBJECTTYPE::Page, 51);
+
+      CLEAR(Gtext_Corps);
+      CLEAR(Aff_Corps);
+      MailSetup.GET(MailSetup."Mail Type"::"Factures Presta Tim‚");
+      MailText.SETRANGE("Mail Type",MailText."Mail Type"::"Factures Presta Tim‚");
+      IF MailText.FINDFIRST THEN
+       REPEAT
+        IF MailText.Seperator = MailText.Seperator::"Carriage Return" THEN BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + '<br>';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + '\';
+        END ELSE BEGIN
+         Gtext_Corps := Gtext_Corps + ReplaceText(MailText.Textline) + ' ';
+         Aff_Corps := Aff_Corps + ReplaceText(MailText.Textline) + ' ';
+        END;
+       UNTIL MailText.NEXT = 0;
+    END;
+
+    PROCEDURE InsertHistorique@1000000004();
+    VAR
+      Lrec_Historic@1000000000 : Record 50004;
+      Lrec_PurchLines@1000000001 : Record 39;
+    BEGIN
+      //D‚but Ajout JX-XAD le 20/11/2009
+      Lrec_Historic.INIT;
+      Lrec_Historic.Type := Lrec_Historic.Type::Invoice;
+      Lrec_Historic."No." := "No.";
+      Lrec_Historic."Date time" := CURRENTDATETIME;
+
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document Type",FORMAT(Lrec_PurchLines."Document Type"::Invoice));
+      Lrec_PurchLines.SETFILTER(Lrec_PurchLines."Document No.","No.");
+      Lrec_Historic.Description := "Status description";
+
+      Lrec_Historic."User ID" := USERID;
+
+      // modif LAB du 16/12/2009
+      // ajout de la gestion du code utilisateur affect‚ sur l'historique envoi email
+
+      Lrec_Historic."Assigned User ID" := "Assigned User ID";
+
+      //fin modif LAB du 16/12/2009
+
+      Lrec_Historic.INSERT;
+    END;
+
+    PROCEDURE InsertFacture@1000000009(VAR pSMAIL@1000000000 : Codeunit 400;pNumFacture@1000000001 : Code[20]) : Text[250];
+    BEGIN
+      IF (COMPANYNAME = 'VSC') OR (COMPANYNAME ='VSC - RECETTE') THEN
+        IF EXISTS(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf') THEN
+          SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf',PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf');
+
+      IF (COMPANYNAME = 'VSCT') OR (COMPANYNAME ='VSCT - RECETTE') THEN
+        IF EXISTS(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf') THEN
+          SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf',PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf');
+
+      IF (COMPANYNAME = 'Agence') OR (COMPANYNAME ='Agence - RECETTE') THEN
+        IF EXISTS(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf') THEN
+          SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf',PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf');
+
+      IF (COMPANYNAME = 'VFEC') OR (COMPANYNAME ='VFEC - RECETTE') THEN
+        IF EXISTS(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf') THEN
+          SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf',PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf');
+
+      IF (COMPANYNAME = 'HEXATOURISME') OR (COMPANYNAME ='HEXATOURISME - RECETTE') THEN
+        IF EXISTS(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf') THEN
+          SMAIL.AddAttachment(PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf',PurchSetup."Mail Invoice Path" + pNumFacture + '.pdf');
+
+      EXIT;
+    END;
+
+    LOCAL PROCEDURE SendMail@1000000003();
+    VAR
+      i@1000000000 : Integer;
+    BEGIN
+      CLEAR(SMAIL);
+
+      //recherche du mail de l'utilisateur
+      IF Grec_UserSetup.GET(USERID) THEN
+        Gtext_Mail := Grec_UserSetup."E-Mail";
+
+      IF Grec_UserSetup.GET("Assigned User ID") THEN
+        Gtext_MailUser := Grec_UserSetup."E-Mail";
+
+      //creation du mail
+      //[Syntax for the Createmessage function -
+      // Createmessage([sender's name] ,[sender's id],[recipient's id or ids],[subject] ,[body line],[html formatted or not]]
+      Gtext_alias := '';
+      IF (COMPANYNAME = 'VFEC') OR (COMPANYNAME ='VFEC - RECETTE') THEN
+        Gtext_alias :=  'VSC GROUPE'
+      ELSE
+        Gtext_alias := COMPANYNAME;
+
+      //recherche du nom du fournisseur
+      Gtext_VendorName :='';
+      IF Grec_Vendor.GET("Buy-from Vendor No.") THEN
+      BEGIN
+        Gtext_VendorName := Grec_Vendor.Name;
+        Gtext_ObjetMail := Gtext_alias + ' - ' + MailSetup.Subject + ' - ' + Gtext_VendorName;
+      END ELSE
+        Gtext_ObjetMail := Gtext_alias + ' - ' + MailSetup.Subject;
+
+      IF VSCSettings."BC Test Mode" THEN
+       Gtext_MailUser := VSCSettings."BC E-Mail Test";
+
+      SMAIL.CreateMessage(Gtext_alias,Gtext_Mail,Gtext_MailUser,Gtext_ObjetMail,'',TRUE);
+      SMAIL.AddCC(Gtext_MailCC);
+
+      //Ajout des lignes au mail
+      CASE Gint_Param4 OF
+      1:
+         BEGIN
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+          END;
+         END;
+      2:
+         BEGIN
+          CorpsMail2;
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+          END;
+          CurrPage.CLOSE;
+         END;
+      3:
+         BEGIN
+          //V‚rification du num‚ro de document saisi s'il existe
+          CorpsMail3;
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Quote,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+              //Envoi du mail
+              SMAIL.Send;
+              MESSAGE(Text002);
+              CurrPage.CLOSE;
+              InsertHistorique;
+            END;
+         END;
+      4:
+         BEGIN
+          //V‚rification du num‚ro de document saisi s'il existe
+          CorpsMail4;
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Quote,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+           END;
+         END;
+      5:
+         BEGIN
+          //V‚rification du num‚ro de document saisi s'il existe
+          CorpsMail5;
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Quote,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+           END;
+         END;
+      6:
+         BEGIN
+          CorpsMail6;
+          //V‚rification du num‚ro de document saisi s'il existe
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Order,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          //recherche du nom du fournisseur
+          Gtext_VendorName :='';
+          IF Grec_Vendor.GET("Buy-from Vendor No.") THEN
+            Gtext_VendorName := Grec_Vendor.Name;
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+           END;
+         END;
+      7:
+         BEGIN
+          //V‚rification du num‚ro de document saisi s'il existe
+          CorpsMail7;
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Order,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+           END;
+         END;
+      8:
+         BEGIN
+          CorpsMail8;
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+          END;
+          CurrPage.CLOSE;
+         END;
+      9:
+         BEGIN
+          //V‚rification du num‚ro de document saisi s'il existe
+          CorpsMail9;
+          CLEAR(Grec_PurchaseHeader);
+          IF NOT Grec_PurchaseHeader.GET(Grec_PurchaseHeader."Document Type"::Order,Gtext_Param2) THEN
+            ERROR(Text001);
+
+          SMAIL.AppendBody(Gtext_Corps);
+          IF NbAtt <> 0 THEN
+           FOR i := 1 TO NbAtt DO
+          //Ajout de la piŠce jointe au mail suivant les soci‚t‚s
+            SMAIL.AddAttachment(AddAtt[i],AddAtt[i]);
+
+          IF CONFIRM('Validez-vous le message suivant ?\' + Aff_Corps) THEN BEGIN
+            //Envoi du mail
+            SMAIL.Send;
+            MESSAGE(Text002);
+            CurrPage.CLOSE;
+            InsertHistorique;
+           END;
+         END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

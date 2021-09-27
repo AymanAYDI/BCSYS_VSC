@@ -2,9 +2,10 @@ OBJECT Page 26 Vendor Card
 {
   OBJECT-PROPERTIES
   {
-    Date=07/01/15;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.39368,NAVFR8.00.00.39368;
+    Date=24/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00.01,NAVFR5.00,JX-VSC1.0-LAB-XAD,JX-VSC1.1-XAD,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -94,6 +95,26 @@ OBJECT Page 26 Vendor Card
                                  DisplayMap;
                                END;
                                 }
+      { 1000000002;2 ;Action    ;
+                      CaptionML=[ENU=Duplicate to another company;
+                                 FRA=Dupliquer vers une autre soci‚t‚];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=CopyFromChartOfAccounts;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 //DEBUT MODIF JX-XAD 03/04/2009
+
+                                 //DEBUT MODIF JX-XAD le 15/06/2010
+                                 //GForm_Dupliquer.initialiser(Gopt_TypeFiche::Vendor,"No.");
+                                 GForm_Dupliquer.initialiser(Gopt_TypeFiche::Vendor,"No.",'');
+                                 //FIN MODIF JX-XAD le 15/06/2010
+
+                                 GForm_Dupliquer.RUNMODAL;
+                                 CLEAR(GForm_Dupliquer);
+                                 //FIN MODIF JX-XAD 03/04/2009
+                               END;
+                                }
       { 11      ;2   ;Separator  }
       { 1120003 ;2   ;Action    ;
                       CaptionML=[ENU=&Payment Addresses;
@@ -157,7 +178,7 @@ OBJECT Page 26 Vendor Card
                       Image=Administration }
       { 74      ;2   ;Action    ;
                       CaptionML=[ENU=Quotes;
-                                 FRA=Demandes de prix];
+                                 FRA=Devis];
                       RunObject=Page 9306;
                       RunPageView=SORTING(Document Type,Buy-from Vendor No.);
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
@@ -252,15 +273,16 @@ OBJECT Page 26 Vendor Card
                       RunObject=Page 509;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=BlanketOrder;
                       PromotedCategory=New;
                       RunPageMode=Create }
       { 1901469405;1 ;Action    ;
                       CaptionML=[ENU=Purchase Quote;
-                                 FRA=Demande de prix];
+                                 FRA=Devis];
                       RunObject=Page 49;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
-                      Promoted=No;
+                      Promoted=Yes;
                       Image=Quote;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -270,6 +292,7 @@ OBJECT Page 26 Vendor Card
                       RunObject=Page 51;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=Yes;
+                      Visible=FALSE;
                       Image=Invoice;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -279,6 +302,7 @@ OBJECT Page 26 Vendor Card
                       RunObject=Page 50;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=Yes;
+                      Visible=FALSE;
                       Image=Document;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -288,6 +312,7 @@ OBJECT Page 26 Vendor Card
                       RunObject=Page 52;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=CreditMemo;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -297,6 +322,7 @@ OBJECT Page 26 Vendor Card
                       RunObject=Page 6640;
                       RunPageLink=Buy-from Vendor No.=FIELD(No.);
                       Promoted=No;
+                      Visible=FALSE;
                       Image=ReturnOrder;
                       PromotedCategory=New;
                       RunPageMode=Create }
@@ -442,6 +468,9 @@ OBJECT Page 26 Vendor Card
 
     { 26  ;2   ;Field     ;
                 SourceExpr="Last Date Modified" }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Registration No." }
 
     { 1902768601;1;Group  ;
                 CaptionML=[ENU=Communication;
@@ -691,6 +720,8 @@ OBJECT Page 26 Vendor Card
       ContactEditable@19051436 : Boolean INDATASET;
       SocialListeningSetupVisible@1007 : Boolean INDATASET;
       SocialListeningVisible@1006 : Boolean INDATASET;
+      GForm_Dupliquer@1000000000 : Page 50013;
+      Gopt_TypeFiche@1000000001 : ',Vendor,G/L Account,Item,VendorBankAccount';
 
     PROCEDURE ActivateFields@3();
     BEGIN
@@ -711,6 +742,25 @@ OBJECT Page 26 Vendor Card
     END;
 
     BEGIN
+    {
+      NAVW16.00.01,NAVFR5.00,JX-VSC1.0-LAB-XAD,JX-VSC1.1-XAD,JX-VSC1.2-XAD,JX-VSC2.0-AUD
+
+
+      //Ajout LAB du 04/11/08
+      //Ajout du champ 50000 Nø SIRET/Immat.
+
+      //Ajout JX-XAD le 03/04/2009
+      //Ajout de la fonction "Dupliquer" dans le menu Fournisseur
+
+      ---------------------------- V1.2 ----------------------------
+
+      //MODIF JX-XAD le 15/06/2010 (fait le 15/10/2010)
+      //Modification suite … l'ajout de la duplication de la fiche bancaire
+
+
+      //MODIF JX-AUD 08/04/2011
+      //Limitation du champ No. du formualaire … 10 caractŠres
+    }
     END.
   }
 }

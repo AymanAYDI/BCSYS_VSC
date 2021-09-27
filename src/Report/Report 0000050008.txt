@@ -1,0 +1,252 @@
+OBJECT Report 50008 Solde BC Masse
+{
+  OBJECT-PROPERTIES
+  {
+    Date=04/12/15;
+    Time=07:30:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    ProcessingOnly=Yes;
+    OnInitReport=BEGIN
+                   Gtext_AxePeriodeDebut := '1501';
+                   Gtext_AxePeriodeFin := '1512';
+                   Gtext_NomFactureFournisseur := 'SOLDE BC2015-';
+                   Gtext_VotreReference := 'Solde BC2015 en masse';
+                   Gdate_DateCompta := 311215D;
+                 END;
+
+    OnPostReport=BEGIN
+                   MESSAGE('Le traitement est termin‚');
+                   CurrReport.QUIT;
+                 END;
+
+  }
+  DATASET
+  {
+    { 3042;0   ;DataItem;                    ;
+               DataItemTable=Table121;
+               DataItemTableView=SORTING(Document No.,Line No.)
+                                 WHERE(Qty. Rcd. Not Invoiced=FILTER(<>0));
+               OnPreDataItem=BEGIN
+                               IF (Gtext_AxePeriodeDebut > Gtext_AxePeriodeFin) OR  (Gtext_AxePeriodeFin < Gtext_AxePeriodeDebut) THEN
+                                 ERROR('Veuillez v‚rifier les axes "Axe p‚riode d‚but" et "Axe p‚riode de fin"');
+
+                               Gtext_NumReception := '';
+
+                               Window.OPEN(Text50000);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  IF NOT Grec_PurchRcptHeader.GET("Purch. Rcpt. Line"."Document No.") THEN
+                                   CurrReport.SKIP
+                                  ELSE
+                                   IF NOT GDimSetEntry.GET("Dimension Set ID",'PERIODE') THEN
+                                    CurrReport.SKIP
+                                   ELSE
+                                    IF (GDimSetEntry."Dimension Value Code" < Gtext_AxePeriodeDebut) OR (GDimSetEntry."Dimension Value Code" > Gtext_AxePeriodeFin) THEN
+                                     CurrReport.SKIP
+                                    ELSE BEGIN
+                                     //creation  de l'en tˆte de facture si Numero de reception diff‚rent
+                                      Window.UPDATE(1,"Document No.");
+                                      IF "Purch. Rcpt. Line"."Document No." <> Gtext_NumReception THEN BEGIN
+                                       TempVendorInvNo.RESET;
+                                       TempVendorInvNo.SETRANGE("Vendor No.",Grec_PurchRcptHeader."Pay-to Vendor No.");
+                                       IF NOT TempVendorInvNo.FINDFIRST THEN BEGIN
+                                        VendorNo += 1;
+                                        TempVendorInvNo."Entry No." := VendorNo;
+                                        TempVendorInvNo."Vendor No." := Grec_PurchRcptHeader."Pay-to Vendor No.";
+                                        TempVendorInvNo.INSERT;
+                                       END;
+
+                                       IF TempVendorInvNo."External Document No." = '' THEN BEGIN
+                                        Grec_PurchInvoiceHeader.RESET;
+                                        Grec_PurchInvoiceHeader.SETCURRENTKEY("Vendor Invoice No.");
+                                        Grec_PurchInvoiceHeader.SETFILTER(Grec_PurchInvoiceHeader."Vendor Invoice No.", Gtext_NomFactureFournisseur+'*');
+                                        IF Grec_PurchInvoiceHeader.FINDLAST THEN
+                                         TempVendorInvNo."External Document No." := Grec_PurchInvoiceHeader."Vendor Invoice No." + '0';
+                                       END;
+                                       IF TempVendorInvNo."External Document No." <> '' THEN
+                                        TempVendorInvNo."External Document No." := INCSTR(TempVendorInvNo."External Document No.")
+                                       ELSE BEGIN
+                                        Gint_Num += 1;
+                                        TempVendorInvNo."External Document No." := Gtext_NomFactureFournisseur +'' + GetInvoiceVendorNo(Gint_Num) + '';
+                                       END;
+                                       TempVendorInvNo.MODIFY;
+
+                                       Grec_PurchaseHeader.INIT;
+                                       Grec_PurchaseHeader.SetHideValidationDialog(TRUE);
+                                       Grec_PurchaseHeader.TRANSFERFIELDS(Grec_PurchRcptHeader);
+                                       Grec_PurchaseHeader.VALIDATE(Grec_PurchaseHeader."Document Type",Grec_PurchaseHeader."Document Type"::Invoice);
+                                       Grec_PurchaseHeader."No. Series" := 'PI';
+                                       Grec_PurchaseHeader."Posting No. Series" := 'PPI';
+                                       Grec_PurchaseHeader."Receiving No. Series" := 'PR';
+                                       Grec_PurchaseHeader."No." := NoSeriesMgt.GetNextNo('PI',"Posting Date",TRUE);
+                                       Grec_PurchaseHeader.VALIDATE("No.");
+                                       Grec_PurchaseHeader.INSERT;
+                                       Grec_Vendor.GET(Grec_PurchRcptHeader."Buy-from Vendor No.");
+                                       IF Grec_Vendor.Blocked <> Grec_Vendor.Blocked::" " THEN
+                                       BEGIN
+                                         MESSAGE('Le fournisseur ' + Grec_Vendor."No." + ' est bloqu‚ ' + "Purch. Rcpt. Line"."Document No.");
+                                         CurrReport.SKIP;
+                                       END;
+                                       Grec_PurchaseHeader."Original user" := USERID;
+                                       Grec_PurchaseHeader."Assigned User ID" := USERID;
+                                       Grec_PurchaseHeader.VALIDATE("Buy-from Vendor No.",Grec_PurchRcptHeader."Buy-from Vendor No.");
+                                       Grec_PurchaseHeader.VALIDATE("Pay-to Vendor No.",Grec_PurchRcptHeader."Pay-to Vendor No.");
+                                       Grec_PurchaseHeader.VALIDATE("Posting Date",Gdate_DateCompta);
+                                       Grec_PurchaseHeader."Your Reference" := Gtext_VotreReference;
+                                       Grec_PurchaseHeader."Vendor Invoice No." := TempVendorInvNo."External Document No.";
+                                       Grec_PurchaseHeader.MODIFY;
+                                      END;
+                                      //insertion de la ligne de reception sur la facture cr‚‚e
+                                      PurchHeader.GET(PurchHeader."Document Type"::Invoice,Grec_PurchaseHeader."No.");
+                                      Grec_PurchRcptLine.SETRANGE("Document No.","Document No.");
+                                      Grec_PurchRcptLine.SETRANGE("Line No.","Line No.");
+                                      CLEAR(GetReceipts);
+                                      GetReceipts.SetPurchHeader(PurchHeader);
+                                      GetReceipts.CreateInvLines(Grec_PurchRcptLine);
+
+                                     //mise en m‚moire du num‚ro de reception pour eviter de cr‚er un nouvelle facture si plusieurs lignes de r‚ception
+                                      Gtext_NumReception := "Purch. Rcpt. Line"."Document No.";
+                                    END;
+                                END;
+
+               OnPostDataItem=BEGIN
+                                Window.CLOSE;
+                              END;
+                               }
+
+    { 1000000000;;DataItem;                  ;
+               DataItemTable=Table38;
+               DataItemTableView=SORTING(Document Type,No.)
+                                 WHERE(Document Type=CONST(Invoice));
+               OnPreDataItem=BEGIN
+                               SETRANGE("Your Reference",Gtext_VotreReference);
+                             END;
+
+               OnAfterGetRecord=VAR
+                                  lToPost@1000000000 : Boolean;
+                                BEGIN
+                                  //mettre le co–t unitaire … jour pour les lignes de r‚ception avant validation de la facture
+                                  Grec_PurchaseLine.SETFILTER("Document Type",FORMAT("Document Type"::Invoice));
+                                  Grec_PurchaseLine.SETFILTER("Document No.","No.");
+                                  IF Grec_PurchaseLine.FINDFIRST THEN
+                                  REPEAT
+                                    IF (Grec_PurchaseLine.Type <> Grec_PurchaseLine.Type::" ") THEN
+                                    BEGIN
+                                      Grec_PurchaseLine.VALIDATE(Grec_PurchaseLine."Direct Unit Cost",0);//co–t unitaire HT … 0
+                                      Grec_PurchaseLine.VALIDATE(Grec_PurchaseLine."Line Discount %",0);//% remise … 0
+                                      Grec_PurchaseLine.VALIDATE(Grec_PurchaseLine."Unit Cost (LCY)",0);//co–t unitaire DS … 0
+                                      Grec_PurchaseLine.MODIFY;
+                                    END;
+                                  UNTIL Grec_PurchaseLine.NEXT = 0;
+
+                                  lToPost := TRUE;
+                                  //valider la facture
+                                  IF NOT Grec_PurchaseLine.FINDFIRST THEN
+                                   lToPost := FALSE
+                                  ELSE BEGIN
+                                   Grec_PurchaseLine.SETFILTER("Qty. to Invoice",'<>%1',0);
+                                   IF NOT Grec_PurchaseLine.FINDFIRST THEN
+                                    lToPost := FALSE;
+                                  END;
+                                  IF lToPost THEN
+                                   PurchPost.RUN("Purchase Header");
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+      { 1000000000;;Container;
+                  Name=Options;
+                  ContainerType=ContentArea }
+
+      { 1000000001;1;Field  ;
+                  CaptionML=FRA=Axe p‚riode d‚but;
+                  SourceExpr=Gtext_AxePeriodeDebut }
+
+      { 1000000002;1;Field  ;
+                  CaptionML=FRA=Axe p‚riode fin;
+                  SourceExpr=Gtext_AxePeriodeFin }
+
+      { 1000000003;1;Field  ;
+                  CaptionML=FRA=Nom facture fournisseur;
+                  SourceExpr=Gtext_NomFactureFournisseur }
+
+      { 1000000004;1;Field  ;
+                  CaptionML=FRA=Votre r‚f‚rence;
+                  SourceExpr=Gtext_VotreReference }
+
+      { 1000000005;1;Field  ;
+                  CaptionML=FRA=Date comptabilisation;
+                  SourceExpr=Gdate_DateCompta }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Grec_PurchaseHeader@1000000001 : Record 38;
+      TempVendorInvNo@1000000021 : TEMPORARY Record 25;
+      Gtext_AxePeriodeDebut@1000000003 : Text[4];
+      Gtext_AxePeriodeFin@1000000004 : Text[4];
+      PurchPost@1000000005 : Codeunit 90;
+      Grec_PurchaseLine@1000000006 : Record 39;
+      NoSeriesMgt@1000000007 : Codeunit 396;
+      Gtext_NumeroReception@1000000009 : Text[50];
+      Grec_PurchRcptHeader@1000000010 : Record 120;
+      GetReceipts@1000000012 : Codeunit 74;
+      Gtext_NumReception@1000000011 : Text[30];
+      PurchHeader@1000000013 : Record 38;
+      Grec_Vendor@1000000002 : Record 23;
+      Gint_Num@1000000008 : Integer;
+      Gtext_NomFactureFournisseur@1000000000 : Text[20];
+      Gtext_VotreReference@1000000014 : Text[30];
+      Grec_PurchInvoiceHeader@1000000015 : Record 122;
+      Gdate_DateCompta@1000000016 : Date;
+      GDimSetEntry@1000000017 : Record 480;
+      Grec_PurchRcptLine@1000000018 : Record 121;
+      Text50000@1000000019 : TextConst 'FRA=R‚ception Nø #1################';
+      VendorNo@1000000022 : Integer;
+      Window@1000000020 : Dialog;
+
+    PROCEDURE SetPurchHeader@1(VAR PurchHeader2@1000 : Record 38);
+    BEGIN
+      PurchHeader.GET(PurchHeader2."Document Type",PurchHeader2."No.");
+      PurchHeader.TESTFIELD("Document Type",PurchHeader."Document Type"::Invoice);
+    END;
+
+    PROCEDURE GetInvoiceVendorNo@1000000000(Gint_num@1000000000 : Integer) Gtext_Num : Text[30];
+    BEGIN
+      CASE TRUE OF
+        STRLEN(FORMAT(Gint_num)) = 1: Gtext_Num := '0000'+ FORMAT(Gint_num);
+        STRLEN(FORMAT(Gint_num)) = 2: Gtext_Num := '000'+ FORMAT(Gint_num);
+        STRLEN(FORMAT(Gint_num)) = 3: Gtext_Num := '00'+ FORMAT(Gint_num);
+        STRLEN(FORMAT(Gint_num)) = 4: Gtext_Num := '0'+ FORMAT(Gint_num);
+        STRLEN(FORMAT(Gint_num)) = 5: Gtext_Num := FORMAT(Gint_num);
+      END;
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD du 14/01/2013
+    }
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

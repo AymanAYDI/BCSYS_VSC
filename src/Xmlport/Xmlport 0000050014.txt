@@ -1,0 +1,187 @@
+OBJECT XMLport 50014 ETAFI
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=JX-VSC2.0-XAD-AUD;
+  }
+  PROPERTIES
+  {
+    Direction=Export;
+    TextEncoding=WINDOWS;
+    Format=Fixed Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+    TableSeparator=<<NewLine><NewLine>>;
+    UseRequestPage=No;
+  }
+  ELEMENTS
+  {
+    { [{59C5FFA2-002E-4E78-AEBD-3EEE454D0649}];  ;Root                ;Element ;Text     }
+
+    { [{56F951F9-4281-476F-8DE1-48AC2CB2FD61}];1 ;GLAccount           ;Element ;Table   ;
+                                                  SourceTable=Table15;
+                                                  SourceTableView=SORTING(Field1);
+                                                  Export::OnPreXMLItem=BEGIN
+                                                                         //Initialisation des dates pour le Filtre date
+
+                                                                         "G/L Account".SETFILTER("G/L Account"."Account Type",'%1',"G/L Account"."Account Type"::Posting);
+
+                                                                         Gint_Annee0 := DATE2DMY(Gdate_EndDate,3);
+                                                                         Gdate_SoldeAnnee0 := DMY2DATE(31, 12, Gint_Annee0);
+
+                                                                         Gdate_SoldeAnnee1 := CALCDATE('<-1Y>', Gdate_SoldeAnnee0);
+                                                                         Gdate_SoldeAnnee2 := CALCDATE('<-2Y>', Gdate_SoldeAnnee0);
+                                                                         Gdate_SoldeAnnee3 := CALCDATE('<-3Y>', Gdate_SoldeAnnee0);
+                                                                       END;
+
+                                                  Export::OnAfterGetRecord=BEGIN
+
+                                                                             Gtext_Compte := PADSTR("G/L Account"."No.",12);
+                                                                             Gtext_Description := PADSTR("G/L Account".Name,35);
+
+                                                                             //Calcul A Nouveau 2010
+                                                                             Gdec_MontantANouveau := 0;
+                                                                             Grec_GL_Entry.RESET;
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."G/L Account No.",'%1',"G/L Account"."No.");
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."Journal Batch Name",'%1','ANOUV');
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."Posting Date",'..%1',Gdate_EndDate);
+                                                                             IF Grec_GL_Entry.FIND('-') THEN
+                                                                             REPEAT
+                                                                               Gdec_MontantANouveau += Grec_GL_Entry.Amount;
+                                                                             UNTIL Grec_GL_Entry.NEXT = 0;
+
+                                                                             //D‚but Ajout ecritures isol‚es
+                                                                             Grec_GL_Entry.RESET;
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."G/L Account No.",'%1',"G/L Account"."No.");
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."Journal Batch Name",'<>%1','ANOUV');
+                                                                             Grec_GL_Entry.SETFILTER(Grec_GL_Entry."Posting Date",'%1',Gdate_DateIsolation);
+                                                                             IF Grec_GL_Entry.FIND('-') THEN
+                                                                             REPEAT
+                                                                               Gdec_MontantANouveau += Grec_GL_Entry.Amount;
+                                                                             UNTIL Grec_GL_Entry.NEXT = 0;
+                                                                             //Fin Ajout ecritures isol‚es
+
+                                                                             Gtext_A_Nouveau := FORMAT(Gdec_MontantANouveau,16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             "G/L Account".SETFILTER("G/L Entry Type Filter",'%1',"G/L Account"."G/L Entry Type Filter"::Definitive);
+                                                                             //SETRANGE("Date Filter",Gdate_StartDate,Gdate_EndDate);
+                                                                             "G/L Account".SETFILTER("Date Filter",'%1..%2&<>%3',Gdate_StartDate,Gdate_EndDate,Gdate_DateIsolation);  //Filtre sur ecritures isol‚es
+
+                                                                             //Calcul DEBIT
+                                                                             "G/L Account".CALCFIELDS("Debit Amount");
+                                                                             Gtext_Debit := FORMAT("G/L Account"."Debit Amount",16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             //Calcul CREDIT
+                                                                             "G/L Account".CALCFIELDS("G/L Account"."Credit Amount");
+                                                                             Gtext_Credit := FORMAT("G/L Account"."Credit Amount",16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             //Calcul Solde 2010
+                                                                             "G/L Account".SETRANGE("Date Filter",0D,Gdate_EndDate);
+                                                                             "G/L Account".CALCFIELDS("G/L Account"."Net Change");
+                                                                             Gtext_SoldeAnnee0 := FORMAT("G/L Account"."Net Change",16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             //Calcul Solde 2009
+                                                                             "G/L Account".SETRANGE("Date Filter",0D,Gdate_SoldeAnnee1);
+                                                                             "G/L Account".CALCFIELDS("G/L Account"."Net Change");
+                                                                             Gtext_SoldeAnnee1 := FORMAT("G/L Account"."Net Change",16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             //Calcul Solde 2008
+                                                                             "G/L Account".SETRANGE("Date Filter",0D,Gdate_SoldeAnnee2);
+                                                                             "G/L Account".CALCFIELDS("G/L Account"."Net Change");
+                                                                             Gtext_SoldeAnnee2 := FORMAT("G/L Account"."Net Change",16,'<Sign,1><Integer><Decimals,3>');
+
+                                                                             //Calcul Solde 2007
+                                                                             "G/L Account".SETRANGE("Date Filter",0D,Gdate_SoldeAnnee3);
+                                                                             "G/L Account".CALCFIELDS("G/L Account"."Net Change");
+                                                                             Gtext_SoldeAnnee3 := FORMAT("G/L Account"."Net Change",16,'<Sign,1><Integer><Decimals,3>');
+                                                                           END;
+                                                                            }
+
+    { [{5E89F254-E41D-49C7-B116-B27BD03C5756}];2 ;Gtext_Compte        ;Element ;Text    ;
+                                                  VariableName=Gtext_Compte;
+                                                  Width=12 }
+
+    { [{2E2BB5DC-3CE3-4A37-A1A0-AE56CA943D20}];2 ;Gtext_Description   ;Element ;Text    ;
+                                                  VariableName=Gtext_Description;
+                                                  Width=35 }
+
+    { [{293DA512-651E-4F7A-B627-33515F473911}];2 ;Gtext_A_Nouveau     ;Element ;Text    ;
+                                                  VariableName=Gtext_A_Nouveau;
+                                                  Width=16 }
+
+    { [{EB8BEA14-4D54-4051-BF5B-9FAA43CA2923}];2 ;Gtext_Debit         ;Element ;Text    ;
+                                                  VariableName=Gtext_Debit;
+                                                  Width=16 }
+
+    { [{198A7372-28F1-4411-8DC1-D4F1F06DB49F}];2 ;Gtext_Credit        ;Element ;Text    ;
+                                                  VariableName=Gtext_Credit;
+                                                  Width=16 }
+
+    { [{E6264FBD-2556-42AF-8A30-C93E8EA3D9B8}];2 ;Gtext_SoldeAnnee0   ;Element ;Text    ;
+                                                  VariableName=Gtext_SoldeAnnee0;
+                                                  Width=16 }
+
+    { [{1B5F046D-5D1A-4FF6-B6E1-DDCB385DC262}];2 ;Gtext_SoldeAnnee1   ;Element ;Text    ;
+                                                  VariableName=Gtext_SoldeAnnee1;
+                                                  Width=16 }
+
+    { [{DB27FF6A-0CA8-4A87-81B3-164CF3643EA3}];2 ;Gtext_SoldeAnnee2   ;Element ;Text    ;
+                                                  VariableName=Gtext_SoldeAnnee2;
+                                                  Width=16 }
+
+    { [{CA6CB97D-0458-4009-8E23-8FB84D2A7764}];2 ;Gtext_SoldeAnnee3   ;Element ;Text    ;
+                                                  VariableName=Gtext_SoldeAnnee3;
+                                                  Width=16 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      nb@1000000017 : Decimal;
+      Gdate_SoldeAnnee0@1000000012 : Date;
+      Gdate_SoldeAnnee1@1000000011 : Date;
+      Gdate_SoldeAnnee2@1000000010 : Date;
+      Gdate_SoldeAnnee3@1000000009 : Date;
+      Gint_Annee0@1000000008 : Integer;
+      Gint_Annee1@1000000007 : Integer;
+      Gint_Annee2@1000000006 : Integer;
+      Gint_Annee3@1000000005 : Integer;
+      Grec_GL_Entry@1000000004 : Record 17;
+      Gdec_MontantANouveau@1000000003 : Decimal;
+      Gdate_StartDate@1000000002 : Date;
+      Gdate_EndDate@1000000001 : Date;
+      Gdate_DateIsolation@1000000000 : Date;
+      Text001@1000000023 : TextConst 'ENU=Error ! Start date is greater than end date.;FRA=Erreur ! Date de d‚but est sup‚rieur … date de fin.';
+
+    PROCEDURE SetParameters@1000000000(Pdate_StartDate@1000000000 : Date;Pdate_EndDate@1000000001 : Date;Pdate_DateIsolation@1000000002 : Date);
+    BEGIN
+      Gdate_StartDate := Pdate_StartDate;
+      Gdate_EndDate := Pdate_EndDate;
+      Gdate_DateIsolation := Pdate_DateIsolation;
+    END;
+
+    BEGIN
+    {
+
+      CREATION JX-XAD 27/08/2010
+      Export ETAFI
+    }
+    END.
+  }
+}
+

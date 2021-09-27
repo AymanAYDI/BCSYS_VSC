@@ -1,0 +1,52 @@
+OBJECT XMLport 50099 Import Temp Windows Login
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/05/15;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=JX-USER;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+    Format=Variable Text;
+    FieldDelimiter=<None>;
+    FieldSeparator=[;];
+  }
+  ELEMENTS
+  {
+    { [{1C97BA43-6BE4-46AC-9854-1EB43880213E}];  ;Root                ;Element ;Text     }
+
+    { [{B934809C-4038-4EBA-ACA6-EB0D6F7F52F9}];1 ;TempWinLogin        ;Element ;Table   ;
+                                                  SourceTable=Table104087 }
+
+    { [{77337442-AEDA-463C-969E-835D9311F25C}];2 ;Id                  ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Temp Windows Login::User ID }
+
+    { [{D03337AA-4680-43B5-8F25-E63CEB2B906A}];2 ;Name                ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Temp Windows Login::User Name }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,156 @@
+OBJECT Page 50044 Purchase Activities VSC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/02/16;
+    Time=15:38:29;
+    Modified=Yes;
+    Version List=NAVW18.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Activities;
+               FRA=Activit‚s];
+    SourceTable=Table9055;
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+
+                 SetRespCenterFilter;
+                 SETFILTER("Date Filter",'>=%1',WORKDATE);
+
+                 // Migration 2015
+                 IF UserMgt.jx_GetPurchasesFilter <> '' THEN
+                  SETFILTER("User Filter",UserMgt.jx_GetPurchasesFilter);
+                 //
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       CalculateCueFieldValues;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 9   ;1   ;Group     ;
+                CaptionML=[ENU=Quote;
+                           FRA=Devis];
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 1000000002;0 ;Action    ;
+                                  CaptionML=[ENU=Navigate;
+                                             FRA=Naviguer];
+                                  RunObject=Page 344;
+                                  Image=Navigate }
+                  { 3       ;    ;Action    ;
+                                  CaptionML=[ENU=New Purchase Quote;
+                                             FRA=Nouveau devis];
+                                  RunObject=Page 49;
+                                  RunPageMode=Create }
+                }
+                 }
+
+    { 1   ;2   ;Field     ;
+                SourceExpr="Quote Open";
+                DrillDownPageID=Purchase Quotes }
+
+    { 5   ;2   ;Field     ;
+                SourceExpr="Quote to Release";
+                DrillDownPageID=Purchase Quotes }
+
+    { 1000000000;2;Field  ;
+                SourceExpr="Quote to tranform";
+                DrillDownPageID=Purchase Quotes }
+
+    { 10  ;1   ;Group     ;
+                CaptionML=[ENU=Orders & Invoices;
+                           FRA=Commandes];
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 16      ;0   ;Action    ;
+                                  CaptionML=[ENU=Navigate;
+                                             FRA=Naviguer];
+                                  RunObject=Page 344;
+                                  Image=Navigate }
+                }
+                 }
+
+    { 1000000005;2;Field  ;
+                Name=<Historique BC>;
+                CaptionML=FRA=Historique BC;
+                SourceExpr="All Orders";
+                DrillDownPageID=Purchase Order List VSC }
+
+    { 1000000004;2;Field  ;
+                Name=<Bc not Receive>;
+                CaptionML=[ENU=BC not receive;
+                           FRA=BC non  receptionn‚s];
+                SourceExpr="Order To Receipt";
+                DrillDownPageID=Purchase Order List VSC }
+
+    { 1000000012;1;Group  ;
+                CaptionML=[ENU=Orders & Invoices;
+                           FRA=Factures & Avoirs];
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 1000000010;0 ;Action    ;
+                                  CaptionML=[ENU=Navigate;
+                                             FRA=Naviguer];
+                                  RunObject=Page 344;
+                                  Image=Navigate }
+                }
+                 }
+
+    { 1000000007;2;Field  ;
+                SourceExpr="Invoice To Approve";
+                DrillDownPageID=Purchase Invoices List VSC }
+
+    { 1000000006;2;Field  ;
+                SourceExpr="Credit Memo To Approve";
+                DrillDownPageID=Purchase Credit Memos List VSC }
+
+  }
+  CODE
+  {
+    VAR
+      UserMgt@1000000000 : Codeunit 5700;
+
+    LOCAL PROCEDURE CalculateCueFieldValues@6();
+    BEGIN
+      IF FIELDACTIVE("Outstanding Purchase Orders") THEN
+        "Outstanding Purchase Orders" := CountOrders(FIELDNO("Outstanding Purchase Orders"));
+
+      IF FIELDACTIVE("Order To Receipt") THEN
+        "Outstanding Purchase Orders" := CountOrders(FIELDNO("Order To Receipt"));
+
+      IF FIELDACTIVE("Not Invoiced") THEN
+        "Not Invoiced" := CountOrders(FIELDNO("Not Invoiced"));
+
+      IF FIELDACTIVE("Partially Invoiced") THEN
+        "Partially Invoiced" := CountOrders(FIELDNO("Partially Invoiced"));
+    END;
+
+    BEGIN
+    {
+      // Modif JX-ABE-20/10/2015
+      // Renommer la Pile BC … receptionner en BC non receptionn‚s.
+      // Fin Modif
+
+      // Modif JX-ABE-01/02/2016
+      // Renommer le caption de la Pile tous mes BC par Historique BC.
+      // Fin Modif
+    }
+    END.
+  }
+}
+

@@ -2,9 +2,10 @@ OBJECT Table 81 Gen. Journal Line
 {
   OBJECT-PROPERTIES
   {
-    Date=27/11/14;
-    Time=12:00:00;
-    Version List=NAVW18.00.00.38798,NAVFR8.00.00.38798;
+    Date=25/07/16;
+    Time=10:00:00;
+    Modified=Yes;
+    Version List=NAVW18.00.00.38798,NAVFR8.00.00.38798,JX-YOOZ2,JX-VSC4.1-PBD;
   }
   PROPERTIES
   {
@@ -2392,6 +2393,28 @@ OBJECT Table 81 Gen. Journal Line
                                                               FRA=R‚aliser TVA] }
     { 10864;  ;Created from No.    ;Code20        ;CaptionML=[ENU=Created from No.;
                                                               FRA=Cr‚‚ … partir du nø] }
+    { 50000;  ;Vendor No.          ;Code20        ;TableRelation=Vendor.No.;
+                                                   CaptionML=FRA=Nø Fournisseur }
+    { 50001;  ;Customer No.        ;Code20        ;TableRelation=Customer.No.;
+                                                   CaptionML=[ENU=Customer No.;
+                                                              FRA=Nø Client] }
+    { 50002;  ;Temp Entry No.      ;Integer        }
+    { 50003;  ;Temp Rcpt No.       ;Code20         }
+    { 50004;  ;Temp Rcpt Line No.  ;Integer        }
+    { 50013;  ;BC No.              ;Code20        ;CaptionML=[ENU=BC No.;
+                                                              FRA=Nø BC];
+                                                   Editable=No }
+    { 50014;  ;Yooz No.            ;Code20        ;CaptionML=[ENU=No. Yooz;
+                                                              FRA=Nø Yooz];
+                                                   Editable=No }
+    { 50015;  ;Yooz Token link     ;Text250       ;ExtendedDatatype=URL;
+                                                   CaptionML=[ENU=Yooz Token link;
+                                                              FRA=Lien Token Yooz];
+                                                   Editable=No }
+    { 50020;  ;Document Type Prepaid;Option       ;OptionCaptionML=[ENU=" ,Quote,Order,FAP";
+                                                                    FRA=" ,Devis,Commande,FAP"];
+                                                   OptionString=[ ,Quote,Order,FAP] }
+    { 50021;  ;Document Prepaid    ;Code20         }
   }
   KEYS
   {
@@ -4239,6 +4262,17 @@ OBJECT Table 81 Gen. Journal Line
     END;
 
     BEGIN
+    {
+
+      MODIF JX-XAD 17/10/2008
+      Ajout d'un champ "Nø Fournisseur" (utilis‚ pour les FNP)
+
+      MODIF JX-XAD 01/10/2010
+      Ajout d'un champ "Nø Client"
+
+      MODIF JX-AUD 24/06/2011
+      Augmentation longueur champs 50000 et 50001 … 20 caractŠres
+    }
     END.
   }
 }

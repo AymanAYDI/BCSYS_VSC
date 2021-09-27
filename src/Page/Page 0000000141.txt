@@ -2,9 +2,10 @@ OBJECT Page 141 Posted Purch. Cr. Memo Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=09/09/14;
-    Time=12:00:00;
-    Version List=NAVW18.00;
+    Date=31/07/15;
+    Time=16:30:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.2-XAD;
   }
   PROPERTIES
   {
@@ -28,7 +29,7 @@ OBJECT Page 141 Posted Purch. Cr. Memo Subform
                                  FRA=&Ligne];
                       Image=Line }
       { 1900295304;2 ;Action    ;
-                      AccessByPermission=TableData 348=R;
+                      AccessByPermission=TableData 348=RM;
                       ShortCutKey=Shift+Ctrl+D;
                       CaptionML=[ENU=Dimensions;
                                  FRA=Axes analytiques];
@@ -243,7 +244,16 @@ OBJECT Page 141 Posted Purch. Cr. Memo Subform
       DocumentTotals@1003 : Codeunit 57;
       VATAmount@1002 : Decimal;
 
+    PROCEDURE ReturnRecord@1000000000(VAR Prec_PurchCrMemoLine@1000000000 : Record 125);
     BEGIN
+      Prec_PurchCrMemoLine := Rec;
+    END;
+
+    BEGIN
+    {
+      MODIF JX-XAD 04/05/2010
+      Creation de la fonction ReturnRecord dans le cadre de la modification analytique
+    }
     END.
   }
 }

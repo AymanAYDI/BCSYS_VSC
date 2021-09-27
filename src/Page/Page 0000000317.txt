@@ -2,9 +2,10 @@ OBJECT Page 317 VAT Statement
 {
   OBJECT-PROPERTIES
   {
-    Date=07/09/12;
-    Time=12:00:00;
-    Version List=NAVW17.00;
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=NAVW16.00,JX-VSC1.0-XAD;
   }
   PROPERTIES
   {
@@ -81,7 +82,7 @@ OBJECT Page 317 VAT Statement
                       Ellipsis=Yes;
                       CaptionML=[ENU=Calc. and Post VAT Settlement;
                                  FRA=Calculer et valider d‚cl. TVA];
-                      RunObject=Report 20;
+                      RunObject=Report 50026;
                       Promoted=Yes;
                       Image=SettleOpenTransactions;
                       PromotedCategory=Process }
@@ -189,6 +190,10 @@ OBJECT Page 317 VAT Statement
     END;
 
     BEGIN
+    {
+      MODIF JX-XAD 31/03/2009
+      Modif accŠs report 50026 (au lieu du report 20) depuis le bouton Fonction ==> Calculer et valider d‚cl. TVA
+    }
     END.
   }
 }

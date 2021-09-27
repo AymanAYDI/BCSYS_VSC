@@ -1310,7 +1310,7 @@ OBJECT Codeunit 422 XBRL Import Taxonomy Spec. 2
       ActiveSession@1000 : Record 2000000110;
     BEGIN
       ActiveSession.GET(SERVICEINSTANCEID,SESSIONID);
-      EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Windows Client");
+      EXIT(ActiveSession."Client Type" = ActiveSession."Client Type"::"Client Windows");
     END;
 
     LOCAL PROCEDURE CreateNameSpaceManager@18(XmlDocument@1000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");

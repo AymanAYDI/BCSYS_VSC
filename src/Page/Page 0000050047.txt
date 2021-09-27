@@ -1,0 +1,50 @@
+OBJECT Page 50047 Purchase Doc. Factbox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=24/06/15;
+    Time=11:00:00;
+    Modified=Yes;
+    Version List=NAVW15.00.01,JX-VSC1.0-LAB,JX-VSC2.0-AUD;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table38;
+    PageType=CardPart;
+    OnAfterGetRecord=BEGIN
+                       CALCFIELDS("Total Amount","Total Amount Incl. VAT");
+                       IF "Total Amount Incl. VAT" < "Total Amount" THEN
+                        VATAmount := 0
+                       ELSE
+                        VATAmount := "Total Amount Incl. VAT" - "Total Amount";
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1000000000;;Container;
+                Name=Montants Document;
+                ContainerType=ContentArea }
+
+    { 1000000001;1;Field  ;
+                SourceExpr="Total Amount" }
+
+    { 1000000003;1;Field  ;
+                Name=VAT Amount;
+                CaptionML=FRA=Total TVA;
+                SourceExpr=VATAmount }
+
+    { 1000000002;1;Field  ;
+                SourceExpr="Total Amount Incl. VAT" }
+
+  }
+  CODE
+  {
+    VAR
+      VATAmount@1000000000 : Decimal;
+
+    BEGIN
+    END.
+  }
+}
+

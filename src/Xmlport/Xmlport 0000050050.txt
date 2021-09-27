@@ -1,0 +1,126 @@
+OBJECT XMLport 50050 XXX
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/04/15;
+    Time=20:00:00;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Direction=Export;
+    OnInitXMLport=BEGIN
+                    Gint_Compteur := 0;
+                    Gint_LineNo :=0;
+                    Grec_CompanyInfo.GET;
+                  END;
+
+  }
+  ELEMENTS
+  {
+    { [{094334DF-AEC4-412C-A997-2E9B5399152E}];  ;Root                ;Element ;Text     }
+
+    { [{DB1FE33B-21D4-4D7C-BC3F-444CC636876B}];1 ;CUST                ;Element ;Table   ;
+                                                  SourceTable=Table18;
+                                                  Export::OnAfterGetRecord=BEGIN
+                                                                             Gtext_Champ1 := Customer.Name;
+                                                                             Gtext_Champ2 := Customer.City;
+                                                                           END;
+                                                                            }
+
+    { [{2A9F63D2-E292-49C9-A5E8-E4BF0A28E75E}];2 ;NO                  ;Element ;Field   ;
+                                                  DataType=Code;
+                                                  SourceField=Customer::No. }
+
+    { [{18A2A756-F084-4EBF-8689-60C1DC266417}];2 ;Gtext_Champ1        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ1 }
+
+    { [{8A165EA3-3DB4-4384-80C2-4455C4A92525}];2 ;Gtext_Champ2        ;Element ;Text    ;
+                                                  VariableName=Gtext_Champ2 }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+    VAR
+      i@1000000037 : Integer;
+      Grec_FeuilleODPaie@1000000036 : Record 81;
+      Gint_Compteur@1000000035 : Integer;
+      Gint_Year@1000000034 : Integer;
+      Gint_Month@1000000033 : Integer;
+      Gint_Day@1000000032 : Integer;
+      varInteger@1000000031 : Integer;
+      varDecimal1@1000000030 : Decimal;
+      varDecimal@1000000029 : Decimal;
+      Gdate_PostingDate@1000000028 : Date;
+      Gdec_DebitAmount@1000000027 : Decimal;
+      Gdec_CreditAmount@1000000026 : Decimal;
+      Gcode_AccountNo@1000000025 : Code[20];
+      Gcode_CashPooling@1000000024 : Code[10];
+      Gcode_CodeJournal@1000000023 : Code[10];
+      Grec_GenJnlBatch@1000000022 : Record 232;
+      Grec_CompanyInfo@1000000021 : Record 79;
+      Grec_Company@1000000020 : Record 2000000006;
+      Gcode_JournalBatchName@1000000019 : Code[20];
+      Gcode_JournalTemplateName@1000000018 : Code[20];
+      Gcode_ODPaie@1000000017 : Code[14];
+      Grec_JnlLineDimension@1000000016 : Record 356;
+      Grec_Dimension@1000000015 : Record 348;
+      Gint_LineNo@1000000014 : Integer;
+      Gcode_Axe@1000000013 : ARRAY [6] OF Code[20];
+      Grecord_GeneralLedgerSetup@1000000012 : Record 98;
+      Grec_Account@1000000011 : Record 15;
+      Gcu_Converter@1000000010 : Codeunit 50002;
+      Gtext_TypeCompte@1000000009 : Text[20];
+      Grec_Customer@1000000008 : Record 18;
+      Grec_Fournisseur@1000000007 : Record 23;
+      Grec_Banque@1000000006 : Record 270;
+      Grec_Immo@1000000005 : Record 5600;
+      Grec_PartenaireIC@1000000004 : Record 413;
+      Grec_GComptaMarche@1000000003 : Record 250;
+      Grec_GComptaProduit@1000000002 : Record 251;
+      Gtext_ComptaM@1000000001 : Text[30];
+      Gtext_ComptaP@1000000000 : Text[30];
+      Text002@1000000044 : TextConst 'ENU=This sheet is not empty. Please open a new sheet;FRA=Cette feuille n''est pas vide. Veuillez ouvrir une nouvelle feuille';
+      Text001@1000000043 : TextConst 'ENU=This fonction is not destinated for the current sheet;FRA=Cette fonction n''est pas destin‚e pour la feuille en cours';
+      Text003@1000000042 : TextConst 'FRA="Le compte Nø %1 n'' existe pas pour le Type Compte : "';
+      Text004@1000000041 : TextConst 'FRA=… la ligne  nø %2 du fichier';
+      Text005@1000000040 : TextConst 'FRA=Le Type Compte %1 n'' existe pas, erreur sur la ligne nø %2';
+      Text006@1000000039 : TextConst 'FRA=Attention ! une autre valeur existe d‚j… pour code axe %1 ligne %2';
+
+    PROCEDURE SetODPaieJnlLine@1000000000(FeuilleODPaie@1000000000 : Record 81);
+    BEGIN
+    END;
+
+    PROCEDURE "Ins‚rerAnalytique"@1000000001();
+    BEGIN
+    END;
+
+    BEGIN
+    {
+      //CREATION JX-AUD 18/10/2010
+      //Import OD Paie
+
+      MODIF JX-XAD 04/04/2011
+      Les codes axes analytiques d‚finis dans le fichier csv sont prioritaires et les axes pr‚d‚finis dans
+      les comptes fournisseurs (ou autres) sont ‚cras‚s dans la feuille de compta.
+
+      MODIF JX-AUD 06/04/2011
+      Modification du code pour les colonnes Debit et cr‚dit on ne prend plus en compte le sens
+    }
+    END.
+  }
+}
+
